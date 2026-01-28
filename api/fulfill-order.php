@@ -54,8 +54,9 @@ try {
             'updated_at' => date('Y-m-d H:i:s'),
             'products' => $storedData['products'] ?? [],
             'tracking' => $storedData['tracking'] ?? [],
-            'fbclid' => $storedData['tracking']['fbclid'] ?? null, // <--- STANDALONE FBCLID
+            'fbclid' => $storedData['tracking']['fbclid'] ?? null,
             'pixel_id' => $storedData['tracking']['pixel_id'] ?? null,
+            'user_agent' => $storedData['tracking']['user_agent'] ?? null, // <--- USER AGENT (Elevated)
             'pix_data' => $storedData['pix_data'] ?? []
         ];
 
