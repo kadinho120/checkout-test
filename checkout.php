@@ -243,7 +243,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
 
                 <h2 class="font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                    <span class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
+                    <span class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm text-white">2</span>
                     Pagamento
                 </h2>
 
