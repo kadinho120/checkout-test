@@ -213,7 +213,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             </h2>
 
             <div id="payment-error"
-                class="hidden bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-md mb-4 text-sm"
+                class="hidden bg-red-100 border border-red-400 text-red-700 dark:bg-red-900/50 dark:border-red-700 dark:text-red-300 px-4 py-3 rounded-md mb-4 text-sm"
                 role="alert"></div>
 
             <form id="checkout-form" novalidate>
