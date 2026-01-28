@@ -134,7 +134,6 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             border-color: #D4AF37;
             color: black;
         }
-
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -153,7 +152,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
-<body class="min-h-screen flex flex-col items-center py-6 sm:py-12 px-4 bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
+<body
+    class="min-h-screen flex flex-col items-center py-6 sm:py-12 px-4 bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
 
     <!-- Header / Security -->
     <div
@@ -243,7 +243,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
 
                 <h2 class="font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                    <span class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm text-white">2</span>
+                    <span
+                        class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm text-white">2</span>
                     Pagamento
                 </h2>
 
@@ -466,11 +467,31 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
             const totalValue = calculateCurrentTotal() / 100;
 
+            // Capture Tracking Params
+            const urlParams = new URLSearchParams(window.location.search);
+            const trackingParams = {};
+            for (const [key, value] of urlParams) {
+                trackingParams[key] = value;
+            }
+
+            // Cookie helpers
+            const getCookie = (name) => {
+                const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                return match ? match[2] : null;
+            };
+
+            const fbp = getCookie('_fbp');
+            const fbc = getCookie('_fbc');
+            if (fbp) trackingParams.fbp = fbp;
+            if (fbc) trackingParams.fbc = fbc;
+            trackingParams.user_agent = navigator.userAgent;
+
             const pixPayload = {
-                value: totalValue * 100, // API expects cents usually? Check process-pix-woovi.php logic. Previous code sent totalValueForPix which was cents.
+                value: totalValue * 100,
                 products: allProducts,
                 customer: customerData,
-                correlation_id: correlationId
+                correlation_id: correlationId,
+                tracking: trackingParams
             };
 
             // Track AddPaymentInfo

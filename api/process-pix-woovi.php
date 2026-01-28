@@ -198,7 +198,8 @@ function handle_woovi_pix_payment()
         $json_data_store = json_encode([
             'correlation_id' => $correlationID,
             'pix_data' => $pix_data,
-            'products' => $params['products'] ?? []
+            'products' => $params['products'] ?? [],
+            'tracking' => $params['tracking'] ?? []
         ]);
 
         // Mock Product ID 0 or extract from first item if available. 
