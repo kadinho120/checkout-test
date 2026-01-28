@@ -263,7 +263,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- ORDER BUMPS -->
                 <?php if (!empty($product['bumps'])): ?>
-                    <div class="space-y-3 mb-8 bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+                    <div class="space-y-3 mb-8 bg-gray-50 dark:bg-slate-950/50 p-4 rounded-xl border border-gray-200 dark:border-slate-800">
                         <p class="text-xs text-yellow-500 font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
                             <i data-lucide="zap" class="w-4 h-4"></i>
                             Turbine sua Compra
