@@ -496,6 +496,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
             if (fbp) trackingParams.fbp = fbp;
             if (fbc) trackingParams.fbc = fbc;
+            if (typeof PIXEL_ID !== 'undefined') trackingParams.pixel_id = PIXEL_ID;
             trackingParams.user_agent = navigator.userAgent;
 
             const pixPayload = {

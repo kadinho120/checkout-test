@@ -50,10 +50,12 @@ try {
                 'document' => $order['customer_cpf']
             ],
             'amount' => (float) $order['total_amount'],
+            'value_formatted' => (float) $order['total_amount'], // Ex: 9 ou 13.5
             'updated_at' => date('Y-m-d H:i:s'),
             'products' => $storedData['products'] ?? [],
             'tracking' => $storedData['tracking'] ?? [],
             'fbclid' => $storedData['tracking']['fbclid'] ?? null, // <--- STANDALONE FBCLID
+            'pixel_id' => $storedData['tracking']['pixel_id'] ?? null,
             'pix_data' => $storedData['pix_data'] ?? []
         ];
 

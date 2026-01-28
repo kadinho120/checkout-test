@@ -228,6 +228,7 @@ function handle_woovi_pix_payment()
             'correlation_id' => $correlationID,
             'status' => 'pending',
             'value' => $params['value'], // Centavos
+            'value_formatted' => (float) ($params['value'] / 100), // Ex: 9 ou 13.5 (Float JSON padrão)
             'created_at' => date('Y-m-d H:i:s'),
             'customer' => [
                 'name' => $params['customer']['name'],
@@ -237,7 +238,8 @@ function handle_woovi_pix_payment()
             ],
             'products' => $params['products'] ?? [],
             'tracking' => $params['tracking'] ?? [], // UTMs, FBC, FBP, User Agent
-            'fbclid' => $params['tracking']['fbclid'] ?? null, // <--- STANDALONE FBCLID (Requested)
+            'fbclid' => $params['tracking']['fbclid'] ?? null, // <--- STANDALONE FBCLID
+            'pixel_id' => $params['tracking']['pixel_id'] ?? null, // <--- PIXEL ID
             'pix_data' => $pix_data // QRCode, BRCode, Preço Formatado
         ];
 
