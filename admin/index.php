@@ -97,7 +97,7 @@ require_once 'auth.php';
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 p-6">
 
                 <!-- KPI CARDS -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
 
                     <!-- Faturamento -->
                     <div
@@ -170,6 +170,24 @@ require_once 'auth.php';
                         </div>
                     </div>
 
+                    <!-- Pix Pendentes (Novo) -->
+                    <div
+                        class="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-lg relative overflow-hidden group">
+                        <div
+                            class="absolute -right-6 -top-6 bg-orange-500/10 w-24 h-24 rounded-full blur-2xl group-hover:bg-orange-500/20 transition">
+                        </div>
+                        <div class="flex justify-between items-start mb-4 relative z-10">
+                            <div>
+                                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">Pix Pendentes</p>
+                                <h3 class="text-2xl font-bold text-white mt-1" x-text="stats.pending_orders">0</h3>
+                                <p class="text-xs text-orange-400 mt-1" x-text="formatCurrency(stats.pending_revenue)">
+                                    R$ 0,00</p>
+                            </div>
+                            <div class="p-2 bg-slate-800 rounded-lg text-orange-500"><i data-lucide="clock"
+                                    class="w-5 h-5"></i></div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Recent Orders Table -->
@@ -226,6 +244,8 @@ require_once 'auth.php';
                     revenue: 0,
                     total_orders: 0,
                     paid_orders: 0,
+                    pending_orders: 0,
+                    pending_revenue: 0,
                     conversion_rate: 0,
                     recent_orders: []
                 },

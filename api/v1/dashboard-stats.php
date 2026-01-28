@@ -55,7 +55,6 @@ try {
     }
 
     // 1. Total Revenue (Paid)
-    // Using broad paid status check
     $stmt = $db->prepare("SELECT SUM(total_amount) as total FROM orders $whereClause AND status IN ('paid', 'completed', 'PAID', 'COMPLETED')");
     $stmt->execute($params);
     $revenue = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
@@ -70,12 +69,17 @@ try {
     $stmt->execute($params);
     $paidOrders = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
 
+    // 3.1 Pending Orders (New)
+    $stmt = $db->prepare("SELECT COUNT(*) as count, SUM(total_amount) as total FROM orders $whereClause AND status = 'pending'");
+    $stmt->execute($params);
+    $pendingData = $stmt->fetch(PDO::FETCH_ASSOC);
+    $pendingOrders = $pendingData['count'] ?? 0;
+    $pendingRevenue = $pendingData['total'] ?? 0;
+
     // 4. Conversion Rate
     $conversionRate = $totalOrders > 0 ? ($paidOrders / $totalOrders) * 100 : 0;
 
     // 5. Recent Orders (Last 5)
-    // We filter these too as requested implies filtering the dashboard views. 
-    // If not desired, remove $whereClause from here.
     $stmt = $db->prepare("SELECT id, customer_name, total_amount, status, created_at FROM orders $whereClause ORDER BY created_at DESC LIMIT 5");
     $stmt->execute($params);
     $recentOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -84,6 +88,8 @@ try {
         'revenue' => (float) $revenue,
         'total_orders' => (int) $totalOrders,
         'paid_orders' => (int) $paidOrders,
+        'pending_orders' => (int) $pendingOrders,
+        'pending_revenue' => (float) $pendingRevenue,
         'conversion_rate' => round($conversionRate, 2),
         'recent_orders' => $recentOrders
     ]);
