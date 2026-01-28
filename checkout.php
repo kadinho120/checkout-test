@@ -198,7 +198,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="flex items-center gap-2"><i data-lucide="check-circle"
                             class="w-4 h-4 text-green-500"></i> Garantia de 7 Dias</div>
                     <div class="flex items-center gap-2"><i data-lucide="check-circle"
-                            class="w-4 h-4 text-green-500"></i> Acesso Imediato por E-mail</div>
+                            class="w-4 h-4 text-green-500"></i> Acesso Imediato por E-mail e WhatsApp</div>
                 </div>
             </div>
         </div>
