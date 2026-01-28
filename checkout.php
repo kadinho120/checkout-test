@@ -653,7 +653,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         const showSuccessView = () => {
             pixWaitView.classList.add('hidden');
             successView.classList.remove('hidden');
-            if (typeof fbq === 'function') fbq('track', 'Purchase', { currency: 'BRL', value: calculateCurrentTotal() / 100 });
+            // Backend tracking handles Purchase event via N8N/S2S
         }
 
     </script>
