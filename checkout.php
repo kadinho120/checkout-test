@@ -135,6 +135,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             color: black;
         }
 
+    </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -150,10 +151,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         }
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
+</head>
 
-<body
-    class="min-h-screen flex flex-col items-center py-6 sm:py-12 px-4 bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
+<body class="min-h-screen flex flex-col items-center py-6 sm:py-12 px-4 bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
 
     <!-- Header / Security -->
     <div
