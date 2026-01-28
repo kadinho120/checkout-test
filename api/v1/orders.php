@@ -9,14 +9,7 @@ $db = $database->getConnection();
 // Basic query to fetch orders
 // In a real app, we would add pagination and search here.
 try {
-    $query = "
-        SELECT 
-            o.*, 
-            p.name as product_name 
-        FROM orders o
-        LEFT JOIN products p ON o.product_id = p.id
-        ORDER BY o.created_at DESC
-    ";
+    $query = "SELECT * FROM orders ORDER BY created_at DESC";
     $stmt = $db->query($query);
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

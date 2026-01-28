@@ -93,7 +93,6 @@ require_once 'auth.php';
                             <tr class="text-xs text-slate-400 border-b border-slate-800 bg-slate-900/50">
                                 <th class="p-4 uppercase font-medium"># ID</th>
                                 <th class="p-4 uppercase font-medium">Cliente</th>
-                                <th class="p-4 uppercase font-medium">Produto</th>
                                 <th class="p-4 uppercase font-medium">Valor</th>
                                 <th class="p-4 uppercase font-medium text-center">Status</th>
                                 <th class="p-4 uppercase font-medium">Data</th>
@@ -108,14 +107,11 @@ require_once 'auth.php';
                                             <span class="font-bold text-white text-sm"
                                                 x-text="order.customer_name"></span>
                                             <span class="text-xs text-slate-400" x-text="order.customer_email"></span>
+                                            <span class="text-xs text-slate-500" x-text="order.customer_phone"></span>
                                         </div>
                                     </td>
-                                    <td class="p-4">
-                                        <span class="text-sm text-blue-400 font-medium"
-                                            x-text="order.product_name || 'Produto Desconhecido'"></span>
-                                    </td>
                                     <td class="p-4 text-white font-mono text-sm"
-                                        x-text="'R$ ' + parseFloat(order.total_amount).toFixed(2)"></td>
+                                        x-text="'R$ ' + parseFloat(order.amount).toFixed(2)"></td>
                                     <td class="p-4 text-center">
                                         <span x-show="order.status === 'paid'"
                                             class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-1 rounded text-xs font-bold">PAGO</span>

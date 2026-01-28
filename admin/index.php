@@ -203,7 +203,6 @@ require_once 'auth.php';
                         <thead>
                             <tr class="text-xs text-slate-400 border-b border-slate-800 bg-slate-900/50">
                                 <th class="p-4 uppercase font-medium">Cliente</th>
-                                <th class="p-4 uppercase font-medium">Produto</th>
                                 <th class="p-4 uppercase font-medium">Valor</th>
                                 <th class="p-4 uppercase font-medium">Status</th>
                                 <th class="p-4 uppercase font-medium text-right">Data</th>
@@ -214,8 +213,6 @@ require_once 'auth.php';
                                 <tr class="hover:bg-slate-800/50 transition">
                                     <td class="p-4 text-white text-sm" x-text="order.customer_name || 'Desconhecido'">
                                     </td>
-                                    <td class="p-4 text-blue-400 text-sm font-medium"
-                                        x-text="order.product_name || 'Produto'"></td>
                                     <td class="p-4 text-white font-mono text-sm"
                                         x-text="formatCurrency(order.total_amount)"></td>
                                     <td class="p-4">
