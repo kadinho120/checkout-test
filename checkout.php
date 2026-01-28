@@ -263,7 +263,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- ORDER BUMPS -->
                 <?php if (!empty($product['bumps'])): ?>
-                    <div class="space-y-3 mb-8 bg-gray-50 dark:bg-slate-950/50 p-4 rounded-xl border border-gray-200 dark:border-slate-800">
+                    <div
+                        class="space-y-3 mb-8 bg-gray-50 dark:bg-slate-950/50 p-4 rounded-xl border border-gray-200 dark:border-slate-800">
                         <p class="text-xs text-yellow-500 font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
                             <i data-lucide="zap" class="w-4 h-4"></i>
                             Turbine sua Compra
@@ -626,20 +627,20 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 `;
             }
             pixWaitView.innerHTML = `
-                <h3 class="text-xl font-bold text-white mb-2">Pagamento via PIX</h3>
-                <p class="text-sm text-slate-400 mb-6">Escaneie o QR Code abaixo para finalizar.</p>
-                <div class="bg-white p-2 rounded-lg inline-block mb-4">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Pagamento via PIX</h3>
+                <p class="text-sm text-gray-600 dark:text-slate-400 mb-6">Escaneie o QR Code abaixo para finalizar.</p>
+                <div class="bg-white p-2 rounded-lg inline-block mb-4 shadow-sm border border-gray-200 dark:border-none">
                     <img src="${pixData.qrCodeImage}" class="w-48 h-48">
                 </div>
                 <div class="mb-4">
-                    <p class="text-slate-400 text-xs uppercase font-bold">Valor a Pagar</p>
-                    <p class="text-2xl font-black text-white">${pixData.formattedPrice}</p>
+                    <p class="text-gray-500 dark:text-slate-400 text-xs uppercase font-bold">Valor a Pagar</p>
+                    <p class="text-2xl font-black text-gray-900 dark:text-white">${pixData.formattedPrice}</p>
                 </div>
-                <div class="bg-slate-950 p-3 rounded border border-slate-800 flex items-center gap-2 mb-4">
-                    <input readonly value="${pixData.brCode}" class="bg-transparent text-xs text-slate-500 w-full outline-none font-mono truncate">
-                    <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}')" class="text-blue-500 font-bold text-xs hover:text-white transition">COPIAR</button>
+                <div class="bg-gray-100 dark:bg-slate-950 p-3 rounded border border-gray-200 dark:border-slate-800 flex items-center gap-2 mb-4">
+                    <input readonly value="${pixData.brCode}" class="bg-transparent text-xs text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate">
+                    <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}')" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 dark:hover:text-white transition">COPIAR</button>
                 </div>
-                <div class="animate-pulse text-green-500 text-sm font-bold flex items-center justify-center gap-2">
+                <div class="animate-pulse text-green-600 dark:text-green-500 text-sm font-bold flex items-center justify-center gap-2">
                     <i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Aguardando confirmação...
                 </div>
             `;
