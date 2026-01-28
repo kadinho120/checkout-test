@@ -1,0 +1,48 @@
+[
+    {
+        "id": "691f2a0b5b1d1",
+        "date": "2025-11-19",
+        "amount": 14.82,
+        "product": [
+            "Acesso Vital\u00edcio (Oferta Especial) - Protocolo Alpha-7",
+            "Acesso Vital\u00edcio - Protocolo Alpha-7",
+            "Protocolo Alpha-7 (Vital\u00edcio)"
+        ],
+        "platform": "meta",
+        "createdAt": "2025-11-20 14:47:39"
+    },
+    {
+        "id": "6920639470de3",
+        "date": "2025-11-20",
+        "amount": 177.48,
+        "product": [
+            "Acesso Vital\u00edcio (Oferta Especial) - Protocolo Alpha-7",
+            "Acesso Vital\u00edcio - Protocolo Alpha-7",
+            "Protocolo Alpha-7 (Vital\u00edcio)"
+        ],
+        "platform": "meta",
+        "createdAt": "2025-11-21 13:05:24"
+    },
+    {
+        "id": "6920c71d45eeb",
+        "date": "2025-11-21",
+        "amount": 245.6,
+        "product": [
+            "Acesso Vital\u00edcio (Oferta Especial) - Protocolo Alpha-7",
+            "Acesso Vital\u00edcio - Protocolo Alpha-7",
+            "Protocolo Alpha-7 (Vital\u00edcio)"
+        ],
+        "platform": "meta",
+        "createdAt": "2025-11-21 20:10:05"
+    },
+    {
+        "id": "69289da639ff1",
+        "date": "2025-11-27",
+        "amount": 182.69,
+        "product": [
+            "global"
+        ],
+        "platform": "meta",
+        "createdAt": "2025-11-27 18:51:18"
+    }
+]

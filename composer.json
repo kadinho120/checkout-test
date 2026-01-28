@@ -1,0 +1,10 @@
+{
+    "name": "project/alpha7-checkout",
+    "description": "Standalone Checkout System",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "ext-pdo": "*",
+        "ext-pdo_sqlite": "*"
+    }
+}

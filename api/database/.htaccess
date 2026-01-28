@@ -1,0 +1,5 @@
+# Bloqueia acesso direto a arquivos .json e .log
+<FilesMatch "\.(json|log|txt)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>

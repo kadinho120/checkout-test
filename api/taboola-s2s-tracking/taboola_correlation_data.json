@@ -1,0 +1,62 @@
+{
+    "carfix_1763946386880_3ideeqwcm": {
+        "click_id": "testedeparametro",
+        "pixel_id": "YOUR_TABOOLA_ID_HERE",
+        "value": 97,
+        "currency": "BRL",
+        "user_agent": "Mozilla\/5.0 (X11; Linux x86_64; rv:145.0) Gecko\/20100101 Firefox\/145.0",
+        "event_source_url": "https:\/\/instaboost.com.br\/develop\/?tblci=testedeparametro",
+        "timestamp": 1763946387,
+        "confirmed": false
+    },
+    "carfix_1764327981818_kmlil34tx": {
+        "click_id": "GiD0Hfb9PnQC7e6YpHYXjNNFbO370g90zxcXtOnyiaVVUyDg5msoyNGyzd3cuLQUMP_jSg",
+        "pixel_id": "1766240",
+        "value": 25,
+        "currency": "BRL",
+        "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/142.0.0.0 Safari\/537.36 Edg\/142.0.0.0",
+        "event_source_url": "https:\/\/carfix.instaboost.com.br\/landing\/carfix\/?utm_source=taboola&utm_medium=referral&tblci=GiD0Hfb9PnQC7e6YpHYXjNNFbO370g90zxcXtOnyiaVVUyDg5msoyNGyzd3cuLQUMP_jSg#checkout",
+        "timestamp": 1764327982,
+        "confirmed": false
+    },
+    "carfix_1764333595066_91q6896kw": {
+        "click_id": "GiDEdXi2jF4Z6IMGLmhIWStBDBSBRBoG19CpgIF5SCk1iiDg5msorazc3460qrwBMOqIQQ",
+        "pixel_id": "1766240",
+        "value": 25,
+        "currency": "BRL",
+        "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/142.0.0.0 Safari\/537.36",
+        "event_source_url": "https:\/\/carfix.instaboost.com.br\/noticias\/carfix\/?utm_source=taboola&utm_medium=referral&tblci=GiDEdXi2jF4Z6IMGLmhIWStBDBSBRBoG19CpgIF5SCk1iiDg5msorazc3460qrwBMOqIQQ#checkout",
+        "timestamp": 1764333594,
+        "confirmed": false
+    },
+    "carfix_1764341153587_km6cej00f": {
+        "click_id": "GiC33NJZ8U_EwFCUKDvKsS81Z0UuyUMUFQmgid_lfb6jGyDg5msoqqLnh-_ggaZlMKvNUQ",
+        "pixel_id": "1766240",
+        "value": 25,
+        "currency": "BRL",
+        "user_agent": "Mozilla\/5.0 (Linux; Android 10; K) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/142.0.0.0 Mobile Safari\/537.36",
+        "event_source_url": "https:\/\/carfix.instaboost.com.br\/noticias\/carfix\/?utm_source=taboola&utm_medium=referral&tblci=GiC33NJZ8U_EwFCUKDvKsS81Z0UuyUMUFQmgid_lfb6jGyDg5msoqqLnh-_ggaZlMKvNUQ#checkout",
+        "timestamp": 1764341154,
+        "confirmed": false
+    },
+    "carfix_1764417737095_lq1e3z2wy": {
+        "click_id": "GiDvpbhYuaJ65GfsJVnJWbgNFQYaUFs17p28OnY69uuRPSDg5msozfiV5I3AwvOdATDfjlo",
+        "pixel_id": "1766240",
+        "value": 25,
+        "currency": "BRL",
+        "user_agent": "Mozilla\/5.0 (Linux; Android 11; SM-A207M Build\/RP1A.200720.012) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/142.0.7444.102 Mobile Safari\/537.36",
+        "event_source_url": "https:\/\/carfix.instaboost.com.br\/noticias\/carfix\/?utm_source=taboola&utm_medium=referral&tblci=GiDvpbhYuaJ65GfsJVnJWbgNFQYaUFs17p28OnY69uuRPSDg5msozfiV5I3AwvOdATDfjlo#checkout",
+        "timestamp": 1764417738,
+        "confirmed": false
+    },
+    "carfix_1764437083142_9d9fikw0b": {
+        "click_id": "GiDyfiG276Kkwn8G90T1CgEjTbBXg5j1ttd9Psvmllu0VyDg5mso-anwya6ViafGATD_40o",
+        "pixel_id": "1766240",
+        "value": 47,
+        "currency": "BRL",
+        "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/142.0.0.0 Safari\/537.36 Edg\/142.0.0.0",
+        "event_source_url": "https:\/\/carfix.instaboost.com.br\/noticias\/carfix\/?utm_source=taboola&utm_medium=referral&tblci=GiDyfiG276Kkwn8G90T1CgEjTbBXg5j1ttd9Psvmllu0VyDg5mso-anwya6ViafGATD_40o#checkout",
+        "timestamp": 1764437083,
+        "confirmed": false
+    }
+}
