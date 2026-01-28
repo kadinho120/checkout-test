@@ -220,15 +220,30 @@ function handle_woovi_pix_payment()
             $json_data_store
         ]);
 
-        // 3. Webhook N8N (Legacy support - preserved)
-        // ... (Webhook logic kept if needed, or removed if user fully moves to local)
-        // Keeping it for now as user asked if "endpoints" are same.
+        // 3. Webhook N8N (Enriched Payload)
         $n8n_webhook_url = 'https://n8n-n8n.tutv5u.easypanel.host/webhook/pix-gerado-abacatepay';
+
+        // Constroi o payload COMPLETO para o N8N
+        $full_webhook_payload = [
+            'correlation_id' => $correlationID,
+            'status' => 'pending',
+            'value' => $params['value'], // Centavos
+            'created_at' => date('Y-m-d H:i:s'),
+            'customer' => [
+                'name' => $params['customer']['name'],
+                'email' => $params['customer']['email'],
+                'phone' => $whatsapp_formatted, // Telefone tratado
+                'document' => $params['customer']['document'] ?? '' // Se houver
+            ],
+            'products' => $params['products'] ?? [],
+            'tracking' => $params['tracking'] ?? [], // UTMs, FBC, FBP, User Agent
+            'pix_data' => $pix_data // QRCode, BRCode, Preço Formatado
+        ];
 
         $ch = curl_init($n8n_webhook_url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($new_detailed_order ?? $payload)); // Send original payload
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($full_webhook_payload));
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, 5000);
         curl_setopt($ch, CURLOPT_NOSIGNAL, 1);

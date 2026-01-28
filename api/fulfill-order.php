@@ -1,95 +1,95 @@
 <?php
+// api/fulfill-order.php
 // Endpoint para buscar um pedido, atualizar status para PAID e encaminhar para webhook.
 
 header('Content-Type: application/json');
+require_once __DIR__ . '/connection.php';
 
 // Recebe o input
 $input = file_get_contents('php://input');
 $data = json_decode($input, true);
 
 if (!isset($data['correlationId'])) {
-    http_response_code(400); 
+    http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'correlationId ausente na requisição.']);
     exit;
 }
 
 $correlationId = $data['correlationId'];
 
-// --- ALTERAÇÃO 1: Caminho apontando para o VOLUME PERSISTENTE ---
-// Sai da pasta 'api' (..) e entra em 'app/database'
-$detailed_orders_path = __DIR__ . '/database/detailed_orders.json';
+try {
+    $database = new Database();
+    $db = $database->getConnection();
 
-// Verifica se o arquivo existe (cria se não existir para evitar erros)
-if (!file_exists($detailed_orders_path)) {
-    file_put_contents($detailed_orders_path, '[]');
-}
+    // 1. Busca o pedido pelo transaction_id (correlation_id)
+    $stmt = $db->prepare("SELECT * FROM orders WHERE transaction_id = ?");
+    $stmt->execute([$correlationId]);
+    $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Abre o arquivo com trava de segurança (Lock) para evitar conflito de vendas simultâneas
-$fp = fopen($detailed_orders_path, 'c+'); 
-$found_order = null;
+    if ($order) {
 
-if (flock($fp, LOCK_EX)) { // Trava exclusiva
-    
-    // Lê o conteúdo atual
-    $filesize = filesize($detailed_orders_path);
-    $content = $filesize > 0 ? fread($fp, $filesize) : '[]';
-    $detailed_orders = json_decode($content, true);
-    
-    // --- ALTERAÇÃO 2: Busca e Atualiza o status na lista principal ---
-    // Usamos o &$order (passagem por referência) ou o índice $key para alterar o original
-    foreach ($detailed_orders as $key => $order) {
-        if (isset($order['correlationId']) && $order['correlationId'] === $correlationId) {
-            // Atualiza no ARRAY PRINCIPAL
-            $detailed_orders[$key]['status'] = 'PAID'; 
-            
-            // Salva uma cópia para enviar ao webhook
-            $found_order = $detailed_orders[$key]; 
-            break;
+        // 2. Atualiza o status se não estiver pago
+        if ($order['status'] !== 'paid' && $order['status'] !== 'completed') {
+            $updateStmt = $db->prepare("UPDATE orders SET status = 'paid', updated_at = datetime('now') WHERE id = ?");
+            $updateStmt->execute([$order['id']]);
+            $order['status'] = 'paid'; // Atualiza array local para envio
         }
-    }
 
-    // --- ALTERAÇÃO 3: Grava de volta no disco se achou o pedido ---
-    if ($found_order) {
-        ftruncate($fp, 0); // Limpa o arquivo
-        rewind($fp);       // Volta pro início
-        fwrite($fp, json_encode($detailed_orders, JSON_PRETTY_PRINT)); // Escreve tudo de novo
-        fflush($fp);       // Força a gravação
-    }
+        // 3. Prepara o payload para o N8N
+        // O campo json_data no banco contém tracking, produtos, etc.
+        $storedData = json_decode($order['json_data'], true) ?? [];
 
-    flock($fp, LOCK_UN); // Destrava
-}
-fclose($fp);
+        $payloadForN8N = [
+            'id' => $order['id'],
+            'correlation_id' => $order['transaction_id'],
+            'status' => 'paid',
+            'customer' => [
+                'name' => $order['customer_name'],
+                'email' => $order['customer_email'],
+                'phone' => $order['customer_phone'],
+                'document' => $order['customer_cpf']
+            ],
+            'amount' => (float) $order['total_amount'],
+            'updated_at' => date('Y-m-d H:i:s'),
+            'products' => $storedData['products'] ?? [],
+            'tracking' => $storedData['tracking'] ?? [],
+            'pix_data' => $storedData['pix_data'] ?? []
+        ];
 
-// Se encontrou e atualizou, segue para o envio ao n8n
-if ($found_order) {
-    $n8n_webhook_url = 'https://n8n-n8n.tutv5u.easypanel.host/webhook/pix-pago-abacatepay-envio';
+        // 4. Envia para o N8N (Webhook de Pagamento Confirmado)
+        $n8n_webhook_url = 'https://n8n-n8n.tutv5u.easypanel.host/webhook/pix-pago-abacatepay-envio';
 
-    $ch = curl_init($n8n_webhook_url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($found_order));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json',
-        'Content-Length: ' . strlen(json_encode($found_order))
-    ]);
-
-    $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($http_code >= 200 && $http_code < 300) {
-        echo json_encode([
-            'success' => true, 
-            'message' => 'Pedido atualizado para PAID e enviado ao n8n.',
-            'order' => $found_order
+        $ch = curl_init($n8n_webhook_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payloadForN8N));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen(json_encode($payloadForN8N))
         ]);
+
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($http_code >= 200 && $http_code < 300) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Pedido atualizado e enviado ao n8n.',
+                'data_sent' => $payloadForN8N
+            ]);
+        } else {
+            http_response_code(502);
+            echo json_encode(['success' => false, 'message' => 'Atualizado DB, mas erro no N8N.', 'n8n_code' => $http_code]);
+        }
+
     } else {
-        http_response_code(502); 
-        echo json_encode(['success' => false, 'message' => 'Pedido atualizado no JSON, mas erro ao enviar para n8n.', 'n8n_response_code' => $http_code]);
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Pedido não encontrado.']);
     }
 
-} else {
-    http_response_code(404);
-    echo json_encode(['success' => false, 'message' => 'Pedido não encontrado no banco de dados.']);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Erro interno: ' . $e->getMessage()]);
 }
 ?>
