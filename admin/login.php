@@ -2,8 +2,8 @@
 session_start();
 
 // Credentials
-$USER_CORRETO = 'admin';
-$PASS_CORRETO = 'admin';
+$USER_CORRETO = 'kadinho120';
+$PASS_CORRETO = 'Houshiengi22@';
 
 if (isset($_GET['logout'])) {
     session_destroy();
