@@ -657,6 +657,45 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
     </script>
+    </script>
+    
+    <!-- CUSTOM REALTIME TRACKER -->
+    <script>
+      (function() {
+        const TRACKING_URL = 'https://instaboost.com.br/realtime-stats/realtime_tracker.php';
+        let visitorId = localStorage.getItem('visitor_id');
+        if (!visitorId) {
+            visitorId = 'v' + Date.now() + Math.random().toString(16).substring(2);
+            localStorage.setItem('visitor_id', visitorId);
+        }
+
+        function track() {
+            const url = encodeURIComponent(window.location.href);
+            const ref = encodeURIComponent(document.referrer || 'direto');
+            const currentHash = encodeURIComponent(window.location.hash);
+            const endpoint = `${TRACKING_URL}?action=track&vid=${visitorId}&url=${url}&ref=${ref}&hash=${currentHash}`;
+
+            fetch(endpoint, {
+                method: 'GET',
+                mode: 'no-cors'
+            })
+            .then(response => response)
+            .catch(e => console.error('Erro ao enviar rastreamento:', e));
+        }
+
+        track();
+        setInterval(track, 15000);
+      })();
+    </script>
+
+    <!-- MICROSOFT CLARITY -->
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "szinav36s7");
+    </script>
 </body>
 
 </html>
