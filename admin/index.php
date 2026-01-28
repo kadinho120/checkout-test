@@ -56,10 +56,37 @@ require_once 'auth.php';
         <div class="flex-1 flex flex-col overflow-hidden relative">
             <header
                 class="h-16 bg-slate-900/50 backdrop-blur border-b border-slate-800 flex items-center justify-between px-6">
-                <h2 class="text-lg font-semibold text-white">Visão Geral</h2>
+                <div class="flex items-center gap-4">
+                    <h2 class="text-lg font-semibold text-white">Dashboard</h2>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="text-xs text-green-500 font-bold uppercase">Online</span>
+                    </div>
+                </div>
+
                 <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span class="text-xs text-green-500 font-bold uppercase">Sistema Online</span>
+                    <select x-model="filter" @change="fetchStats()"
+                        class="bg-slate-800 text-white text-sm border border-slate-700 rounded-lg p-2 outline-none focus:border-blue-500">
+                        <option value="today">Hoje</option>
+                        <option value="yesterday">Ontem</option>
+                        <option value="last7">Últimos 7 dias</option>
+                        <option value="last14">Últimos 14 dias</option>
+                        <option value="last30">Últimos 30 dias</option>
+                        <option value="this_month">Este Mês</option>
+                        <option value="this_year">Este Ano</option>
+                        <option value="all">Todo o Período</option>
+                        <option value="custom">Personalizado</option>
+                    </select>
+
+                    <template x-if="filter === 'custom'">
+                        <div class="flex items-center gap-2">
+                            <input type="date" x-model="startDate" @change="fetchStats()"
+                                class="bg-slate-800 text-white text-sm border border-slate-700 rounded-lg p-2 outline-none">
+                            <span class="text-slate-500">-</span>
+                            <input type="date" x-model="endDate" @change="fetchStats()"
+                                class="bg-slate-800 text-white text-sm border border-slate-700 rounded-lg p-2 outline-none">
+                        </div>
+                    </template>
                 </div>
             </header>
 
@@ -198,12 +225,42 @@ require_once 'auth.php';
                     conversion_rate: 0,
                     recent_orders: []
                 },
+                filter: 'today',
+                startDate: '',
+                endDate: '',
+                isLoading: true,
+
                 init() {
-                    fetch('../api/v1/dashboard-stats.php')
+                    const today = new Date().toISOString().split('T')[0];
+                    this.startDate = today;
+                    this.endDate = today;
+                    this.fetchStats();
+                    
+                    // Auto-refresh every 30s
+                    setInterval(() => {
+                        this.fetchStats();
+                    }, 30000);
+                },
+
+                fetchStats() {
+                    // Build Query Params
+                    let query = `?searchDate=${this.filter}`;
+                    if (this.filter === 'custom') {
+                        if(!this.startDate || !this.endDate) return; // Wait for both dates
+                        query += `&startDate=${this.startDate}&endDate=${this.endDate}`;
+                    }
+
+                    this.isLoading = true;
+                    fetch('../api/v1/dashboard-stats.php' + query)
                         .then(res => res.json())
                         .then(data => {
                             this.stats = data;
+                            this.isLoading = false;
                             this.$nextTick(() => lucide.createIcons());
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            this.isLoading = false;
                         });
                 },
                 formatCurrency(value) {
