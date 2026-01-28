@@ -1,9 +1,11 @@
 <?php
-class Database {
+class Database
+{
     private $db_file = __DIR__ . '/../database/database.sqlite';
     private $conn;
 
-    public function getConnection() {
+    public function getConnection()
+    {
         $this->conn = null;
 
         try {
@@ -30,7 +32,22 @@ class Database {
                 }
             }
 
-        } catch(PDOException $exception) {
+            // --- AUTO-MIGRATION FIX (Self-Healing) ---
+            // Fixes "no such column: updated_at" for existing installations
+            $cols = $this->conn->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasUpdatedAt = false;
+            foreach ($cols as $col) {
+                if ($col['name'] === 'updated_at') {
+                    $hasUpdatedAt = true;
+                    break;
+                }
+            }
+            if (!$hasUpdatedAt) {
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN updated_at DATETIME;");
+            }
+            // -----------------------------------------
+
+        } catch (PDOException $exception) {
             echo "Connection error: " . $exception->getMessage();
         }
 

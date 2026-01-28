@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS orders (
     payment_method TEXT,
     transaction_id TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
     json_data TEXT -- Store full payload for safety
 );
 
