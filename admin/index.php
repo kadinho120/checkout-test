@@ -39,6 +39,10 @@ require_once 'auth.php';
                     class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
                     <i data-lucide="package" class="w-5 h-5"></i> Produtos
                 </a>
+                <a href="orders.php"
+                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                    <i data-lucide="shopping-cart" class="w-5 h-5"></i> Pedidos
+                </a>
             </nav>
             <div class="p-4 border-t border-slate-800">
                 <div class="flex items-center gap-3 px-4 py-2">
@@ -235,7 +239,7 @@ require_once 'auth.php';
                     this.startDate = today;
                     this.endDate = today;
                     this.fetchStats();
-                    
+
                     // Auto-refresh every 30s
                     setInterval(() => {
                         this.fetchStats();
@@ -246,7 +250,7 @@ require_once 'auth.php';
                     // Build Query Params
                     let query = `?searchDate=${this.filter}`;
                     if (this.filter === 'custom') {
-                        if(!this.startDate || !this.endDate) return; // Wait for both dates
+                        if (!this.startDate || !this.endDate) return; // Wait for both dates
                         query += `&startDate=${this.startDate}&endDate=${this.endDate}`;
                     }
 
