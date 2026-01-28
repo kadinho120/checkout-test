@@ -111,7 +111,7 @@ require_once 'auth.php';
                                         </div>
                                     </td>
                                     <td class="p-4 text-white font-mono text-sm"
-                                        x-text="'R$ ' + parseFloat(order.amount).toFixed(2)"></td>
+                                        x-text="'R$ ' + parseFloat(order.total_amount || 0).toFixed(2)"></td>
                                     <td class="p-4 text-center">
                                         <span x-show="order.status === 'paid'"
                                             class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-1 rounded text-xs font-bold">PAGO</span>
