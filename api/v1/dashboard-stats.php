@@ -80,7 +80,21 @@ try {
     $conversionRate = $totalOrders > 0 ? ($paidOrders / $totalOrders) * 100 : 0;
 
     // 5. Recent Orders (Last 5)
-    $stmt = $db->prepare("SELECT id, customer_name, total_amount, status, created_at FROM orders $whereClause ORDER BY created_at DESC LIMIT 5");
+    // 5. Recent Orders (Last 5)
+    $stmt = $db->prepare("
+        SELECT 
+            o.id, 
+            o.customer_name, 
+            o.total_amount, 
+            o.status, 
+            o.created_at,
+            p.name as product_name
+        FROM orders o
+        LEFT JOIN products p ON o.product_id = p.id
+        $whereClause 
+        ORDER BY o.created_at DESC 
+        LIMIT 5
+    ");
     $stmt->execute($params);
     $recentOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
