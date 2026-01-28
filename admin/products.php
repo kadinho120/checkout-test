@@ -46,6 +46,10 @@ require_once 'auth.php';
                     class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
                     <i data-lucide="shopping-cart" class="w-5 h-5"></i> Pedidos
                 </a>
+                <a href="tracking.php"
+                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                    <i data-lucide="scan-line" class="w-5 h-5"></i> Rastreamento
+                </a>
             </nav>
 
             <div class="p-4 border-t border-slate-800">
