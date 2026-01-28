@@ -306,8 +306,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 <!-- SUMMARY & BUTTON -->
                 <div class="border-t border-slate-800 pt-6">
                     <div class="flex justify-between items-end mb-4">
-                        <span class="text-slate-400 text-sm">Total a pagar:</span>
-                        <span id="checkout-price-display" class="text-2xl font-black text-white">R$
+                        <span class="text-gray-600 dark:text-slate-400 text-sm">Total a pagar:</span>
+                        <span id="checkout-price-display" class="text-2xl font-black text-gray-900 dark:text-white">R$
                             <?= number_format($product['price'], 2, ',', '.') ?></span>
                     </div>
 
