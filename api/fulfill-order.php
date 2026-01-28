@@ -53,6 +53,7 @@ try {
             'updated_at' => date('Y-m-d H:i:s'),
             'products' => $storedData['products'] ?? [],
             'tracking' => $storedData['tracking'] ?? [],
+            'fbclid' => $storedData['tracking']['fbclid'] ?? null, // <--- STANDALONE FBCLID
             'pix_data' => $storedData['pix_data'] ?? []
         ];
 

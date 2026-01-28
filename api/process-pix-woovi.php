@@ -237,6 +237,7 @@ function handle_woovi_pix_payment()
             ],
             'products' => $params['products'] ?? [],
             'tracking' => $params['tracking'] ?? [], // UTMs, FBC, FBP, User Agent
+            'fbclid' => $params['tracking']['fbclid'] ?? null, // <--- STANDALONE FBCLID (Requested)
             'pix_data' => $pix_data // QRCode, BRCode, Preço Formatado
         ];
 

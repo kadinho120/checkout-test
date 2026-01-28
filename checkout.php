@@ -482,6 +482,18 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
             const fbp = getCookie('_fbp');
             const fbc = getCookie('_fbc');
+
+            // Extract standalone fbclid
+            let fbclid = trackingParams.fbclid || '';
+            if (!fbclid && fbc) {
+                // fbc format: "fb.1.{timestamp}.{fbclid}" or "fb.2..."
+                const parts = fbc.split('.');
+                if (parts.length >= 4) {
+                    fbclid = parts.slice(3).join('.');
+                }
+            }
+            if (fbclid) trackingParams.fbclid = fbclid;
+
             if (fbp) trackingParams.fbp = fbp;
             if (fbc) trackingParams.fbc = fbc;
             trackingParams.user_agent = navigator.userAgent;
