@@ -193,7 +193,7 @@ function handle_woovi_pix_payment()
         $database = new Database();
         $db = $database->getConnection();
 
-        $stmt = $db->prepare("INSERT INTO orders (product_id, customer_name, customer_email, customer_phone, customer_cpf, total_amount, status, payment_method, transaction_id, json_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))");
+        $stmt = $db->prepare("INSERT INTO orders (product_id, customer_name, customer_email, customer_phone, customer_cpf, total_amount, status, payment_method, transaction_id, json_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-03:00'))");
 
         $json_data_store = json_encode([
             'correlation_id' => $correlationID,
