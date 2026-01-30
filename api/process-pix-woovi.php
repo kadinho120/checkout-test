@@ -254,6 +254,23 @@ function handle_woovi_pix_payment()
         $hook_response = curl_exec($ch);
         curl_close($ch);
 
+        // --- UTMIFY TRACKING HOOK ---
+        require_once __DIR__ . '/utmify-helper.php';
+
+        // Prepare data for helper
+        // Ideally we pass the exact structure expected
+        $utmifyOrderData = [
+            'correlation_id' => $correlationID,
+            'value' => $params['value'],
+            'status' => 'pending',
+            'customer' => $params['customer'], // ensure phone/email keys match
+            'products' => $params['products'] ?? [],
+            'tracking' => $params['tracking'] ?? []
+        ];
+
+        sendUtmifyEvent($utmifyOrderData, 'pending');
+        // ----------------------------
+
     } catch (Exception $e) {
         error_log('Erro interno ao salvar pedido SQLite: ' . $e->getMessage());
     }

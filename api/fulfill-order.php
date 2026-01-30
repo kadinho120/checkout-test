@@ -73,7 +73,29 @@ try {
 
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        // --- UTMIFY PAID HOOK ---
+        require_once __DIR__ . '/utmify-helper.php';
+
+        $utmifyOrderData = [
+            'correlation_id' => $order['transaction_id'],
+            'value' => (int) ($order['total_amount'] * 100), // Convert back to cents for helper
+            'status' => 'paid',
+            'customer' => [
+                'name' => $order['customer_name'],
+                'email' => $order['customer_email'],
+                'phone' => $order['customer_phone'],
+                'document' => $order['customer_cpf']
+            ],
+            'products' => $storedData['products'] ?? [],
+            'tracking' => $storedData['tracking'] ?? []
+        ];
+
+        sendUtmifyEvent($utmifyOrderData, 'paid');
+        // ------------------------
 
         if ($http_code >= 200 && $http_code < 300) {
             echo json_encode([
