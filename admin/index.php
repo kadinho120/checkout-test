@@ -115,6 +115,10 @@ require_once 'auth.php';
                                 </p>
                                 <h3 class="text-2xl font-bold text-white mt-1" x-text="formatCurrency(stats.revenue)">R$
                                     0,00</h3>
+                                <p class="text-xs text-green-400 mt-1 font-medium flex items-center gap-1">
+                                    <i data-lucide="check-circle" class="w-3 h-3"></i>
+                                    <span x-text="stats.paid_orders + ' Venda(s) Aprovada(s)'">0 Vendas</span>
+                                </p>
                             </div>
                             <div class="p-2 bg-slate-800 rounded-lg text-green-500"><i data-lucide="dollar-sign"
                                     class="w-5 h-5"></i></div>

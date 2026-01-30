@@ -13,6 +13,9 @@ try {
     $customStart = $_GET['startDate'] ?? null;
     $customEnd = $_GET['endDate'] ?? null;
 
+    // Fix Timezone for PHP logic
+    date_default_timezone_set('America/Sao_Paulo');
+
     $whereClause = "WHERE 1=1";
     $params = [];
 
@@ -27,26 +30,27 @@ try {
 
         switch ($searchDate) {
             case 'today':
+                // Compare explicitly with today's date in PHP (which is now Sao Paulo)
                 $whereClause .= " AND date(created_at) = :today";
                 $params[':today'] = $today;
                 break;
             case 'yesterday':
-                $whereClause .= " AND date(created_at) = date('now', '-1 day')";
+                $whereClause .= " AND date(created_at) = date('now', '-03:00', '-1 day')";
                 break;
             case 'last7':
-                $whereClause .= " AND created_at >= date('now', '-7 days')";
+                $whereClause .= " AND created_at >= date('now', '-03:00', '-7 days')";
                 break;
             case 'last14':
-                $whereClause .= " AND created_at >= date('now', '-14 days')";
+                $whereClause .= " AND created_at >= date('now', '-03:00', '-14 days')";
                 break;
             case 'last30':
-                $whereClause .= " AND created_at >= date('now', '-30 days')";
+                $whereClause .= " AND created_at >= date('now', '-03:00', '-30 days')";
                 break;
             case 'this_month':
-                $whereClause .= " AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')";
+                $whereClause .= " AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now', '-03:00')";
                 break;
             case 'this_year':
-                $whereClause .= " AND strftime('%Y', created_at) = strftime('%Y', 'now')";
+                $whereClause .= " AND strftime('%Y', created_at) = strftime('%Y', 'now', '-03:00')";
                 break;
             default:
                 // 'all' or fallback -> No filter
