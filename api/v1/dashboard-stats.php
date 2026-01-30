@@ -122,9 +122,30 @@ try {
     });
 
     // 6. Recent Orders (Last 5)
-    $stmt = $db->prepare("SELECT id, customer_name, total_amount, status, created_at FROM orders $whereClause ORDER BY created_at DESC LIMIT 5");
+    // 6. Recent Orders (Last 5)
+    $stmt = $db->prepare("SELECT id, customer_name, total_amount, status, created_at, json_data FROM orders $whereClause ORDER BY created_at DESC LIMIT 5");
     $stmt->execute($params);
-    $recentOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $recentOrdersRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $recentOrders = [];
+    foreach ($recentOrdersRaw as $order) {
+        $data = json_decode($order['json_data'], true);
+        $productName = 'Produto desconhecido';
+
+        if (isset($data['products']) && is_array($data['products']) && count($data['products']) > 0) {
+            $names = array_column($data['products'], 'name');
+            $productName = $names[0] . (count($names) > 1 ? ' + ' . (count($names) - 1) . ' item(s)' : '');
+        }
+
+        $recentOrders[] = [
+            'id' => $order['id'],
+            'customer_name' => $order['customer_name'],
+            'total_amount' => $order['total_amount'],
+            'status' => $order['status'],
+            'created_at' => $order['created_at'],
+            'product_name' => $productName
+        ];
+    }
 
     echo json_encode([
         'revenue' => (float) $revenue,

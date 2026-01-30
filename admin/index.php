@@ -251,8 +251,10 @@ require_once 'auth.php';
                                         <div>
                                             <p class="text-sm font-bold text-white line-clamp-1"
                                                 x-text="order.customer_name"></p>
-                                            <p class="text-xs text-slate-500"
-                                                x-text="new Date(order.created_at).toLocaleDateString()"></p>
+                                            <p class="text-xs text-slate-400" x-text="order.product_name"></p>
+                                            <p class="text-[10px] text-slate-500 mt-0.5"
+                                                x-text="new Date(order.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })">
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="text-right">
@@ -261,14 +263,15 @@ require_once 'auth.php';
                                         <span :class="{
                                             'bg-green-500/10 text-green-400 border-green-500/20': ['paid', 'completed'].includes(order.status.toLowerCase()),
                                             'bg-yellow-500/10 text-yellow-500 border-yellow-500/20': ['pending'].includes(order.status.toLowerCase()),
-                                            'bg-red-500/10 text-red-500 border-red-500/20': ['failed', 'canceled'].includes(order.status.toLowerCase())
-                                </tr>
+                                        }" class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase inline-block mt-1"
+                                            x-text="order.status === 'paid' ? 'PAGO' : (order.status === 'pending' ? 'PENDENTE' : order.status)">
+                                        </span>
+                                    </div>
+                                </div>
                             </template>
                             <template x-if=" stats.recent_orders.length===0">
-                                            <tr>
-                                                <td colspan="4" class="p-8 text-center text-slate-500">Nenhum pedido
-                                                    ainda.</td>
-                                            </tr>
+                                ainda.</td>
+                                </tr>
                             </template>
                             </tbody>
                             </table>
