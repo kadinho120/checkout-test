@@ -198,48 +198,81 @@ require_once 'auth.php';
 
                 </div>
 
-                <!-- Recent Orders Table -->
-                <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
-                    <div class="p-6 border-b border-slate-800 flex justify-between items-center">
-                        <h3 class="font-bold text-white">Pedidos Recentes</h3>
+                <!-- SALES BY PRODUCT & RECENT ORDERS GRID -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    <!-- Sales By Product -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg h-fit">
+                        <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                            <h3 class="font-bold text-white">Desempenho por Produto</h3>
+                        </div>
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs text-slate-400 border-b border-slate-800 bg-slate-900/50">
+                                    <th class="p-4 uppercase font-medium">Produto</th>
+                                    <th class="p-4 uppercase font-medium text-center">Qtd.</th>
+                                    <th class="p-4 uppercase font-medium text-right">Faturamento</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800">
+                                <template x-for="item in stats.sales_by_product" :key="item.name">
+                                    <tr class="hover:bg-slate-800/50 transition">
+                                        <td class="p-4 text-sm text-slate-300 font-medium" x-text="item.name"></td>
+                                        <td class="p-4 text-sm text-slate-400 text-center font-mono" x-text="item.qty">
+                                        </td>
+                                        <td class="p-4 text-sm text-green-400 text-right font-mono font-bold"
+                                            x-text="formatCurrency(item.revenue)"></td>
+                                    </tr>
+                                </template>
+                                <template x-if="!stats.sales_by_product || stats.sales_by_product.length === 0">
+                                    <tr>
+                                        <td colspan="3" class="p-8 text-center text-slate-500 text-sm">
+                                            Nenhum dado de venda disponível.
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
                     </div>
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-xs text-slate-400 border-b border-slate-800 bg-slate-900/50">
-                                <th class="p-4 uppercase font-medium">Cliente</th>
-                                <th class="p-4 uppercase font-medium">Valor</th>
-                                <th class="p-4 uppercase font-medium">Status</th>
-                                <th class="p-4 uppercase font-medium text-right">Data</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-800">
+
+                    <!-- Recent Orders -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg h-fit">
+                        <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                            <h3 class="font-bold text-white">Pedidos Recentes</h3>
+                            <a href="orders.php" class="text-xs text-blue-400 hover:text-blue-300 transition">Ver
+                                Todos</a>
+                        </div>
+                        <div class="divide-y divide-slate-800">
                             <template x-for="order in stats.recent_orders" :key="order.id">
-                                <tr class="hover:bg-slate-800/50 transition">
-                                    <td class="p-4 text-white text-sm" x-text="order.customer_name || 'Desconhecido'">
-                                    </td>
-                                    <td class="p-4 text-white font-mono text-sm"
-                                        x-text="formatCurrency(order.total_amount)"></td>
-                                    <td class="p-4">
+                                <div class="p-4 flex items-center justify-between hover:bg-slate-800/50 transition">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs"
+                                            x-text="'#'+order.id"></div>
+                                        <div>
+                                            <p class="text-sm font-bold text-white line-clamp-1"
+                                                x-text="order.customer_name"></p>
+                                            <p class="text-xs text-slate-500"
+                                                x-text="new Date(order.created_at).toLocaleDateString()"></p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-bold text-white text-green-400"
+                                            x-text="formatCurrency(order.total_amount)"></p>
                                         <span :class="{
                                             'bg-green-500/10 text-green-400 border-green-500/20': ['paid', 'completed'].includes(order.status.toLowerCase()),
                                             'bg-yellow-500/10 text-yellow-500 border-yellow-500/20': ['pending'].includes(order.status.toLowerCase()),
                                             'bg-red-500/10 text-red-500 border-red-500/20': ['failed', 'canceled'].includes(order.status.toLowerCase())
-                                        }" class="px-2 py-1 rounded text-xs font-bold border uppercase"
-                                            x-text="order.status">
-                                        </span>
-                                    </td>
-                                    <td class="p-4 text-right text-slate-500 text-xs"
-                                        x-text="formatDate(order.created_at)"></td>
                                 </tr>
                             </template>
-                            <template x-if="stats.recent_orders.length === 0">
-                                <tr>
-                                    <td colspan="4" class="p-8 text-center text-slate-500">Nenhum pedido ainda.</td>
-                                </tr>
+                            <template x-if=" stats.recent_orders.length===0">
+                                            <tr>
+                                                <td colspan="4" class="p-8 text-center text-slate-500">Nenhum pedido
+                                                    ainda.</td>
+                                            </tr>
                             </template>
-                        </tbody>
-                    </table>
-                </div>
+                            </tbody>
+                            </table>
+                        </div>
 
             </main>
         </div>

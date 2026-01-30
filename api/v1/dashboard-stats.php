@@ -83,7 +83,45 @@ try {
     // 4. Conversion Rate
     $conversionRate = $totalOrders > 0 ? ($paidOrders / $totalOrders) * 100 : 0;
 
-    // 5. Recent Orders (Last 5)
+    // 5. Sales by Product (Aggregation)
+    // Fetch all paid/completed orders in range to aggregate products from JSON
+    $stmt = $db->prepare("SELECT json_data FROM orders $whereClause AND status IN ('paid', 'completed', 'PAID', 'COMPLETED')");
+    $stmt->execute($params);
+    $ordersData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $productSales = [];
+
+    foreach ($ordersData as $orderRow) {
+        $data = json_decode($orderRow['json_data'], true);
+        if (isset($data['products']) && is_array($data['products'])) {
+            foreach ($data['products'] as $item) {
+                // Determine a key (SKU or Name)
+                $key = $item['sku'] ?? $item['name'] ?? 'Unknown';
+                $name = $item['name'] ?? 'Unknown Product';
+                $price = (float) ($item['price'] ?? 0);
+                $qty = (int) ($item['qty'] ?? 1);
+
+                if (!isset($productSales[$key])) {
+                    $productSales[$key] = [
+                        'name' => $name,
+                        'qty' => 0,
+                        'revenue' => 0
+                    ];
+                }
+
+                $productSales[$key]['qty'] += $qty;
+                $productSales[$key]['revenue'] += ($price * $qty);
+            }
+        }
+    }
+
+    // Convert to indexed array and sort by revenue desc
+    $salesByProduct = array_values($productSales);
+    usort($salesByProduct, function ($a, $b) {
+        return $b['revenue'] <=> $a['revenue'];
+    });
+
+    // 6. Recent Orders (Last 5)
     $stmt = $db->prepare("SELECT id, customer_name, total_amount, status, created_at FROM orders $whereClause ORDER BY created_at DESC LIMIT 5");
     $stmt->execute($params);
     $recentOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -95,6 +133,7 @@ try {
         'pending_orders' => (int) $pendingOrders,
         'pending_revenue' => (float) $pendingRevenue,
         'conversion_rate' => round($conversionRate, 2),
+        'sales_by_product' => $salesByProduct,
         'recent_orders' => $recentOrders
     ]);
 
