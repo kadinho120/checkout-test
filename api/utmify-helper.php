@@ -83,7 +83,9 @@ function sendUtmifyEvent($orderData, $eventType)
             'utm_campaign' => $tracking['utm_campaign'] ?? null,
             'utm_medium' => $tracking['utm_medium'] ?? null,
             'utm_content' => $tracking['utm_content'] ?? null,
-            'utm_term' => $tracking['utm_term'] ?? null
+            'utm_content' => $tracking['utm_content'] ?? null,
+            'utm_term' => $tracking['utm_term'] ?? null,
+            'fbclid' => $tracking['fbclid'] ?? null // Added explicitly per request
         ],
         'commission' => [
             'totalPriceInCents' => $totalCents,
