@@ -226,20 +226,24 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                             class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
                             required>
                     </div>
-                    <div>
-                        <label
-                            class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">E-MAIL</label>
-                        <input type="email" id="email" placeholder="Digite seu melhor @email..."
-                            class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
-                            required>
-                    </div>
-                    <div>
-                        <label
-                            class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">WHATSAPP</label>
-                        <input type="tel" id="whatsapp" placeholder="(00) 00000-0000"
-                            class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
-                            required>
-                    </div>
+                    <?php if ($product['request_email'] !== 0): ?>
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">E-MAIL</label>
+                            <input type="email" id="email" placeholder="Digite seu melhor @email..."
+                                class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
+                                required>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($product['request_phone'] !== 0): ?>
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">WHATSAPP</label>
+                            <input type="tel" id="whatsapp" placeholder="(00) 00000-0000"
+                                class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
+                                required>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <h2 class="font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
@@ -388,7 +392,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         };
 
         ['name', 'email', 'whatsapp'].forEach(id => {
-            document.getElementById(id).addEventListener('input', trackAddPaymentInfo);
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', trackAddPaymentInfo);
         });
 
         window.calculateCurrentTotal = () => {
@@ -413,6 +418,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             // 1. Basic Empty Check
             ['name', 'email', 'whatsapp'].forEach(id => {
                 const input = document.getElementById(id);
+                if (!input) return; // Skip if optional/hidden
+
                 input.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
                 if (!input.value.trim()) {
                     input.classList.add('border-red-500', 'ring-1', 'ring-red-500');
@@ -423,7 +430,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             // 2. Strict Email Validation
             const emailInput = document.getElementById('email');
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (emailInput.value.trim() && !emailRegex.test(emailInput.value.trim())) {
+            if (emailInput && emailInput.value.trim() && !emailRegex.test(emailInput.value.trim())) {
                 emailInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
                 isValid = false;
                 errorMessage = 'Por favor, insira um e-mail válido.';
@@ -437,14 +444,17 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         };
 
         // Phone Mask
-        document.getElementById('whatsapp').addEventListener('input', (e) => {
-            let v = e.target.value.replace(/\D/g, '');
-            v = v.substring(0, 11);
-            if (v.length > 2) v = '(' + v.substring(0, 2) + ') ' + v.substring(2);
-            if (v.length > 9) v = v.replace(/(\d{5})(\d)/, '$1-$2');
-            else if (v.length > 8) v = v.replace(/(\d{4})(\d)/, '$1-$2');
-            e.target.value = v;
-        });
+        const whatsappInput = document.getElementById('whatsapp');
+        if (whatsappInput) {
+            whatsappInput.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                v = v.substring(0, 11);
+                if (v.length > 2) v = '(' + v.substring(0, 2) + ') ' + v.substring(2);
+                if (v.length > 9) v = v.replace(/(\d{5})(\d)/, '$1-$2');
+                else if (v.length > 8) v = v.replace(/(\d{4})(\d)/, '$1-$2');
+                e.target.value = v;
+            });
+        }
 
         // Submit Handler
         form.addEventListener('submit', async (e) => {
@@ -457,8 +467,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
             const customerData = {
                 name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('whatsapp').value,
+                email: document.getElementById('email') ? document.getElementById('email').value : '',
+                phone: document.getElementById('whatsapp') ? document.getElementById('whatsapp').value : '',
                 document: ''
             };
 

@@ -45,6 +45,23 @@ class Database
             if (!$hasUpdatedAt) {
                 $this->conn->exec("ALTER TABLE orders ADD COLUMN updated_at DATETIME;");
             }
+
+            // Check for request_email and request_phone in products
+            $pCols = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasReqEmail = false;
+            $hasReqPhone = false;
+            foreach ($pCols as $col) {
+                if ($col['name'] === 'request_email')
+                    $hasReqEmail = true;
+                if ($col['name'] === 'request_phone')
+                    $hasReqPhone = true;
+            }
+            if (!$hasReqEmail) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN request_email INTEGER DEFAULT 1;");
+            }
+            if (!$hasReqPhone) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN request_phone INTEGER DEFAULT 1;");
+            }
             // -----------------------------------------
 
         } catch (PDOException $exception) {

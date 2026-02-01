@@ -209,6 +209,19 @@ require_once 'auth.php';
                                     <option value="light">Claro (Light Mode)</option>
                                 </select>
                             </div>
+                            <div class="space-y-2 pt-2">
+                                <label class="block text-sm font-medium text-slate-400">Campos do Checkout</label>
+                                <div class="flex items-center gap-2">
+                                    <input x-model="form.request_email" type="checkbox" id="req_email"
+                                        class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500">
+                                    <label for="req_email" class="text-slate-300 text-sm">Solicitar E-mail</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input x-model="form.request_phone" type="checkbox" id="req_phone"
+                                        class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500">
+                                    <label for="req_phone" class="text-slate-300 text-sm">Solicitar WhatsApp</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -373,9 +386,15 @@ require_once 'auth.php';
                                     image_url: data.image_url,
                                     active: data.active == 1,
                                     theme: data.theme || 'dark',
+                                    request_email: data.request_email == 1, // Default true if undefined but usually comes from DB
+                                    request_phone: data.request_phone == 1,
                                     bumps: data.bumps || [],
                                     pixels: data.pixels || []
                                 };
+                                // Fallback for legacy records (null/undefined => true)
+                                if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
+                                if (data.request_phone === undefined || data.request_phone === null) this.form.request_phone = true;
+
                                 this.isModalOpen = true;
                                 this.$nextTick(() => lucide.createIcons());
                             });
@@ -391,6 +410,8 @@ require_once 'auth.php';
                             image_url: '',
                             active: true,
                             theme: 'dark',
+                            request_email: true,
+                            request_phone: true,
                             bumps: [],
                             pixels: []
                         };

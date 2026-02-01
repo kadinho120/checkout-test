@@ -116,12 +116,13 @@ function handle_woovi_pix_payment()
     $api_key = WOOVI_APP_ID;
     $correlationID = $params['correlation_id'];
 
-    // Formatação de telefone (Envia o número real do cliente)
-    $clean_phone = preg_replace('/[^0-9]/', '', $params['customer']['phone']);
+    // Tratamento de Telefone
+    $raw_phone = $params['customer']['phone'] ?? '';
+    $clean_phone = preg_replace('/[^0-9]/', '', $raw_phone);
 
     // Verifica se o número tem conteúdo, senão usa um fallback ou gera erro
     if (empty($clean_phone)) {
-        // Se por algum motivo chegar vazio, aí sim usamos o gerador para não quebrar a API
+        // Se por algum motivo chegar vazio (opcional no checkout), geramos um
         $whatsapp_formatted = generate_random_phone();
     } else {
         // Se o número não começar com 55 (DDI Brasil), adiciona
@@ -130,6 +131,15 @@ function handle_woovi_pix_payment()
         } else {
             $whatsapp_formatted = $clean_phone;
         }
+    }
+
+    // Tratamento de Email (Opcional)
+    $customer_email = $params['customer']['email'] ?? '';
+    if (empty($customer_email)) {
+        // Gerar email dummy para não quebrar gateways que exigem
+        $customer_email = 'cliente_' . $correlationID . '@naoinformado.com';
+        // Atualiza params para reflexão no salvamento
+        $params['customer']['email'] = $customer_email;
     }
 
     // --- LÓGICA DE PRODUTOS (Para uso interno) ---
@@ -149,7 +159,7 @@ function handle_woovi_pix_payment()
         // 'comment'    => $product_description, // Removido para não aparecer no Pix
         'customer' => [
             'name' => $params['customer']['name'],
-            'email' => $params['customer']['email'],
+            'email' => $customer_email,
             'phone' => $whatsapp_formatted,
             'taxID' => generate_valid_cpf() // <--- GERA UM CPF ALEATÓRIO E VÁLIDO A CADA PEDIDO
         ]
@@ -232,7 +242,7 @@ function handle_woovi_pix_payment()
             'created_at' => date('Y-m-d H:i:s'),
             'customer' => [
                 'name' => $params['customer']['name'],
-                'email' => $params['customer']['email'],
+                'email' => $customer_email,
                 'phone' => $whatsapp_formatted, // Telefone tratado
                 'document' => $params['customer']['document'] ?? '' // Se houver
             ],
