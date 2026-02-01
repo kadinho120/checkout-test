@@ -73,8 +73,8 @@ switch ($method) {
                     $data->image_url ?? '',
                     $data->active ?? 1,
                     $data->theme ?? 'dark',
-                    $data->request_email ?? 1,
-                    $data->request_phone ?? 1,
+                    isset($data->request_email) ? ($data->request_email ? 1 : 0) : 1,
+                    isset($data->request_phone) ? ($data->request_phone ? 1 : 0) : 1,
                     $data->id
                 ]);
                 $productId = $data->id;
@@ -90,8 +90,8 @@ switch ($method) {
                     $data->image_url ?? '',
                     $data->active ?? 1,
                     $data->theme ?? 'dark',
-                    $data->request_email ?? 1,
-                    $data->request_phone ?? 1
+                    isset($data->request_email) ? ($data->request_email ? 1 : 0) : 1,
+                    isset($data->request_phone) ? ($data->request_phone ? 1 : 0) : 1
                 ]);
                 $productId = $db->lastInsertId();
             }

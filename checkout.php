@@ -226,7 +226,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                             class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
                             required>
                     </div>
-                    <?php if ($product['request_email'] !== 0): ?>
+                    <?php if ((int) $product['request_email'] !== 0): ?>
                         <div>
                             <label
                                 class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">E-MAIL</label>
@@ -235,7 +235,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                                 required>
                         </div>
                     <?php endif; ?>
-                    <?php if ($product['request_phone'] !== 0): ?>
+                    <?php if ((int) $product['request_phone'] !== 0): ?>
                         <div>
                             <label
                                 class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">WHATSAPP</label>
