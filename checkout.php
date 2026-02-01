@@ -197,8 +197,20 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="mt-6 space-y-2 text-xs text-slate-500">
                     <div class="flex items-center gap-2"><i data-lucide="check-circle"
                             class="w-4 h-4 text-green-500"></i> Garantia de 7 Dias</div>
+                    <?php
+                    $reqEmail = (int)$product['request_email'] !== 0;
+                    $reqPhone = (int)$product['request_phone'] !== 0;
+                    $accessText = "Acesso Imediato";
+                    if ($reqEmail && $reqPhone) {
+                        $accessText .= " por E-mail e WhatsApp";
+                    } elseif ($reqEmail) {
+                        $accessText .= " por E-mail";
+                    } elseif ($reqPhone) {
+                        $accessText .= " por WhatsApp";
+                    }
+                    ?>
                     <div class="flex items-center gap-2"><i data-lucide="check-circle"
-                            class="w-4 h-4 text-green-500"></i> Acesso Imediato por E-mail e WhatsApp</div>
+                            class="w-4 h-4 text-green-500"></i> <?= $accessText ?></div>
                 </div>
             </div>
         </div>
