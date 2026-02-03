@@ -29,6 +29,7 @@ switch ($method) {
                 $bumpStmt = $db->prepare("SELECT * FROM order_bumps WHERE product_id = ?");
                 $bumpStmt->execute([$_GET['id']]);
                 $product['bumps'] = $bumpStmt->fetchAll();
+                $product['debug_bumps_count'] = count($product['bumps']);
 
                 // Fetch Pixels
                 $pixelStmt = $db->prepare("SELECT * FROM pixels WHERE product_id = ?");
@@ -108,6 +109,7 @@ switch ($method) {
             }
 
             // Handle Bumps (Full replace for simplicity)
+            $bumpsProcessed = 0;
             if (isset($data->bumps) && is_array($data->bumps)) {
                 $db->prepare("DELETE FROM order_bumps WHERE product_id = ?")->execute([$productId]);
                 $bumpStmt = $db->prepare("INSERT INTO order_bumps (product_id, title, description, price, image_url, active, deliverable_type, deliverable_text, deliverable_file) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -123,6 +125,7 @@ switch ($method) {
                         $bump->deliverable_text ?? '',
                         $bump->deliverable_file ?? ''
                     ]);
+                    $bumpsProcessed++;
                 }
             }
 
@@ -142,7 +145,12 @@ switch ($method) {
             }
 
             $db->commit();
-            echo json_encode(["message" => "Product saved.", "id" => $productId]);
+            echo json_encode([
+                "message" => "Product saved.",
+                "id" => $productId,
+                "debug_bumps_received" => isset($data->bumps) ? count($data->bumps) : 0,
+                "debug_bumps_processed" => $bumpsProcessed
+            ]);
 
         } catch (Exception $e) {
             $db->rollBack();

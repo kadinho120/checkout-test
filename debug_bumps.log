@@ -1,0 +1,17 @@
+Processing bumps: 1
+Array
+(
+    [0] => stdClass Object
+        (
+            [title] => Bump Teste
+            [description] => Desc
+            [price] => 5.00
+            [image_url] => 
+            [active] => 1
+            [deliverable_type] => text
+            [deliverable_text] => 
+            [deliverable_file] => 
+        )
+
+)
+
