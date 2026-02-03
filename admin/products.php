@@ -270,6 +270,14 @@ require_once 'auth.php';
                                 <textarea x-model="form.deliverable_text" rows="2"
                                     placeholder="Sua mensagem de confirmação..."
                                     class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white resize-none focus:border-green-500 outline-none"></textarea>
+                                <div class="flex gap-2 mt-2 flex-wrap">
+                                    <template
+                                        x-for="tag in ['{primeiro_nome}', '{nome_completo}', '{email}', '{telefone}', '{pix_copia_cola}']">
+                                        <span @click="copyToClipboard(tag)"
+                                            class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none"
+                                            x-text="tag" title="Clique para copiar"></span>
+                                    </template>
+                                </div>
                             </div>
                             <div x-show="form.deliverable_type !== 'text'">
                                 <label class="block text-sm font-medium text-slate-400 mb-1">URL do Arquivo</label>
