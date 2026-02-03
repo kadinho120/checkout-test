@@ -73,6 +73,22 @@ class Database
             if (!$hasToken) {
                 $this->conn->exec("ALTER TABLE pixels ADD COLUMN token TEXT;");
             }
+
+            // Check for Evolution API columns in products
+            $prodCols = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasEvoInstance = false;
+            foreach ($prodCols as $col) {
+                if ($col['name'] === 'evolution_instance')
+                    $hasEvoInstance = true;
+            }
+            if (!$hasEvoInstance) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN evolution_instance TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN evolution_token TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN evolution_url TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN deliverable_type TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN deliverable_text TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN deliverable_file TEXT;");
+            }
             // -----------------------------------------
 
         } catch (PDOException $exception) {

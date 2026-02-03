@@ -156,6 +156,44 @@ try {
             );
         }
         // -------------------------------
+
+        // --- EVOLUTION API DELIVERABLE HOOK ---
+        require_once __DIR__ . '/evolution-helper.php';
+
+        try {
+            $customerPhone = $order['customer_phone'];
+
+            // Iterate products to find deliverables
+            if (!empty($storedData['products'])) {
+                foreach ($storedData['products'] as $prodItem) {
+                    // Fetch fresh config from DB
+                    if (isset($prodItem['id'])) {
+
+                        // Using a new DB instance or statement to be safe
+                        $stmtProd = $db->prepare("SELECT evolution_instance, evolution_token, evolution_url, deliverable_type, deliverable_text, deliverable_file FROM products WHERE id = ?");
+                        $stmtProd->execute([$prodItem['id']]);
+                        $prodConfig = $stmtProd->fetch(PDO::FETCH_ASSOC);
+
+                        if ($prodConfig && !empty($prodConfig['evolution_url']) && !empty($prodConfig['evolution_instance'])) {
+
+                            // Send Message
+                            $evoResult = sendEvolutionMessage(
+                                $prodConfig['evolution_instance'],
+                                $prodConfig['evolution_token'],
+                                $prodConfig['evolution_url'],
+                                $customerPhone,
+                                $prodConfig['deliverable_type'],
+                                $prodConfig['deliverable_text'],
+                                $prodConfig['deliverable_file']
+                            );
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) { /* Silent fail for Deliverable */
+        }
+        // --------------------------------------
+
         // ------------------------
 
         if ($http_code >= 200 && $http_code < 300) {

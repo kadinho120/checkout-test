@@ -231,6 +231,57 @@ require_once 'auth.php';
 
                     <hr class="border-slate-800">
 
+                    <!-- Evolution API / Deliverables -->
+                    <div>
+                        <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i data-lucide="message-circle" class="text-green-500 w-5 h-5"></i>
+                            Entrega Automática (WhatsApp)
+                        </h4>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">API URL</label>
+                                <input type="text" x-model="form.evolution_url" placeholder="https://api.evolution..."
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-green-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Instance Name</label>
+                                <input type="text" x-model="form.evolution_instance" placeholder="Nome da Instância"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-green-500 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-slate-400 mb-1">API Token</label>
+                            <input type="password" x-model="form.evolution_token" placeholder="Token de Acesso"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-green-500 outline-none">
+                        </div>
+
+                        <div class="bg-slate-950/50 p-4 rounded-lg border border-slate-800 space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Tipo de Entrega</label>
+                                <select x-model="form.deliverable_type"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-green-500 outline-none">
+                                    <option value="text">Apenas Texto</option>
+                                    <option value="pdf">Texto + Arquivo (PDF/Imagem)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Mensagem</label>
+                                <textarea x-model="form.deliverable_text" rows="2"
+                                    placeholder="Sua mensagem de confirmação..."
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white resize-none focus:border-green-500 outline-none"></textarea>
+                            </div>
+                            <div x-show="form.deliverable_type !== 'text'">
+                                <label class="block text-sm font-medium text-slate-400 mb-1">URL do Arquivo</label>
+                                <input type="text" x-model="form.deliverable_file" placeholder="https://..."
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-green-500 outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-800">
+
                     <!-- Order Bumps -->
                     <div>
                         <div class="flex justify-between items-center mb-4">
@@ -351,6 +402,14 @@ require_once 'auth.php';
                     image_url: '',
                     active: true,
                     theme: 'dark',
+                    request_email: true,
+                    request_phone: true,
+                    evolution_instance: '',
+                    evolution_token: '',
+                    evolution_url: '',
+                    deliverable_type: 'text',
+                    deliverable_text: '',
+                    deliverable_file: '',
                     bumps: [],
                     pixels: []
                 },
@@ -390,8 +449,14 @@ require_once 'auth.php';
                                     image_url: data.image_url,
                                     active: data.active == 1,
                                     theme: data.theme || 'dark',
-                                    request_email: data.request_email == 1, // Default true if undefined but usually comes from DB
+                                    request_email: data.request_email == 1,
                                     request_phone: data.request_phone == 1,
+                                    evolution_instance: data.evolution_instance || '',
+                                    evolution_token: data.evolution_token || '',
+                                    evolution_url: data.evolution_url || '',
+                                    deliverable_type: data.deliverable_type || 'text',
+                                    deliverable_text: data.deliverable_text || '',
+                                    deliverable_file: data.deliverable_file || '',
                                     bumps: data.bumps || [],
                                     pixels: data.pixels || []
                                 };
@@ -416,6 +481,12 @@ require_once 'auth.php';
                             theme: 'dark',
                             request_email: true,
                             request_phone: true,
+                            evolution_instance: '',
+                            evolution_token: '',
+                            evolution_url: '',
+                            deliverable_type: 'text',
+                            deliverable_text: '',
+                            deliverable_file: '',
                             bumps: [],
                             pixels: []
                         };
