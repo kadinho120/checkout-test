@@ -32,6 +32,31 @@ class Database
                 }
             }
 
+            // Verify and Create Tables if missing (Robust Migration)
+            $this->conn->exec("CREATE TABLE IF NOT EXISTS order_bumps (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_id INTEGER,
+                title TEXT,
+                description TEXT,
+                price REAL,
+                image_url TEXT,
+                active INTEGER DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME,
+                FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+            )");
+
+            $this->conn->exec("CREATE TABLE IF NOT EXISTS pixels (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_id INTEGER,
+                type TEXT,
+                pixel_id TEXT,
+                token TEXT,
+                active INTEGER DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+            )");
+
             // --- AUTO-MIGRATION FIX (Self-Healing) ---
             // Fixes "no such column: updated_at" for existing installations
             $cols = $this->conn->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_ASSOC);
@@ -105,7 +130,8 @@ class Database
             // -----------------------------------------
 
         } catch (PDOException $exception) {
-            echo "Connection error: " . $exception->getMessage();
+            // Log error but don't output to avoid breaking JSON responses
+            error_log("Connection error: " . $exception->getMessage());
         }
 
         return $this->conn;
