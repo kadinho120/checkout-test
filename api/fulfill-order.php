@@ -161,36 +161,19 @@ try {
         require_once __DIR__ . '/evolution-helper.php';
 
         try {
-            $customerPhone = $order['customer_phone'];
+            // Prepare Customer Data for Helper
+            $customerDataForHelper = [
+                'name' => $order['customer_name'],
+                'email' => $order['customer_email'],
+                'phone' => $order['customer_phone'], // Already in $customerPhone variable too
+                'document' => $order['customer_cpf']
+            ];
 
-            // Iterate products to find deliverables
-            if (!empty($storedData['products'])) {
-                foreach ($storedData['products'] as $prodItem) {
-                    // Fetch fresh config from DB
-                    if (isset($prodItem['id'])) {
+            // Use the robust helper function that handles Bumps and Main Products correctly
+            processOrderDeliverables($storedData['products'] ?? [], $customerDataForHelper, $db);
 
-                        // Using a new DB instance or statement to be safe
-                        $stmtProd = $db->prepare("SELECT evolution_instance, evolution_token, evolution_url, deliverable_type, deliverable_text, deliverable_file FROM products WHERE id = ?");
-                        $stmtProd->execute([$prodItem['id']]);
-                        $prodConfig = $stmtProd->fetch(PDO::FETCH_ASSOC);
-
-                        if ($prodConfig && !empty($prodConfig['evolution_url']) && !empty($prodConfig['evolution_instance'])) {
-
-                            // Send Message
-                            $evoResult = sendEvolutionMessage(
-                                $prodConfig['evolution_instance'],
-                                $prodConfig['evolution_token'],
-                                $prodConfig['evolution_url'],
-                                $customerPhone,
-                                $prodConfig['deliverable_type'],
-                                $prodConfig['deliverable_text'],
-                                $prodConfig['deliverable_file']
-                            );
-                        }
-                    }
-                }
-            }
         } catch (Exception $e) { /* Silent fail for Deliverable */
+            error_log("Deliverable Error: " . $e->getMessage());
         }
         // --------------------------------------
 

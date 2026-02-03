@@ -121,6 +121,21 @@ require_once 'auth.php';
                                             class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-1 rounded text-xs font-bold">PAGO</span>
                                         <span x-show="order.status === 'pending'"
                                             class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded text-xs font-bold">PENDENTE</span>
+
+                                        <!-- Actions -->
+                                        <div x-show="order.status === 'paid'"
+                                            class="mt-2 text-left flex justify-center">
+                                            <button @click="resendDeliverable(order.id)"
+                                                :disabled="isResending === order.id"
+                                                class="text-xs bg-slate-800 hover:bg-slate-700 text-blue-400 px-2 py-1 rounded border border-slate-700 flex items-center gap-1 transition"
+                                                title="Reenviar Mensagens de Entrega">
+                                                <i x-show="isResending !== order.id" data-lucide="send"
+                                                    class="w-3 h-3"></i>
+                                                <i x-show="isResending === order.id" data-lucide="loader-2"
+                                                    class="w-3 h-3 animate-spin"></i>
+                                                Reenviar
+                                            </button>
+                                        </div>
                                     </td>
                                     <td class="p-4 text-sm text-slate-400"
                                         x-text="new Date(order.created_at).toLocaleString()"></td>
@@ -148,6 +163,7 @@ require_once 'auth.php';
             return {
                 orders: [],
                 isLoading: true,
+                isResending: null,
 
                 init() {
                     this.fetchOrders();
@@ -165,6 +181,30 @@ require_once 'auth.php';
                         .catch(err => {
                             console.error(err);
                             this.isLoading = false;
+                        });
+                },
+
+                resendDeliverable(orderId) {
+                    if (!confirm('Deseja reenviar os produtos deste pedido via WhatsApp?')) return;
+
+                    this.isResending = orderId;
+                    fetch('../api/v1/resend-deliverable.php', {
+                        method: 'POST',
+                        body: JSON.stringify({ order_id: orderId })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isResending = null;
+                            if (data.success) {
+                                alert('Mensagens enviadas com sucesso! (' + data.details.sent + ' enviados)');
+                            } else {
+                                alert('Erro: ' + data.message);
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            this.isResending = null;
+                            alert('Erro de conexão ao reenviar.');
                         });
                 }
             }
