@@ -314,28 +314,53 @@ require_once 'auth.php';
                     </div>
 
                     <div class="space-y-4">
-                        <template x-for="(bump, index) in form.bumps" :key="index">
-                            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 relative group">
-                                <button @click="removeBump(index)"
-                                    class="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
-                                        data-lucide="trash" class="w-4 h-4"></i></button>
+                        <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 relative group">
+                            <button @click="removeBump(index)"
+                                class="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
+                                    data-lucide="trash" class="w-4 h-4"></i></button>
 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div class="md:col-span-2">
-                                        <input x-model="bump.title" type="text" placeholder="Título da Oferta"
-                                            class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
-                                        <input x-model="bump.description" type="text"
-                                            placeholder="Descrição curta (ex: Receita secreta...)"
-                                            class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
-                                    </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                <div class="md:col-span-2">
+                                    <input x-model="bump.title" type="text" placeholder="Título da Oferta"
+                                        class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
+                                    <input x-model="bump.description" type="text"
+                                        placeholder="Descrição curta (ex: Receita secreta...)"
+                                        class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
+                                </div>
+                                <div>
+                                    <input x-model="bump.price" type="number" step="0.01" placeholder="Preço"
+                                        class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
+                                    <input x-model="bump.image_url" type="text" placeholder="URL Imagem (Opcional)"
+                                        class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
+                                </div>
+                            </div>
+
+                            <!-- Bump Deliverable -->
+                            <div class="mt-3 bg-slate-900/50 p-3 rounded border border-slate-800">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i data-lucide="message-square" class="w-3 h-3 text-green-500"></i>
+                                    <span class="text-xs font-bold text-slate-400">Entrega Automática (Bump)</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
-                                        <input x-model="bump.price" type="number" step="0.01" placeholder="Preço"
-                                            class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
-                                        <input x-model="bump.image_url" type="text" placeholder="URL Imagem (Opcional)"
-                                            class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
+                                        <select x-model="bump.deliverable_type"
+                                            class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-green-500 outline-none">
+                                            <option value="text">Apenas Texto</option>
+                                            <option value="pdf">Texto + Arquivo</option>
+                                        </select>
+                                    </div>
+                                    <div x-show="bump.deliverable_type !== 'text'">
+                                        <input x-model="bump.deliverable_file" type="text" placeholder="URL do Arquivo"
+                                            class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-green-500 outline-none">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <textarea x-model="bump.deliverable_text" rows="1"
+                                            placeholder="Mensagem de entrega do Bump..."
+                                            class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs resize-none focus:border-green-500 outline-none"></textarea>
                                     </div>
                                 </div>
                             </div>
+                        </div>
                         </template>
                         <template x-if="form.bumps.length === 0">
                             <p class="text-slate-500 text-sm italic">Nenhum order bump configurado.</p>
@@ -388,7 +413,8 @@ require_once 'auth.php';
 
             </div>
 
-            <div class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 sticky bottom-0">
+            <div
+                class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 sticky bottom-0 z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
                 <button @click="closeModal()"
                     class="px-5 py-2 rounded-lg text-slate-300 hover:text-white font-medium transition">Cancelar</button>
                 <button @click="saveProduct()" :disabled="isSaving"
