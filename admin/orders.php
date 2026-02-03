@@ -219,6 +219,30 @@ require_once 'auth.php';
                             this.isResending = null;
                             alert('Erro de conexão ao reenviar.');
                         });
+                },
+
+                recoverPix(orderId) {
+                    if (!confirm('Deseja enviar mensagem de recuperação de Pix para este cliente?')) return;
+
+                    this.isRecovering = orderId;
+                    fetch('../api/v1/recover-pix.php', {
+                        method: 'POST',
+                        body: JSON.stringify({ order_id: orderId })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isRecovering = null;
+                            if (data.success) {
+                                alert('Mensagem de recuperação enviada!');
+                            } else {
+                                alert('Erro: ' + data.message);
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            this.isRecovering = null;
+                            alert('Erro de conexão ao recuperar.');
+                        });
                 }
             }
         }
