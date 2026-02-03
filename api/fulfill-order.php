@@ -73,8 +73,7 @@ try {
 
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $response = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
         curl_close($ch);
 
         // --- UTMIFY PAID HOOK ---
