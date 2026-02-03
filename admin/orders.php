@@ -136,6 +136,18 @@ require_once 'auth.php';
                                                 Reenviar
                                             </button>
                                         </div>
+                                        <div x-show="order.status === 'pending'"
+                                            class="mt-2 text-left flex justify-center">
+                                            <button @click="recoverPix(order.id)" :disabled="isRecovering === order.id"
+                                                class="text-xs bg-slate-800 hover:bg-slate-700 text-yellow-500 px-2 py-1 rounded border border-slate-700 flex items-center gap-1 transition"
+                                                title="Enviar Mensagem de Recuperação (Pix)">
+                                                <i x-show="isRecovering !== order.id" data-lucide="message-square"
+                                                    class="w-3 h-3"></i>
+                                                <i x-show="isRecovering === order.id" data-lucide="loader-2"
+                                                    class="w-3 h-3 animate-spin"></i>
+                                                Recuperar
+                                            </button>
+                                        </div>
                                     </td>
                                     <td class="p-4 text-sm text-slate-400"
                                         x-text="new Date(order.created_at).toLocaleString()"></td>
