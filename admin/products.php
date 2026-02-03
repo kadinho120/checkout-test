@@ -366,6 +366,14 @@ require_once 'auth.php';
                                                 <textarea x-model="bump.deliverable_text" rows="1"
                                                     placeholder="Mensagem de entrega do Bump..."
                                                     class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs resize-none focus:border-green-500 outline-none"></textarea>
+                                                <div class="flex gap-2 mt-2 flex-wrap">
+                                                    <template
+                                                        x-for="tag in ['{primeiro_nome}', '{nome_completo}', '{email}', '{telefone}', '{pix_copia_cola}']">
+                                                        <span @click="copyToClipboard(tag)"
+                                                            class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none"
+                                                            x-text="tag" title="Clique para copiar"></span>
+                                                    </template>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
