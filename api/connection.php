@@ -89,6 +89,19 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN deliverable_text TEXT;");
                 $this->conn->exec("ALTER TABLE products ADD COLUMN deliverable_file TEXT;");
             }
+
+            // Check for Evolution API columns in order_bumps
+            $bumpCols = $this->conn->query("PRAGMA table_info(order_bumps)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasBumpDeliv = false;
+            foreach ($bumpCols as $col) {
+                if ($col['name'] === 'deliverable_type')
+                    $hasBumpDeliv = true;
+            }
+            if (!$hasBumpDeliv) {
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN deliverable_type TEXT;");
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN deliverable_text TEXT;");
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN deliverable_file TEXT;");
+            }
             // -----------------------------------------
 
         } catch (PDOException $exception) {

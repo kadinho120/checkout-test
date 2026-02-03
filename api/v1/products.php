@@ -110,7 +110,7 @@ switch ($method) {
             // Handle Bumps (Full replace for simplicity)
             if (isset($data->bumps) && is_array($data->bumps)) {
                 $db->prepare("DELETE FROM order_bumps WHERE product_id = ?")->execute([$productId]);
-                $bumpStmt = $db->prepare("INSERT INTO order_bumps (product_id, title, description, price, image_url, active) VALUES (?, ?, ?, ?, ?, ?)");
+                $bumpStmt = $db->prepare("INSERT INTO order_bumps (product_id, title, description, price, image_url, active, deliverable_type, deliverable_text, deliverable_file) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 foreach ($data->bumps as $bump) {
                     $bumpStmt->execute([
                         $productId,
@@ -118,7 +118,10 @@ switch ($method) {
                         $bump->description ?? '',
                         $bump->price,
                         $bump->image_url ?? '',
-                        $bump->active ?? 1
+                        $bump->active ?? 1,
+                        $bump->deliverable_type ?? 'text',
+                        $bump->deliverable_text ?? '',
+                        $bump->deliverable_file ?? ''
                     ]);
                 }
             }

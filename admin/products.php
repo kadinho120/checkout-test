@@ -520,7 +520,16 @@ require_once 'auth.php';
                 },
 
                 addBump() {
-                    this.form.bumps.push({ title: '', description: '', price: '', image_url: '', active: 1 });
+                    this.form.bumps.push({
+                        title: '',
+                        description: '',
+                        price: '',
+                        image_url: '',
+                        active: 1,
+                        deliverable_type: 'text',
+                        deliverable_text: '',
+                        deliverable_file: ''
+                    });
                     this.$nextTick(() => lucide.createIcons());
                 },
                 removeBump(index) {
@@ -564,7 +573,7 @@ require_once 'auth.php';
                     });
                 },
 
-                testEvolution() {
+                addBump() {
                     if (!this.testPhone) {
                         alert('Digite um telefone para teste.');
                         return;
