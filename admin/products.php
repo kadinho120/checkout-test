@@ -542,6 +542,17 @@ require_once 'auth.php';
                     this.isModalOpen = false;
                 },
 
+                copyToClipboard(text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        // Optional: Show toast or feedback
+                        // Since we don't have a toast system, maybe just console or minor visual feedback could be nice perfectly.
+                        // But for now, simple copy is enough as per request.
+                        // Actually, let's flash a small alert using standard alert or just silent copy?
+                        // User request: "função de copiar eles ao clicar". 
+                        // I'll assume silent copy is fine but visual feedback is better.
+                    });
+                },
+
                 addBump() {
                     this.form.bumps.push({
                         title: '',

@@ -29,7 +29,6 @@ switch ($method) {
                 $bumpStmt = $db->prepare("SELECT * FROM order_bumps WHERE product_id = ?");
                 $bumpStmt->execute([$_GET['id']]);
                 $product['bumps'] = $bumpStmt->fetchAll();
-                $product['debug_bumps_count'] = count($product['bumps']);
 
                 // Fetch Pixels
                 $pixelStmt = $db->prepare("SELECT * FROM pixels WHERE product_id = ?");
@@ -145,12 +144,7 @@ switch ($method) {
             }
 
             $db->commit();
-            echo json_encode([
-                "message" => "Product saved.",
-                "id" => $productId,
-                "debug_bumps_received" => isset($data->bumps) ? count($data->bumps) : 0,
-                "debug_bumps_processed" => $bumpsProcessed
-            ]);
+            echo json_encode(["message" => "Product saved.", "id" => $productId]);
 
         } catch (Exception $e) {
             $db->rollBack();
