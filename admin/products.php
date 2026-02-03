@@ -161,15 +161,14 @@ require_once 'auth.php';
         <div x-show="isModalOpen" x-transition.opacity x-cloak
             class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div @click.outside="closeModal()"
-                class="bg-slate-900 border border-slate-700 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl flex flex-col">
-                <div
-                    class="p-6 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-slate-900 z-10">
+                class="bg-slate-900 border border-slate-700 w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+                <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900 z-10 shrink-0">
                     <h3 class="text-xl font-bold text-white" x-text="form.id ? 'Editar Produto' : 'Novo Produto'"></h3>
                     <button @click="closeModal()" class="text-slate-400 hover:text-white"><i
                             data-lucide="x"></i></button>
                 </div>
 
-                <div class="p-6 space-y-6">
+                <div class="p-6 space-y-6 overflow-y-auto flex-1">
                     <!-- Basic Info -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-4">
@@ -413,8 +412,7 @@ require_once 'auth.php';
 
             </div>
 
-            <div
-                class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 sticky bottom-0 z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
+            <div class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 z-10 shrink-0">
                 <button @click="closeModal()"
                     class="px-5 py-2 rounded-lg text-slate-300 hover:text-white font-medium transition">Cancelar</button>
                 <button @click="saveProduct()" :disabled="isSaving"
