@@ -62,6 +62,17 @@ class Database
             if (!$hasReqPhone) {
                 $this->conn->exec("ALTER TABLE products ADD COLUMN request_phone INTEGER DEFAULT 1;");
             }
+
+            // Check for token in pixels verification
+            $pixCols = $this->conn->query("PRAGMA table_info(pixels)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasToken = false;
+            foreach ($pixCols as $col) {
+                if ($col['name'] === 'token')
+                    $hasToken = true;
+            }
+            if (!$hasToken) {
+                $this->conn->exec("ALTER TABLE pixels ADD COLUMN token TEXT;");
+            }
             // -----------------------------------------
 
         } catch (PDOException $exception) {

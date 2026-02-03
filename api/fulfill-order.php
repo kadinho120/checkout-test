@@ -94,6 +94,68 @@ try {
         ];
 
         sendUtmifyEvent($utmifyOrderData, 'paid');
+
+        // --- META CAPI PURCHASE HOOK ---
+        require_once __DIR__ . '/meta-capi-helper.php';
+
+        // 1. Recover Pixel Token
+        // Logic: Try to find token from DB for the main product in the order
+        $capiToken = null;
+        $capiPixelId = $storedData['tracking']['pixel_id'] ?? null;
+
+        // If we don't have pixel_id or need token, fetch from DB
+        try {
+            // Retrieve first product SKU/ID from stored json
+            $mainProductSku = $storedData['products'][0]['sku'] ?? null;
+            if ($mainProductSku) {
+                // Re-use DB connection from above
+                $stmtPx = $db->prepare("
+                    SELECT px.pixel_id, px.token 
+                    FROM products p 
+                    JOIN pixels px ON p.id = px.product_id 
+                    WHERE p.slug = ? AND px.type = 'facebook' AND px.active = 1 
+                    LIMIT 1
+                ");
+                $stmtPx->execute([$mainProductSku]);
+                $pxData = $stmtPx->fetch(PDO::FETCH_ASSOC);
+                if ($pxData) {
+                    if (!$capiPixelId)
+                        $capiPixelId = $pxData['pixel_id'];
+                    $capiToken = $pxData['token'];
+                }
+            }
+        } catch (Exception $e) { /* Ignore */
+        }
+
+        // 2. Send Purchase Event
+        if ($capiPixelId && $capiToken) {
+            $capiContext = [
+                'client_ip' => $storedData['tracking']['client_ip'] ?? null,
+                'user_agent' => $storedData['tracking']['user_agent'] ?? null,
+                'fbp' => $storedData['tracking']['fbp'] ?? null,
+                'fbc' => $storedData['tracking']['fbc'] ?? null,
+                'source_url' => $storedData['tracking']['source_url'] ?? null
+            ];
+
+            sendMetaEvent(
+                $capiPixelId,
+                $capiToken,
+                'Purchase',
+                [ // Using formatted amount for value
+                    'correlation_id' => $order['transaction_id'],
+                    'value' => (int) ($order['total_amount'] * 100),
+                    'customer' => [
+                        'name' => $order['customer_name'],
+                        'email' => $order['customer_email'],
+                        'phone' => $order['customer_phone'],
+                        'document' => $order['customer_cpf']
+                    ],
+                    'products' => $storedData['products'] ?? []
+                ],
+                $capiContext
+            );
+        }
+        // -------------------------------
         // ------------------------
 
         if ($http_code >= 200 && $http_code < 300) {
