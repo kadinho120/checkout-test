@@ -280,107 +280,125 @@ require_once 'auth.php';
                         </div>
                     </div>
 
-                    <hr class="border-slate-800">
-
-                    <!-- Order Bumps -->
-                    <div>
-                        <div class="flex justify-between items-center mb-4">
-                            <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="zap"
-                                    class="text-yellow-500 w-5 h-5"></i> Order Bumps</h4>
-                            <button @click="addBump()"
-                                class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-700 flex items-center gap-1">
-                                <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
-                            </button>
+                    <!-- Test Section -->
+                    <div class="mt-4 pt-4 border-t border-slate-800 flex items-end gap-3">
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-slate-400 mb-1">Telefone para Teste</label>
+                            <input type="text" x-model="testPhone" placeholder="5511999999999"
+                                class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm focus:border-blue-500 outline-none">
                         </div>
+                        <button @click="testEvolution()" :disabled="isTesting"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold text-sm transition flex items-center gap-2 h-[38px]">
+                            <span x-show="isTesting" class="animate-spin"><i data-lucide="loader-2"
+                                    class="w-4 h-4"></i></span>
+                            <span x-show="!isTesting"><i data-lucide="send" class="w-4 h-4 inline mr-1"></i> Testar
+                                Envio</span>
+                        </button>
+                    </div>
+                    <p x-show="testResult" class="text-xs mt-2"
+                        :class="testResult.success ? 'text-green-400' : 'text-red-400'" x-text="testResult.message"></p>
 
-                        <div class="space-y-4">
-                            <template x-for="(bump, index) in form.bumps" :key="index">
-                                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 relative group">
-                                    <button @click="removeBump(index)"
-                                        class="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
-                                            data-lucide="trash" class="w-4 h-4"></i></button>
+                </div>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                        <div class="md:col-span-2">
-                                            <input x-model="bump.title" type="text" placeholder="Título da Oferta"
-                                                class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
-                                            <input x-model="bump.description" type="text"
-                                                placeholder="Descrição curta (ex: Receita secreta...)"
-                                                class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
-                                        </div>
-                                        <div>
-                                            <input x-model="bump.price" type="number" step="0.01" placeholder="Preço"
-                                                class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
-                                            <input x-model="bump.image_url" type="text"
-                                                placeholder="URL Imagem (Opcional)"
-                                                class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
-                                        </div>
+                <hr class="border-slate-800">
+
+                <!-- Order Bumps -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="zap"
+                                class="text-yellow-500 w-5 h-5"></i> Order Bumps</h4>
+                        <button @click="addBump()"
+                            class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-700 flex items-center gap-1">
+                            <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <template x-for="(bump, index) in form.bumps" :key="index">
+                            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 relative group">
+                                <button @click="removeBump(index)"
+                                    class="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
+                                        data-lucide="trash" class="w-4 h-4"></i></button>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div class="md:col-span-2">
+                                        <input x-model="bump.title" type="text" placeholder="Título da Oferta"
+                                            class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
+                                        <input x-model="bump.description" type="text"
+                                            placeholder="Descrição curta (ex: Receita secreta...)"
+                                            class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
+                                    </div>
+                                    <div>
+                                        <input x-model="bump.price" type="number" step="0.01" placeholder="Preço"
+                                            class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
+                                        <input x-model="bump.image_url" type="text" placeholder="URL Imagem (Opcional)"
+                                            class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
                                     </div>
                                 </div>
-                            </template>
-                            <template x-if="form.bumps.length === 0">
-                                <p class="text-slate-500 text-sm italic">Nenhum order bump configurado.</p>
-                            </template>
-                        </div>
+                            </div>
+                        </template>
+                        <template x-if="form.bumps.length === 0">
+                            <p class="text-slate-500 text-sm italic">Nenhum order bump configurado.</p>
+                        </template>
                     </div>
-
-                    <hr class="border-slate-800">
-
-                    <!-- Pixels -->
-                    <div>
-                        <div class="flex justify-between items-center mb-4">
-                            <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="target"
-                                    class="text-blue-500 w-5 h-5"></i> Pixels de Rastreamento</h4>
-                            <button @click="addPixel()"
-                                class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-700 flex items-center gap-1">
-                                <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
-                            </button>
-                        </div>
-
-                        <div class="space-y-3">
-                            <template x-for="(pixel, index) in form.pixels" :key="index">
-                                <div
-                                    class="flex items-center gap-3 bg-slate-950 p-3 rounded-lg border border-slate-800 relative group">
-                                    <button @click="removePixel(index)"
-                                        class="absolute top-3 right-3 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
-                                            data-lucide="trash" class="w-4 h-4"></i></button>
-
-                                    <select x-model="pixel.type"
-                                        class="bg-slate-900 border border-slate-700 text-white text-xs rounded p-2 outline-none">
-                                        <option value="facebook">Facebook Ads</option>
-                                        <option value="google">Google Ads</option>
-                                        <option value="tiktok">TikTok</option>
-                                        <option value="custom">Custom Script</option>
-                                    </select>
-
-                                    <input x-model="pixel.pixel_id" type="text" placeholder="ID do Pixel / Tag"
-                                        class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
-
-                                    <input x-show="pixel.type === 'facebook'" x-model="pixel.token" type="text"
-                                        placeholder="Token API (Opcional)"
-                                        class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
-                                </div>
-                            </template>
-                            <template x-if="form.pixels.length === 0">
-                                <p class="text-slate-500 text-sm italic">Nenhum pixel configurado.</p>
-                            </template>
-                        </div>
-                    </div>
-
                 </div>
 
-                <div class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 sticky bottom-0">
-                    <button @click="closeModal()"
-                        class="px-5 py-2 rounded-lg text-slate-300 hover:text-white font-medium transition">Cancelar</button>
-                    <button @click="saveProduct()" :disabled="isSaving"
-                        class="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition flex items-center gap-2">
-                        <span x-show="isSaving" class="animate-spin"><i data-lucide="loader-2"
-                                class="w-4 h-4"></i></span>
-                        <span x-text="isSaving ? 'Salvando...' : 'Salvar Produto'"></span>
-                    </button>
+                <hr class="border-slate-800">
+
+                <!-- Pixels -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="target"
+                                class="text-blue-500 w-5 h-5"></i> Pixels de Rastreamento</h4>
+                        <button @click="addPixel()"
+                            class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-700 flex items-center gap-1">
+                            <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
+                        </button>
+                    </div>
+
+                    <div class="space-y-3">
+                        <template x-for="(pixel, index) in form.pixels" :key="index">
+                            <div
+                                class="flex items-center gap-3 bg-slate-950 p-3 rounded-lg border border-slate-800 relative group">
+                                <button @click="removePixel(index)"
+                                    class="absolute top-3 right-3 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
+                                        data-lucide="trash" class="w-4 h-4"></i></button>
+
+                                <select x-model="pixel.type"
+                                    class="bg-slate-900 border border-slate-700 text-white text-xs rounded p-2 outline-none">
+                                    <option value="facebook">Facebook Ads</option>
+                                    <option value="google">Google Ads</option>
+                                    <option value="tiktok">TikTok</option>
+                                    <option value="custom">Custom Script</option>
+                                </select>
+
+                                <input x-model="pixel.pixel_id" type="text" placeholder="ID do Pixel / Tag"
+                                    class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
+
+                                <input x-show="pixel.type === 'facebook'" x-model="pixel.token" type="text"
+                                    placeholder="Token API (Opcional)"
+                                    class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
+                            </div>
+                        </template>
+                        <template x-if="form.pixels.length === 0">
+                            <p class="text-slate-500 text-sm italic">Nenhum pixel configurado.</p>
+                        </template>
+                    </div>
                 </div>
+
+            </div>
+
+            <div class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 sticky bottom-0">
+                <button @click="closeModal()"
+                    class="px-5 py-2 rounded-lg text-slate-300 hover:text-white font-medium transition">Cancelar</button>
+                <button @click="saveProduct()" :disabled="isSaving"
+                    class="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition flex items-center gap-2">
+                    <span x-show="isSaving" class="animate-spin"><i data-lucide="loader-2" class="w-4 h-4"></i></span>
+                    <span x-text="isSaving ? 'Salvando...' : 'Salvar Produto'"></span>
+                </button>
             </div>
         </div>
+    </div>
 
     </div>
 
@@ -392,6 +410,9 @@ require_once 'auth.php';
                 isLoading: true,
                 isModalOpen: false,
                 isSaving: false,
+                isTesting: false,
+                testPhone: '',
+                testResult: null,
                 form: {
                     id: null,
                     name: '',
@@ -541,6 +562,39 @@ require_once 'auth.php';
                     }).then(() => {
                         this.fetchProducts();
                     });
+                },
+
+                testEvolution() {
+                    if (!this.testPhone) {
+                        alert('Digite um telefone para teste.');
+                        return;
+                    }
+                    this.isTesting = true;
+                    this.testResult = null;
+
+                    const payload = {
+                        ...this.form,
+                        test_phone: this.testPhone
+                    };
+
+                    fetch('../api/v1/test-evolution.php', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isTesting = false;
+                            if (data.success) {
+                                this.testResult = { success: true, message: 'Sucesso! Verifique o WhatsApp.' };
+                            } else {
+                                this.testResult = { success: false, message: 'Erro: ' + (data.error || JSON.stringify(data.response)) };
+                            }
+                        })
+                        .catch(err => {
+                            this.isTesting = false;
+                            this.testResult = { success: false, message: 'Erro na requisição.' };
+                            console.error(err);
+                        });
                 }
             }
         }
