@@ -573,38 +573,27 @@ require_once 'auth.php';
                     });
                 },
 
-                addBump() {
-                    if (!this.testPhone) {
-                        alert('Digite um telefone para teste.');
-                        return;
-                    }
-                    this.isTesting = true;
-                    this.testResult = null;
 
-                    const payload = {
-                        ...this.form,
-                        test_phone: this.testPhone
-                    };
 
-                    fetch('../api/v1/test-evolution.php', {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
-                    })
+                fetch('../api/v1/test-evolution.php', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+            })
                         .then(res => res.json())
-                        .then(data => {
-                            this.isTesting = false;
-                            if (data.success) {
-                                this.testResult = { success: true, message: 'Sucesso! Verifique o WhatsApp.' };
-                            } else {
-                                this.testResult = { success: false, message: 'Erro: ' + (data.error || JSON.stringify(data.response)) };
-                            }
-                        })
-                        .catch(err => {
-                            this.isTesting = false;
-                            this.testResult = { success: false, message: 'Erro na requisição.' };
-                            console.error(err);
-                        });
-                }
+                .then(data => {
+                    this.isTesting = false;
+                    if (data.success) {
+                        this.testResult = { success: true, message: 'Sucesso! Verifique o WhatsApp.' };
+                    } else {
+                        this.testResult = { success: false, message: 'Erro: ' + (data.error || JSON.stringify(data.response)) };
+                    }
+                })
+                .catch(err => {
+                    this.isTesting = false;
+                    this.testResult = { success: false, message: 'Erro na requisição.' };
+                    console.error(err);
+                });
+        }
             }
         }
 
