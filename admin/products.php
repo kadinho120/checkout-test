@@ -417,9 +417,6 @@ require_once 'auth.php';
                     id: null,
                     name: '',
                     slug: '',
-                    description: '',
-                    price: '',
-                    image_url: '',
                     image_url: '',
                     active: true,
                     theme: 'dark',
@@ -465,8 +462,6 @@ require_once 'auth.php';
                                     name: data.name,
                                     slug: data.slug,
                                     description: data.description,
-                                    price: data.price,
-                                    image_url: data.image_url,
                                     image_url: data.image_url,
                                     active: data.active == 1,
                                     theme: data.theme || 'dark',
@@ -495,8 +490,6 @@ require_once 'auth.php';
                             name: '',
                             slug: '',
                             description: '',
-                            price: '',
-                            image_url: '',
                             image_url: '',
                             active: true,
                             theme: 'dark',
@@ -576,7 +569,6 @@ require_once 'auth.php';
 
 
             }
-        }
         }
 
     </script>
