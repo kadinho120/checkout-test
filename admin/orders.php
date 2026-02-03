@@ -164,6 +164,7 @@ require_once 'auth.php';
                 orders: [],
                 isLoading: true,
                 isResending: null,
+                isRecovering: null,
 
                 init() {
                     this.fetchOrders();
