@@ -116,7 +116,8 @@ if (strlen($phone) >= 10 && strlen($phone) <= 11) { $phone='55' . $phone; } // R
         // Re-fetch with join to get parent credentials
         $stmt = $db->prepare("
         SELECT ob.deliverable_type, ob.deliverable_text, ob.deliverable_file,
-        p.evolution_instance, p.evolution_token, p.evolution_url
+        ob.deliverable_email_subject, ob.deliverable_email_body,
+        p.evolution_instance, p.evolution_token, p.evolution_url, p.name as product_name
         FROM order_bumps ob
         JOIN products p ON ob.product_id = p.id
         WHERE ob.id = ?
@@ -126,7 +127,8 @@ if (strlen($phone) >= 10 && strlen($phone) <= 11) { $phone='55' . $phone; } // R
         } else {
         // Main Product (lookup by slug)
         $stmt = $db->prepare("SELECT evolution_instance, evolution_token, evolution_url, deliverable_type,
-        deliverable_text, deliverable_file FROM products WHERE slug = ?");
+        deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, name as product_name FROM
+        products WHERE slug = ?");
         $stmt->execute([$sku]);
         $deliverableConfig = $stmt->fetch(PDO::FETCH_ASSOC);
         }
