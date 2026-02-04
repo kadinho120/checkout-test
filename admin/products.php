@@ -305,428 +305,422 @@ require_once 'auth.php';
                     <p x-show="testResult" class="text-xs mt-2"
                         :class="testResult.success ? 'text-green-400' : 'text-red-400'" x-text="testResult.message"></p>
 
-                    </button>
-                </div>
-                <p x-show="testResult" class="text-xs mt-2"
-                    :class="testResult.success ? 'text-green-400' : 'text-red-400'" x-text="testResult.message"></p>
 
-                <hr class="border-slate-800 my-4">
+                    <hr class="border-slate-800 my-4">
 
-                <!-- Email Deliverable -->
-                <div>
-                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <i data-lucide="mail" class="text-blue-500 w-5 h-5"></i>
-                        Entrega Automática (E-mail)
-                    </h4>
+                    <!-- Email Deliverable -->
+                    <div>
+                        <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i data-lucide="mail" class="text-blue-500 w-5 h-5"></i>
+                            Entrega Automática (E-mail)
+                        </h4>
 
-                    <div class="bg-slate-950/50 p-4 rounded-lg border border-slate-800 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-400 mb-1">Assunto do E-mail</label>
-                            <input type="text" x-model="form.deliverable_email_subject"
-                                placeholder="Ex: Seu acesso ao [Nome do Produto]"
-                                class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-400 mb-1">Corpo do E-mail (HTML
-                                permitido)</label>
-                            <textarea x-model="form.deliverable_email_body" rows="4"
-                                placeholder="<p>Olá, {primeiro_nome}!</p><p>Aqui está seu acesso...</p>"
-                                class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white resize-none focus:border-blue-500 outline-none font-mono text-xs"></textarea>
-                            <div class="flex gap-2 mt-2 flex-wrap">
-                                <template
-                                    x-for="tag in ['{primeiro_nome}', '{nome_completo}', '{email}', '{telefone}', '{pix_copia_cola}', '{nome_do_produto}']">
-                                    <span @click="copyToClipboard(tag)"
-                                        class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none"
-                                        x-text="tag" title="Clique para copiar"></span>
-                                </template>
+                        <div class="bg-slate-950/50 p-4 rounded-lg border border-slate-800 space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Assunto do E-mail</label>
+                                <input type="text" x-model="form.deliverable_email_subject"
+                                    placeholder="Ex: Seu acesso ao [Nome do Produto]"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Corpo do E-mail (HTML
+                                    permitido)</label>
+                                <textarea x-model="form.deliverable_email_body" rows="4"
+                                    placeholder="<p>Olá, {primeiro_nome}!</p><p>Aqui está seu acesso...</p>"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white resize-none focus:border-blue-500 outline-none font-mono text-xs"></textarea>
+                                <div class="flex gap-2 mt-2 flex-wrap">
+                                    <template
+                                        x-for="tag in ['{primeiro_nome}', '{nome_completo}', '{email}', '{telefone}', '{pix_copia_cola}', '{nome_do_produto}']">
+                                        <span @click="copyToClipboard(tag)"
+                                            class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none"
+                                            x-text="tag" title="Clique para copiar"></span>
+                                    </template>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <hr class="border-slate-800 my-4">
+
+                    <!-- Order Bumps -->
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="zap"
+                                    class="text-yellow-500 w-5 h-5"></i> Order Bumps</h4>
+                            <button @click="addBump()"
+                                class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-700 flex items-center gap-1">
+                                <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <template x-for="(bump, index) in form.bumps" :key="index">
+                                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 relative group"
+                                    :class="{'opacity-50': bump.active == 0}">
+                                    <button
+                                        @click="bump.active = (bump.active == 1 ? 0 : 1); $nextTick(() => lucide.createIcons())"
+                                        class="absolute top-2 right-9 text-slate-400 hover:text-white transition"
+                                        :title="bump.active == 1 ? 'Ocultar Bump' : 'Exibir Bump'">
+                                        <i :data-lucide="bump.active == 1 ? 'eye' : 'eye-off'" class="w-4 h-4"
+                                            :class="bump.active == 1 ? 'text-green-500' : 'text-slate-500'"></i>
+                                    </button>
+                                    <button @click="removeBump(index)"
+                                        class="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
+                                            data-lucide="trash" class="w-4 h-4"></i></button>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                        <div class="md:col-span-2">
+                                            <input x-model="bump.title" type="text" placeholder="Título da Oferta"
+                                                class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
+                                            <input x-model="bump.description" type="text"
+                                                placeholder="Descrição curta (ex: Receita secreta...)"
+                                                class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
+                                        </div>
+                                        <div>
+                                            <input x-model="bump.price" type="number" step="0.01" placeholder="Preço"
+                                                class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
+                                            <input x-model="bump.image_url" type="text"
+                                                placeholder="URL Imagem (Opcional)"
+                                                class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
+                                        </div>
+                                    </div>
+
+                                    <!-- Bump Deliverable -->
+                                    <div class="mt-3 bg-slate-900/50 p-3 rounded border border-slate-800">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i data-lucide="message-square" class="w-3 h-3 text-green-500"></i>
+                                            <span class="text-xs font-bold text-slate-400">Entrega Automática
+                                                (Bump)</span>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div>
+                                                <select x-model="bump.deliverable_type"
+                                                    class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-green-500 outline-none">
+                                                    <option value="text">Apenas Texto</option>
+                                                    <option value="pdf">Texto + Arquivo</option>
+                                                </select>
+                                            </div>
+                                            <div x-show="bump.deliverable_type !== 'text'">
+                                                <input x-model="bump.deliverable_file" type="text"
+                                                    placeholder="URL do Arquivo"
+                                                    class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-green-500 outline-none">
+                                            </div>
+                                            <div class="md:col-span-2">
+                                                <textarea x-model="bump.deliverable_text" rows="1"
+                                                    placeholder="Mensagem de entrega do Bump..."
+                                                    class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs resize-none focus:border-green-500 outline-none"></textarea>
+                                                <div class="flex gap-2 mt-2 flex-wrap">
+                                                    <template
+                                                        x-for="tag in ['{primeiro_nome}', '{nome_completo}', '{email}', '{telefone}', '{pix_copia_cola}']">
+                                                        <span @click="copyToClipboard(tag)"
+                                                            class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none"
+                                                            x-text="tag" title="Clique para copiar"></span>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bump Email -->
+                                    <div class="mt-3 border-t border-slate-800 pt-3">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i data-lucide="mail" class="w-3 h-3 text-blue-500"></i>
+                                            <span class="text-xs font-bold text-slate-400">Entrega por E-mail</span>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <input x-model="bump.deliverable_email_subject" type="text"
+                                                placeholder="Assunto do E-mail (Opcional)"
+                                                class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-blue-500 outline-none">
+
+                                            <textarea x-model="bump.deliverable_email_body" rows="2"
+                                                placeholder="Corpo do E-mail (HTML)..."
+                                                class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs resize-none focus:border-blue-500 outline-none font-mono"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+                        </template>
+                        <template x-if="form.bumps.length === 0">
+                            <p class="text-slate-500 text-sm italic">Nenhum order bump configurado.</p>
+                        </template>
+                    </div>
                 </div>
 
-                <hr class="border-slate-800 my-4">
+                <hr class="border-slate-800">
 
-                <!-- Order Bumps -->
+                <!-- Pixels -->
                 <div>
                     <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="zap"
-                                class="text-yellow-500 w-5 h-5"></i> Order Bumps</h4>
-                        <button @click="addBump()"
+                        <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="target"
+                                class="text-blue-500 w-5 h-5"></i> Pixels de Rastreamento</h4>
+                        <button @click="addPixel()"
                             class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-700 flex items-center gap-1">
                             <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
                         </button>
                     </div>
 
-                    <div class="space-y-4">
-                        <template x-for="(bump, index) in form.bumps" :key="index">
-                            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 relative group"
-                                :class="{'opacity-50': bump.active == 0}">
-                                <button
-                                    @click="bump.active = (bump.active == 1 ? 0 : 1); $nextTick(() => lucide.createIcons())"
-                                    class="absolute top-2 right-9 text-slate-400 hover:text-white transition"
-                                    :title="bump.active == 1 ? 'Ocultar Bump' : 'Exibir Bump'">
-                                    <i :data-lucide="bump.active == 1 ? 'eye' : 'eye-off'" class="w-4 h-4"
-                                        :class="bump.active == 1 ? 'text-green-500' : 'text-slate-500'"></i>
-                                </button>
-                                <button @click="removeBump(index)"
-                                    class="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
+                    <div class="space-y-3">
+                        <template x-for="(pixel, index) in form.pixels" :key="index">
+                            <div
+                                class="flex items-center gap-3 bg-slate-950 p-3 rounded-lg border border-slate-800 relative group">
+                                <button @click="removePixel(index)"
+                                    class="absolute top-3 right-3 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
                                         data-lucide="trash" class="w-4 h-4"></i></button>
 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                                    <div class="md:col-span-2">
-                                        <input x-model="bump.title" type="text" placeholder="Título da Oferta"
-                                            class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
-                                        <input x-model="bump.description" type="text"
-                                            placeholder="Descrição curta (ex: Receita secreta...)"
-                                            class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
-                                    </div>
-                                    <div>
-                                        <input x-model="bump.price" type="number" step="0.01" placeholder="Preço"
-                                            class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
-                                        <input x-model="bump.image_url" type="text" placeholder="URL Imagem (Opcional)"
-                                            class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
-                                    </div>
-                                </div>
+                                <select x-model="pixel.type"
+                                    class="bg-slate-900 border border-slate-700 text-white text-xs rounded p-2 outline-none">
+                                    <option value="facebook">Facebook Ads</option>
+                                    <option value="google">Google Ads</option>
+                                    <option value="tiktok">TikTok</option>
+                                    <option value="custom">Custom Script</option>
+                                </select>
 
-                                <!-- Bump Deliverable -->
-                                <div class="mt-3 bg-slate-900/50 p-3 rounded border border-slate-800">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <i data-lucide="message-square" class="w-3 h-3 text-green-500"></i>
-                                        <span class="text-xs font-bold text-slate-400">Entrega Automática
-                                            (Bump)</span>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <div>
-                                            <select x-model="bump.deliverable_type"
-                                                class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-green-500 outline-none">
-                                                <option value="text">Apenas Texto</option>
-                                                <option value="pdf">Texto + Arquivo</option>
-                                            </select>
-                                        </div>
-                                        <div x-show="bump.deliverable_type !== 'text'">
-                                            <input x-model="bump.deliverable_file" type="text"
-                                                placeholder="URL do Arquivo"
-                                                class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-green-500 outline-none">
-                                        </div>
-                                        <div class="md:col-span-2">
-                                            <textarea x-model="bump.deliverable_text" rows="1"
-                                                placeholder="Mensagem de entrega do Bump..."
-                                                class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs resize-none focus:border-green-500 outline-none"></textarea>
-                                            <div class="flex gap-2 mt-2 flex-wrap">
-                                                <template
-                                                    x-for="tag in ['{primeiro_nome}', '{nome_completo}', '{email}', '{telefone}', '{pix_copia_cola}']">
-                                                    <span @click="copyToClipboard(tag)"
-                                                        class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none"
-                                                        x-text="tag" title="Clique para copiar"></span>
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <input x-model="pixel.pixel_id" type="text" placeholder="ID do Pixel / Tag"
+                                    class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
 
-                                <!-- Bump Email -->
-                                <div class="mt-3 border-t border-slate-800 pt-3">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <i data-lucide="mail" class="w-3 h-3 text-blue-500"></i>
-                                        <span class="text-xs font-bold text-slate-400">Entrega por E-mail</span>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <input x-model="bump.deliverable_email_subject" type="text"
-                                            placeholder="Assunto do E-mail (Opcional)"
-                                            class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-blue-500 outline-none">
-
-                                        <textarea x-model="bump.deliverable_email_body" rows="2"
-                                            placeholder="Corpo do E-mail (HTML)..."
-                                            class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs resize-none focus:border-blue-500 outline-none font-mono"></textarea>
-                                    </div>
-                                </div>
+                                <input x-show="pixel.type === 'facebook'" x-model="pixel.token" type="text"
+                                    placeholder="Token API (Opcional)"
+                                    class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
                             </div>
+                        </template>
+                        <template x-if="form.pixels.length === 0">
+                            <p class="text-slate-500 text-sm italic">Nenhum pixel configurado.</p>
+                        </template>
                     </div>
-                    </template>
-                    <template x-if="form.bumps.length === 0">
-                        <p class="text-slate-500 text-sm italic">Nenhum order bump configurado.</p>
-                    </template>
                 </div>
+
             </div>
 
-            <hr class="border-slate-800">
-
-            <!-- Pixels -->
-            <div>
-                <div class="flex justify-between items-center mb-4">
-                    <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="target"
-                            class="text-blue-500 w-5 h-5"></i> Pixels de Rastreamento</h4>
-                    <button @click="addPixel()"
-                        class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-700 flex items-center gap-1">
-                        <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
-                    </button>
-                </div>
-
-                <div class="space-y-3">
-                    <template x-for="(pixel, index) in form.pixels" :key="index">
-                        <div
-                            class="flex items-center gap-3 bg-slate-950 p-3 rounded-lg border border-slate-800 relative group">
-                            <button @click="removePixel(index)"
-                                class="absolute top-3 right-3 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
-                                    data-lucide="trash" class="w-4 h-4"></i></button>
-
-                            <select x-model="pixel.type"
-                                class="bg-slate-900 border border-slate-700 text-white text-xs rounded p-2 outline-none">
-                                <option value="facebook">Facebook Ads</option>
-                                <option value="google">Google Ads</option>
-                                <option value="tiktok">TikTok</option>
-                                <option value="custom">Custom Script</option>
-                            </select>
-
-                            <input x-model="pixel.pixel_id" type="text" placeholder="ID do Pixel / Tag"
-                                class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
-
-                            <input x-show="pixel.type === 'facebook'" x-model="pixel.token" type="text"
-                                placeholder="Token API (Opcional)"
-                                class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
-                        </div>
-                    </template>
-                    <template x-if="form.pixels.length === 0">
-                        <p class="text-slate-500 text-sm italic">Nenhum pixel configurado.</p>
-                    </template>
-                </div>
+            <div class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 z-10 shrink-0">
+                <button @click="closeModal()"
+                    class="px-5 py-2 rounded-lg text-slate-300 hover:text-white font-medium transition">Cancelar</button>
+                <button @click="saveProduct()" :disabled="isSaving"
+                    class="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition flex items-center gap-2">
+                    <span x-show="isSaving" class="animate-spin"><i data-lucide="loader-2" class="w-4 h-4"></i></span>
+                    <span x-text="isSaving ? 'Salvando...' : 'Salvar Produto'"></span>
+                </button>
             </div>
-
         </div>
 
-        <div class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 z-10 shrink-0">
-            <button @click="closeModal()"
-                class="px-5 py-2 rounded-lg text-slate-300 hover:text-white font-medium transition">Cancelar</button>
-            <button @click="saveProduct()" :disabled="isSaving"
-                class="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition flex items-center gap-2">
-                <span x-show="isSaving" class="animate-spin"><i data-lucide="loader-2" class="w-4 h-4"></i></span>
-                <span x-text="isSaving ? 'Salvando...' : 'Salvar Produto'"></span>
-            </button>
-        </div>
-    </div>
-    </div>
-
-    </div>
-
-    <!-- App Logic -->
-    <script>
-        function productsApp() {
-            return {
-                products: [],
-                isLoading: true,
-                isModalOpen: false,
-                isSaving: false,
-                isTesting: false,
-                testPhone: '',
-                testResult: null,
-                form: {
-                    id: null,
-                    name: '',
-                    slug: '',
-                    price: '',
-                    image_url: '',
-                    active: true,
-                    theme: 'dark',
-                    request_email: true,
-                    request_phone: true,
-                    evolution_instance: '',
-                    evolution_token: '',
-                    evolution_url: '',
-                    deliverable_type: 'text',
-                    deliverable_text: '',
-                    deliverable_file: '',
-                    bumps: [],
-                    pixels: []
-                },
-
-                init() {
-                    this.fetchProducts();
-                },
-
-                fetchProducts() {
-                    this.isLoading = true;
-                    fetch('../api/v1/products.php')
-                        .then(res => res.json())
-                        .then(data => {
-                            this.products = data;
-                            this.isLoading = false;
-                            this.$nextTick(() => lucide.createIcons());
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            this.isLoading = false;
-                        });
-                },
-
-                openModal(product = null) {
-                    if (product) {
-                        // Load full details including bumps/pixels by fetching single
-                        fetch(`../api/v1/products.php?id=${product.id}`)
-                            .then(res => res.json())
-                            .then(data => {
-                                this.form = {
-                                    id: data.id,
-                                    name: data.name,
-                                    slug: data.slug,
-                                    description: data.description,
-                                    price: data.price,
-                                    image_url: data.image_url,
-                                    active: data.active == 1,
-                                    theme: data.theme || 'dark',
-                                    request_email: data.request_email == 1,
-                                    request_phone: data.request_phone == 1,
-                                    evolution_instance: data.evolution_instance || '',
-                                    evolution_token: data.evolution_token || '',
-                                    evolution_url: data.evolution_url || '',
-                                    deliverable_type: data.deliverable_type || 'text',
-                                    deliverable_text: data.deliverable_text || '',
-                                    deliverable_file: data.deliverable_file || '',
-                                    bumps: data.bumps || [],
-                                    pixels: data.pixels || []
-                                };
-                                // Fallback for legacy records (null/undefined => true)
-                                if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
-                                if (data.request_phone === undefined || data.request_phone === null) this.form.request_phone = true;
-
-                                this.isModalOpen = true;
-                                this.$nextTick(() => lucide.createIcons());
-                            });
-                    } else {
-                        // Reset Form
-                        this.form = {
-                            id: null,
-                            name: '',
-                            slug: '',
-                            description: '',
-                            price: '',
-                            image_url: '',
-                            active: true,
-                            theme: 'dark',
-                            request_email: true,
-                            request_phone: true,
-                            evolution_instance: '',
-                            evolution_token: '',
-                            evolution_url: '',
-                            deliverable_type: 'text',
-                            deliverable_text: '',
-                            deliverable_file: '',
-                            bumps: [],
-                            pixels: []
-                        };
-                        this.isModalOpen = true;
-                    }
-                },
-
-                closeModal() {
-                    this.isModalOpen = false;
-                },
-
-                copyToClipboard(text) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        // Optional: Show toast or feedback
-                        // Since we don't have a toast system, maybe just console or minor visual feedback could be nice perfectly.
-                        // But for now, simple copy is enough as per request.
-                        // Actually, let's flash a small alert using standard alert or just silent copy?
-                        // User request: "função de copiar eles ao clicar". 
-                        // I'll assume silent copy is fine but visual feedback is better.
-                    });
-                },
-
-                addBump() {
-                    this.form.bumps.push({
-                        title: '',
-                        description: '',
+        <!-- App Logic -->
+        <script>
+            function productsApp() {
+                return {
+                    products: [],
+                    isLoading: true,
+                    isModalOpen: false,
+                    isSaving: false,
+                    isTesting: false,
+                    testPhone: '',
+                    testResult: null,
+                    form: {
+                        id: null,
+                        name: '',
+                        slug: '',
                         price: '',
                         image_url: '',
-                        active: 1,
+                        active: true,
+                        theme: 'dark',
+                        request_email: true,
+                        request_phone: true,
+                        evolution_instance: '',
+                        evolution_token: '',
+                        evolution_url: '',
                         deliverable_type: 'text',
                         deliverable_text: '',
                         deliverable_file: '',
-                        deliverable_email_subject: '',
-                        deliverable_email_body: ''
-                    });
-                    this.$nextTick(() => lucide.createIcons());
-                },
-                removeBump(index) {
-                    this.form.bumps.splice(index, 1);
-                },
+                        bumps: [],
+                        pixels: []
+                    },
 
-                addPixel() {
-                    this.form.pixels.push({ type: 'facebook', pixel_id: '', token: '', active: 1 });
-                    this.$nextTick(() => lucide.createIcons());
-                },
-                removePixel(index) {
-                    this.form.pixels.splice(index, 1);
-                },
-
-                saveProduct() {
-                    this.isSaving = true;
-                    fetch('../api/v1/products.php', {
-                        method: 'POST',
-                        body: JSON.stringify(this.form)
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            this.isSaving = false;
-                            // Reload list
-                            this.fetchProducts();
-                            this.closeModal();
-                        })
-                        .catch(err => {
-                            alert('Erro ao salvar');
-                            this.isSaving = false;
-                        });
-                },
-
-                testEvolution() {
-                    if (!this.testPhone) {
-                        alert('Digite um telefone para teste.');
-                        return;
-                    }
-                    this.isTesting = true;
-                    this.testResult = null;
-
-                    const payload = {
-                        ...this.form,
-                        test_phone: this.testPhone
-                    };
-
-                    fetch('../api/v1/test-evolution.php', {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            this.isTesting = false;
-                            if (data.success) {
-                                this.testResult = { success: true, message: 'Sucesso! Verifique o WhatsApp.' };
-                            } else {
-                                this.testResult = { success: false, message: 'Erro: ' + (data.error || JSON.stringify(data.response)) };
-                            }
-                        })
-                        .catch(err => {
-                            this.isTesting = false;
-                            this.testResult = { success: false, message: 'Erro na requisição.' };
-                            console.error(err);
-                        });
-                },
-
-                deleteProduct(id) {
-                    if (!confirm('Tem certeza? Isso não pode ser desfeito.')) return;
-
-                    fetch(`../api/v1/products.php?id=${id}`, {
-                        method: 'DELETE'
-                    }).then(() => {
+                    init() {
                         this.fetchProducts();
-                    });
-                },
+                    },
+
+                    fetchProducts() {
+                        this.isLoading = true;
+                        fetch('../api/v1/products.php')
+                            .then(res => res.json())
+                            .then(data => {
+                                this.products = data;
+                                this.isLoading = false;
+                                this.$nextTick(() => lucide.createIcons());
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                this.isLoading = false;
+                            });
+                    },
+
+                    openModal(product = null) {
+                        if (product) {
+                            // Load full details including bumps/pixels by fetching single
+                            fetch(`../api/v1/products.php?id=${product.id}`)
+                                .then(res => res.json())
+                                .then(data => {
+                                    this.form = {
+                                        id: data.id,
+                                        name: data.name,
+                                        slug: data.slug,
+                                        description: data.description,
+                                        price: data.price,
+                                        image_url: data.image_url,
+                                        active: data.active == 1,
+                                        theme: data.theme || 'dark',
+                                        request_email: data.request_email == 1,
+                                        request_phone: data.request_phone == 1,
+                                        evolution_instance: data.evolution_instance || '',
+                                        evolution_token: data.evolution_token || '',
+                                        evolution_url: data.evolution_url || '',
+                                        deliverable_type: data.deliverable_type || 'text',
+                                        deliverable_text: data.deliverable_text || '',
+                                        deliverable_file: data.deliverable_file || '',
+                                        bumps: data.bumps || [],
+                                        pixels: data.pixels || []
+                                    };
+                                    // Fallback for legacy records (null/undefined => true)
+                                    if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
+                                    if (data.request_phone === undefined || data.request_phone === null) this.form.request_phone = true;
+
+                                    this.isModalOpen = true;
+                                    this.$nextTick(() => lucide.createIcons());
+                                });
+                        } else {
+                            // Reset Form
+                            this.form = {
+                                id: null,
+                                name: '',
+                                slug: '',
+                                description: '',
+                                price: '',
+                                image_url: '',
+                                active: true,
+                                theme: 'dark',
+                                request_email: true,
+                                request_phone: true,
+                                evolution_instance: '',
+                                evolution_token: '',
+                                evolution_url: '',
+                                deliverable_type: 'text',
+                                deliverable_text: '',
+                                deliverable_file: '',
+                                bumps: [],
+                                pixels: []
+                            };
+                            this.isModalOpen = true;
+                        }
+                    },
+
+                    closeModal() {
+                        this.isModalOpen = false;
+                    },
+
+                    copyToClipboard(text) {
+                        navigator.clipboard.writeText(text).then(() => {
+                            // Optional: Show toast or feedback
+                            // Since we don't have a toast system, maybe just console or minor visual feedback could be nice perfectly.
+                            // But for now, simple copy is enough as per request.
+                            // Actually, let's flash a small alert using standard alert or just silent copy?
+                            // User request: "função de copiar eles ao clicar". 
+                            // I'll assume silent copy is fine but visual feedback is better.
+                        });
+                    },
+
+                    addBump() {
+                        this.form.bumps.push({
+                            title: '',
+                            description: '',
+                            price: '',
+                            image_url: '',
+                            active: 1,
+                            deliverable_type: 'text',
+                            deliverable_text: '',
+                            deliverable_file: '',
+                            deliverable_email_subject: '',
+                            deliverable_email_body: ''
+                        });
+                        this.$nextTick(() => lucide.createIcons());
+                    },
+                    removeBump(index) {
+                        this.form.bumps.splice(index, 1);
+                    },
+
+                    addPixel() {
+                        this.form.pixels.push({ type: 'facebook', pixel_id: '', token: '', active: 1 });
+                        this.$nextTick(() => lucide.createIcons());
+                    },
+                    removePixel(index) {
+                        this.form.pixels.splice(index, 1);
+                    },
+
+                    saveProduct() {
+                        this.isSaving = true;
+                        fetch('../api/v1/products.php', {
+                            method: 'POST',
+                            body: JSON.stringify(this.form)
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                this.isSaving = false;
+                                // Reload list
+                                this.fetchProducts();
+                                this.closeModal();
+                            })
+                            .catch(err => {
+                                alert('Erro ao salvar');
+                                this.isSaving = false;
+                            });
+                    },
+
+                    testEvolution() {
+                        if (!this.testPhone) {
+                            alert('Digite um telefone para teste.');
+                            return;
+                        }
+                        this.isTesting = true;
+                        this.testResult = null;
+
+                        const payload = {
+                            ...this.form,
+                            test_phone: this.testPhone
+                        };
+
+                        fetch('../api/v1/test-evolution.php', {
+                            method: 'POST',
+                            body: JSON.stringify(payload)
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                this.isTesting = false;
+                                if (data.success) {
+                                    this.testResult = { success: true, message: 'Sucesso! Verifique o WhatsApp.' };
+                                } else {
+                                    this.testResult = { success: false, message: 'Erro: ' + (data.error || JSON.stringify(data.response)) };
+                                }
+                            })
+                            .catch(err => {
+                                this.isTesting = false;
+                                this.testResult = { success: false, message: 'Erro na requisição.' };
+                                console.error(err);
+                            });
+                    },
+
+                    deleteProduct(id) {
+                        if (!confirm('Tem certeza? Isso não pode ser desfeito.')) return;
+
+                        fetch(`../api/v1/products.php?id=${id}`, {
+                            method: 'DELETE'
+                        }).then(() => {
+                            this.fetchProducts();
+                        });
+                    },
 
 
 
+                }
             }
-        }
 
-    </script>
+        </script>
 </body>
 
 </html>
