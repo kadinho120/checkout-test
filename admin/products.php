@@ -320,7 +320,15 @@ require_once 'auth.php';
 
                         <div class="space-y-4">
                             <template x-for="(bump, index) in form.bumps" :key="index">
-                                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 relative group">
+                                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 relative group"
+                                    :class="{'opacity-50': bump.active == 0}">
+                                    <button
+                                        @click="bump.active = (bump.active == 1 ? 0 : 1); $nextTick(() => lucide.createIcons())"
+                                        class="absolute top-2 right-9 text-slate-400 hover:text-white transition"
+                                        :title="bump.active == 1 ? 'Ocultar Bump' : 'Exibir Bump'">
+                                        <i :data-lucide="bump.active == 1 ? 'eye' : 'eye-off'" class="w-4 h-4"
+                                            :class="bump.active == 1 ? 'text-green-500' : 'text-slate-500'"></i>
+                                    </button>
                                     <button @click="removeBump(index)"
                                         class="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
                                             data-lucide="trash" class="w-4 h-4"></i></button>
