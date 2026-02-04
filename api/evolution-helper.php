@@ -138,8 +138,7 @@ if (strlen($phone) >= 10 && strlen($phone) <= 11) { $phone='55' . $phone; } // R
         !empty($deliverableConfig['evolution_instance'])) {
 
         // Apply Shortcodes
-        $finalMessage = replaceShortcodes($deliverableConfig['deliverable_text'], $customerData, ''); // Pix code
-        optional/empty here
+        $finalMessage = replaceShortcodes($deliverableConfig['deliverable_text'], $customerData, '');
 
         $res = sendEvolutionMessage(
         $deliverableConfig['evolution_instance'],
@@ -150,11 +149,28 @@ if (strlen($phone) >= 10 && strlen($phone) <= 11) { $phone='55' . $phone; } // R
         $finalMessage,
         $deliverableConfig['deliverable_file']
         );
-        $results[] = ['sku' => $sku, 'status' => $res['success'] ? 'sent' : 'failed'];
-        if ($res['success'])
-        $sentCount++;
+        $results[] = ['sku' => $sku, 'wpp_status' => $res['success'] ? 'sent' : 'failed'];
+        if ($res['success']) $sentCount++;
         } else {
-        $results[] = ['sku' => $sku, 'status' => 'skipped_no_config'];
+        $results[] = ['sku' => $sku, 'wpp_status' => 'skipped_no_config'];
+        }
+
+        // 2. Email Sending
+        if ($deliverableConfig && !empty($deliverableConfig['deliverable_email_subject']) &&
+        !empty($deliverableConfig['deliverable_email_body'])) {
+        // Ensure product name is present for shortcode
+        if (empty($customerData['product_name']) && !empty($deliverableConfig['product_name'])) {
+        $customerData['product_name'] = $deliverableConfig['product_name'];
+        }
+
+        $emailBody = replaceShortcodes($deliverableConfig['deliverable_email_body'], $customerData, '');
+        $emailSubject = replaceShortcodes($deliverableConfig['deliverable_email_subject'], $customerData, '');
+
+        $resEmail = sendOrderEmail($customerData['email'], $emailSubject, $emailBody);
+        // Append status to updated result
+        if (!empty($results)) {
+        $results[count($results)-1]['email_status'] = $resEmail['success'] ? 'sent' : 'failed'];
+        }
         }
         }
 

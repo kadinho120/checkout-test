@@ -45,7 +45,10 @@ try {
     ];
 
     // Process Deliverables
-    $result = processOrderDeliverables($products, $customerData, $db);
+    $type = $data->type ?? 'all';
+    $filter = ($type === 'email') ? ['email'] : (($type === 'wpp') ? ['wpp'] : ['wpp', 'email']);
+
+    $result = processOrderDeliverables($products, $customerData, $db, $filter);
 
     echo json_encode([
         "success" => true,

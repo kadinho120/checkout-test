@@ -123,29 +123,49 @@ require_once 'auth.php';
                                             class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded text-xs font-bold">PENDENTE</span>
 
                                         <!-- Actions -->
-                                        <div x-show="order.status === 'paid'"
-                                            class="mt-2 text-left flex justify-center">
-                                            <button @click="resendDeliverable(order.id)"
-                                                :disabled="isResending === order.id"
-                                                class="text-xs bg-slate-800 hover:bg-slate-700 text-blue-400 px-2 py-1 rounded border border-slate-700 flex items-center gap-1 transition"
-                                                title="Reenviar Mensagens de Entrega">
-                                                <i x-show="isResending !== order.id" data-lucide="send"
-                                                    class="w-3 h-3"></i>
-                                                <i x-show="isResending === order.id" data-lucide="loader-2"
+                                        <div x-show="order.status === 'paid'" class="mt-2 flex justify-center gap-2">
+                                            <!-- Reenviar WhatsApp -->
+                                            <button @click="resendDeliverable(order.id, 'wpp')"
+                                                :disabled="isResending === order.id + '_wpp'"
+                                                class="text-xs bg-slate-800 hover:bg-slate-700 text-green-400 px-2 py-1 rounded border border-slate-700 flex items-center gap-1 transition"
+                                                title="Reenviar WhatsApp">
+                                                <i x-show="isResending !== order.id + '_wpp'"
+                                                    data-lucide="message-circle" class="w-3 h-3"></i>
+                                                <i x-show="isResending === order.id + '_wpp'" data-lucide="loader-2"
                                                     class="w-3 h-3 animate-spin"></i>
-                                                Reenviar
+                                            </button>
+                                            <!-- Reenviar Email -->
+                                            <button @click="resendDeliverable(order.id, 'email')"
+                                                :disabled="isResending === order.id + '_email'"
+                                                class="text-xs bg-slate-800 hover:bg-slate-700 text-blue-400 px-2 py-1 rounded border border-slate-700 flex items-center gap-1 transition"
+                                                title="Reenviar E-mail">
+                                                <i x-show="isResending !== order.id + '_email'" data-lucide="mail"
+                                                    class="w-3 h-3"></i>
+                                                <i x-show="isResending === order.id + '_email'" data-lucide="loader-2"
+                                                    class="w-3 h-3 animate-spin"></i>
                                             </button>
                                         </div>
-                                        <div x-show="order.status === 'pending'"
-                                            class="mt-2 text-left flex justify-center">
-                                            <button @click="recoverPix(order.id)" :disabled="isRecovering === order.id"
-                                                class="text-xs bg-slate-800 hover:bg-slate-700 text-yellow-500 px-2 py-1 rounded border border-slate-700 flex items-center gap-1 transition"
-                                                title="Enviar Mensagem de Recuperação (Pix)">
-                                                <i x-show="isRecovering !== order.id" data-lucide="message-square"
-                                                    class="w-3 h-3"></i>
-                                                <i x-show="isRecovering === order.id" data-lucide="loader-2"
+
+                                        <div x-show="order.status === 'pending'" class="mt-2 flex justify-center gap-2">
+                                            <!-- Recuperar WhatsApp -->
+                                            <button @click="recoverPix(order.id, 'wpp')"
+                                                :disabled="isRecovering === order.id + '_wpp'"
+                                                class="text-xs bg-slate-800 hover:bg-slate-700 text-green-500 px-2 py-1 rounded border border-slate-700 flex items-center gap-1 transition"
+                                                title="Recuperar via WhatsApp">
+                                                <i x-show="isRecovering !== order.id + '_wpp'"
+                                                    data-lucide="message-square" class="w-3 h-3"></i>
+                                                <i x-show="isRecovering === order.id + '_wpp'" data-lucide="loader-2"
                                                     class="w-3 h-3 animate-spin"></i>
-                                                Recuperar
+                                            </button>
+                                            <!-- Recuperar Email -->
+                                            <button @click="recoverPix(order.id, 'email')"
+                                                :disabled="isRecovering === order.id + '_email'"
+                                                class="text-xs bg-slate-800 hover:bg-slate-700 text-blue-500 px-2 py-1 rounded border border-slate-700 flex items-center gap-1 transition"
+                                                title="Recuperar via E-mail">
+                                                <i x-show="isRecovering !== order.id + '_email'" data-lucide="mail"
+                                                    class="w-3 h-3"></i>
+                                                <i x-show="isRecovering === order.id + '_email'" data-lucide="loader-2"
+                                                    class="w-3 h-3 animate-spin"></i>
                                             </button>
                                         </div>
                                     </td>
@@ -197,19 +217,22 @@ require_once 'auth.php';
                         });
                 },
 
-                resendDeliverable(orderId) {
-                    if (!confirm('Deseja reenviar os produtos deste pedido via WhatsApp?')) return;
+                resendDeliverable(orderId, type) {
+                    const actionName = type === 'wpp' ? 'WhatsApp' : 'E-mail';
+                    if (!confirm(`Deseja reenviar o pedido #${orderId} via ${actionName}?`)) return;
 
-                    this.isResending = orderId;
+                    const loadingKey = orderId + '_' + type;
+                    this.isResending = loadingKey;
+                    
                     fetch('../api/v1/resend-deliverable.php', {
                         method: 'POST',
-                        body: JSON.stringify({ order_id: orderId })
+                        body: JSON.stringify({ order_id: orderId, type: type })
                     })
                         .then(res => res.json())
                         .then(data => {
                             this.isResending = null;
                             if (data.success) {
-                                alert('Mensagens enviadas com sucesso! (' + data.details.sent + ' enviados)');
+                                alert(`Envio (${actionName}) realizado com sucesso!`);
                             } else {
                                 alert('Erro: ' + data.message);
                             }
@@ -221,19 +244,22 @@ require_once 'auth.php';
                         });
                 },
 
-                recoverPix(orderId) {
-                    if (!confirm('Deseja enviar mensagem de recuperação de Pix para este cliente?')) return;
+                recoverPix(orderId, type) {
+                    const actionName = type === 'wpp' ? 'WhatsApp' : 'E-mail';
+                    if (!confirm(`Enviar recuperação de Pix (Pedido #${orderId}) via ${actionName}?`)) return;
 
-                    this.isRecovering = orderId;
+                    const loadingKey = orderId + '_' + type;
+                    this.isRecovering = loadingKey;
+
                     fetch('../api/v1/recover-pix.php', {
                         method: 'POST',
-                        body: JSON.stringify({ order_id: orderId })
+                        body: JSON.stringify({ order_id: orderId, type: type })
                     })
                         .then(res => res.json())
                         .then(data => {
                             this.isRecovering = null;
                             if (data.success) {
-                                alert('Mensagem de recuperação enviada!');
+                                alert(`Recuperação (${actionName}) enviada!`);
                             } else {
                                 alert('Erro: ' + data.message);
                             }

@@ -84,19 +84,43 @@ try {
     $finalMessage = replaceShortcodes($rawMessage, $customerData, $pixCode);
 
     // Send Message
-    $res = sendEvolutionMessage(
-        $config['evolution_instance'],
-        $config['evolution_token'],
-        $config['evolution_url'],
-        $customerData['phone'],
-        'text',
-        $finalMessage
-    );
+    // Send Message based on Type
+    $type = $data->type ?? 'wpp'; // Default to wpp if not specified
+    $results = [];
+
+    if ($type === 'wpp' || $type === 'all') {
+        $res = sendEvolutionMessage(
+            $config['evolution_instance'],
+            $config['evolution_token'],
+            $config['evolution_url'],
+            $customerData['phone'],
+            'text',
+            $finalMessage
+        );
+        $results['wpp'] = $res;
+    }
+
+    if ($type === 'email' || $type === 'all') {
+        $emailSubject = "Finalize seu pedido de {nome_do_produto}";
+        $emailSubject = replaceShortcodes($emailSubject, $customerData, '');
+
+        $emailBody = "<p>Olá, {primeiro_nome}!</p>
+        <p>Vimos que você ainda não finalizou o pagamento do seu pedido do <strong>{nome_do_produto}</strong>.</p>
+        <p>As vagas estão acabando e não podemos segurar a sua por muito tempo.</p>
+        <p>Segue o código Pix Copia e Cola para efetuar o pagamento:</p>
+        <div style='background: #f4f4f4; padding: 15px; border-radius: 5px; word-break: break-all; margin: 20px 0; font-family: monospace;'>{pix_copia_cola}</div>
+        <p>Caso já tenha efetuado o pagamento, desconsidere esta mensagem.</p>";
+
+        $emailBody = replaceShortcodes($emailBody, $customerData, $pixCode);
+
+        $resEmail = sendOrderEmail($customerData['email'], $emailSubject, $emailBody);
+        $results['email'] = $resEmail;
+    }
 
     echo json_encode([
-        "success" => $res['success'],
-        "message" => $res['success'] ? "Recovery message sent" : "Failed to send",
-        "details" => $res
+        "success" => true,
+        "message" => "Recovery processed",
+        "details" => $results
     ]);
 
 } catch (Exception $e) {
