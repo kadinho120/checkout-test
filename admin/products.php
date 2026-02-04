@@ -501,226 +501,228 @@ require_once 'auth.php';
                 </button>
             </div>
         </div>
+    </div>
+    </div>
 
-        <!-- App Logic -->
-        <script>
-            function productsApp() {
-                return {
-                    products: [],
-                    isLoading: true,
-                    isModalOpen: false,
-                    isSaving: false,
-                    isTesting: false,
-                    testPhone: '',
-                    testResult: null,
-                    form: {
-                        id: null,
-                        name: '',
-                        slug: '',
-                        price: '',
-                        image_url: '',
-                        active: true,
-                        theme: 'dark',
-                        request_email: true,
-                        request_phone: true,
-                        evolution_instance: '',
-                        evolution_token: '',
-                        evolution_url: '',
-                        deliverable_type: 'text',
-                        deliverable_text: '',
-                        deliverable_file: '',
-                        bumps: [],
-                        pixels: []
-                    },
+    <!-- App Logic -->
+    <script>
+        function productsApp() {
+            return {
+                products: [],
+                isLoading: true,
+                isModalOpen: false,
+                isSaving: false,
+                isTesting: false,
+                testPhone: '',
+                testResult: null,
+                form: {
+                    id: null,
+                    name: '',
+                    slug: '',
+                    price: '',
+                    image_url: '',
+                    active: true,
+                    theme: 'dark',
+                    request_email: true,
+                    request_phone: true,
+                    evolution_instance: '',
+                    evolution_token: '',
+                    evolution_url: '',
+                    deliverable_type: 'text',
+                    deliverable_text: '',
+                    deliverable_file: '',
+                    bumps: [],
+                    pixels: []
+                },
 
-                    init() {
-                        this.fetchProducts();
-                    },
+                init() {
+                    this.fetchProducts();
+                },
 
-                    fetchProducts() {
-                        this.isLoading = true;
-                        fetch('../api/v1/products.php')
+                fetchProducts() {
+                    this.isLoading = true;
+                    fetch('../api/v1/products.php')
+                        .then(res => res.json())
+                        .then(data => {
+                            this.products = data;
+                            this.isLoading = false;
+                            this.$nextTick(() => lucide.createIcons());
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            this.isLoading = false;
+                        });
+                },
+
+                openModal(product = null) {
+                    if (product) {
+                        // Load full details including bumps/pixels by fetching single
+                        fetch(`../api/v1/products.php?id=${product.id}`)
                             .then(res => res.json())
                             .then(data => {
-                                this.products = data;
-                                this.isLoading = false;
+                                this.form = {
+                                    id: data.id,
+                                    name: data.name,
+                                    slug: data.slug,
+                                    description: data.description,
+                                    price: data.price,
+                                    image_url: data.image_url,
+                                    active: data.active == 1,
+                                    theme: data.theme || 'dark',
+                                    request_email: data.request_email == 1,
+                                    request_phone: data.request_phone == 1,
+                                    evolution_instance: data.evolution_instance || '',
+                                    evolution_token: data.evolution_token || '',
+                                    evolution_url: data.evolution_url || '',
+                                    deliverable_type: data.deliverable_type || 'text',
+                                    deliverable_text: data.deliverable_text || '',
+                                    deliverable_file: data.deliverable_file || '',
+                                    bumps: data.bumps || [],
+                                    pixels: data.pixels || []
+                                };
+                                // Fallback for legacy records (null/undefined => true)
+                                if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
+                                if (data.request_phone === undefined || data.request_phone === null) this.form.request_phone = true;
+
+                                this.isModalOpen = true;
                                 this.$nextTick(() => lucide.createIcons());
-                            })
-                            .catch(err => {
-                                console.error(err);
-                                this.isLoading = false;
                             });
-                    },
-
-                    openModal(product = null) {
-                        if (product) {
-                            // Load full details including bumps/pixels by fetching single
-                            fetch(`../api/v1/products.php?id=${product.id}`)
-                                .then(res => res.json())
-                                .then(data => {
-                                    this.form = {
-                                        id: data.id,
-                                        name: data.name,
-                                        slug: data.slug,
-                                        description: data.description,
-                                        price: data.price,
-                                        image_url: data.image_url,
-                                        active: data.active == 1,
-                                        theme: data.theme || 'dark',
-                                        request_email: data.request_email == 1,
-                                        request_phone: data.request_phone == 1,
-                                        evolution_instance: data.evolution_instance || '',
-                                        evolution_token: data.evolution_token || '',
-                                        evolution_url: data.evolution_url || '',
-                                        deliverable_type: data.deliverable_type || 'text',
-                                        deliverable_text: data.deliverable_text || '',
-                                        deliverable_file: data.deliverable_file || '',
-                                        bumps: data.bumps || [],
-                                        pixels: data.pixels || []
-                                    };
-                                    // Fallback for legacy records (null/undefined => true)
-                                    if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
-                                    if (data.request_phone === undefined || data.request_phone === null) this.form.request_phone = true;
-
-                                    this.isModalOpen = true;
-                                    this.$nextTick(() => lucide.createIcons());
-                                });
-                        } else {
-                            // Reset Form
-                            this.form = {
-                                id: null,
-                                name: '',
-                                slug: '',
-                                description: '',
-                                price: '',
-                                image_url: '',
-                                active: true,
-                                theme: 'dark',
-                                request_email: true,
-                                request_phone: true,
-                                evolution_instance: '',
-                                evolution_token: '',
-                                evolution_url: '',
-                                deliverable_type: 'text',
-                                deliverable_text: '',
-                                deliverable_file: '',
-                                bumps: [],
-                                pixels: []
-                            };
-                            this.isModalOpen = true;
-                        }
-                    },
-
-                    closeModal() {
-                        this.isModalOpen = false;
-                    },
-
-                    copyToClipboard(text) {
-                        navigator.clipboard.writeText(text).then(() => {
-                            // Optional: Show toast or feedback
-                            // Since we don't have a toast system, maybe just console or minor visual feedback could be nice perfectly.
-                            // But for now, simple copy is enough as per request.
-                            // Actually, let's flash a small alert using standard alert or just silent copy?
-                            // User request: "função de copiar eles ao clicar". 
-                            // I'll assume silent copy is fine but visual feedback is better.
-                        });
-                    },
-
-                    addBump() {
-                        this.form.bumps.push({
-                            title: '',
+                    } else {
+                        // Reset Form
+                        this.form = {
+                            id: null,
+                            name: '',
+                            slug: '',
                             description: '',
                             price: '',
                             image_url: '',
-                            active: 1,
+                            active: true,
+                            theme: 'dark',
+                            request_email: true,
+                            request_phone: true,
+                            evolution_instance: '',
+                            evolution_token: '',
+                            evolution_url: '',
                             deliverable_type: 'text',
                             deliverable_text: '',
                             deliverable_file: '',
-                            deliverable_email_subject: '',
-                            deliverable_email_body: ''
-                        });
-                        this.$nextTick(() => lucide.createIcons());
-                    },
-                    removeBump(index) {
-                        this.form.bumps.splice(index, 1);
-                    },
-
-                    addPixel() {
-                        this.form.pixels.push({ type: 'facebook', pixel_id: '', token: '', active: 1 });
-                        this.$nextTick(() => lucide.createIcons());
-                    },
-                    removePixel(index) {
-                        this.form.pixels.splice(index, 1);
-                    },
-
-                    saveProduct() {
-                        this.isSaving = true;
-                        fetch('../api/v1/products.php', {
-                            method: 'POST',
-                            body: JSON.stringify(this.form)
-                        })
-                            .then(res => res.json())
-                            .then(data => {
-                                this.isSaving = false;
-                                // Reload list
-                                this.fetchProducts();
-                                this.closeModal();
-                            })
-                            .catch(err => {
-                                alert('Erro ao salvar');
-                                this.isSaving = false;
-                            });
-                    },
-
-                    testEvolution() {
-                        if (!this.testPhone) {
-                            alert('Digite um telefone para teste.');
-                            return;
-                        }
-                        this.isTesting = true;
-                        this.testResult = null;
-
-                        const payload = {
-                            ...this.form,
-                            test_phone: this.testPhone
+                            bumps: [],
+                            pixels: []
                         };
+                        this.isModalOpen = true;
+                    }
+                },
 
-                        fetch('../api/v1/test-evolution.php', {
-                            method: 'POST',
-                            body: JSON.stringify(payload)
-                        })
-                            .then(res => res.json())
-                            .then(data => {
-                                this.isTesting = false;
-                                if (data.success) {
-                                    this.testResult = { success: true, message: 'Sucesso! Verifique o WhatsApp.' };
-                                } else {
-                                    this.testResult = { success: false, message: 'Erro: ' + (data.error || JSON.stringify(data.response)) };
-                                }
-                            })
-                            .catch(err => {
-                                this.isTesting = false;
-                                this.testResult = { success: false, message: 'Erro na requisição.' };
-                                console.error(err);
-                            });
-                    },
+                closeModal() {
+                    this.isModalOpen = false;
+                },
 
-                    deleteProduct(id) {
-                        if (!confirm('Tem certeza? Isso não pode ser desfeito.')) return;
+                copyToClipboard(text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        // Optional: Show toast or feedback
+                        // Since we don't have a toast system, maybe just console or minor visual feedback could be nice perfectly.
+                        // But for now, simple copy is enough as per request.
+                        // Actually, let's flash a small alert using standard alert or just silent copy?
+                        // User request: "função de copiar eles ao clicar". 
+                        // I'll assume silent copy is fine but visual feedback is better.
+                    });
+                },
 
-                        fetch(`../api/v1/products.php?id=${id}`, {
-                            method: 'DELETE'
-                        }).then(() => {
+                addBump() {
+                    this.form.bumps.push({
+                        title: '',
+                        description: '',
+                        price: '',
+                        image_url: '',
+                        active: 1,
+                        deliverable_type: 'text',
+                        deliverable_text: '',
+                        deliverable_file: '',
+                        deliverable_email_subject: '',
+                        deliverable_email_body: ''
+                    });
+                    this.$nextTick(() => lucide.createIcons());
+                },
+                removeBump(index) {
+                    this.form.bumps.splice(index, 1);
+                },
+
+                addPixel() {
+                    this.form.pixels.push({ type: 'facebook', pixel_id: '', token: '', active: 1 });
+                    this.$nextTick(() => lucide.createIcons());
+                },
+                removePixel(index) {
+                    this.form.pixels.splice(index, 1);
+                },
+
+                saveProduct() {
+                    this.isSaving = true;
+                    fetch('../api/v1/products.php', {
+                        method: 'POST',
+                        body: JSON.stringify(this.form)
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isSaving = false;
+                            // Reload list
                             this.fetchProducts();
+                            this.closeModal();
+                        })
+                        .catch(err => {
+                            alert('Erro ao salvar');
+                            this.isSaving = false;
                         });
-                    },
+                },
+
+                testEvolution() {
+                    if (!this.testPhone) {
+                        alert('Digite um telefone para teste.');
+                        return;
+                    }
+                    this.isTesting = true;
+                    this.testResult = null;
+
+                    const payload = {
+                        ...this.form,
+                        test_phone: this.testPhone
+                    };
+
+                    fetch('../api/v1/test-evolution.php', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isTesting = false;
+                            if (data.success) {
+                                this.testResult = { success: true, message: 'Sucesso! Verifique o WhatsApp.' };
+                            } else {
+                                this.testResult = { success: false, message: 'Erro: ' + (data.error || JSON.stringify(data.response)) };
+                            }
+                        })
+                        .catch(err => {
+                            this.isTesting = false;
+                            this.testResult = { success: false, message: 'Erro na requisição.' };
+                            console.error(err);
+                        });
+                },
+
+                deleteProduct(id) {
+                    if (!confirm('Tem certeza? Isso não pode ser desfeito.')) return;
+
+                    fetch(`../api/v1/products.php?id=${id}`, {
+                        method: 'DELETE'
+                    }).then(() => {
+                        this.fetchProducts();
+                    });
+                },
 
 
 
-                }
             }
+        }
 
-        </script>
+    </script>
 </body>
 
 </html>
