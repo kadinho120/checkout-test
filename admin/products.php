@@ -576,7 +576,10 @@ require_once 'auth.php';
                                     evolution_url: data.evolution_url || '',
                                     deliverable_type: data.deliverable_type || 'text',
                                     deliverable_text: data.deliverable_text || '',
+                                    deliverable_text: data.deliverable_text || '',
                                     deliverable_file: data.deliverable_file || '',
+                                    deliverable_email_subject: data.deliverable_email_subject || '',
+                                    deliverable_email_body: data.deliverable_email_body || '',
                                     bumps: data.bumps || [],
                                     pixels: data.pixels || []
                                 };
