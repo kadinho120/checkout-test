@@ -139,6 +139,30 @@ class Database
             if (!$hasBumpActive) {
                 $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN active INTEGER DEFAULT 1;");
             }
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN active INTEGER DEFAULT 1;");
+            }
+
+            // Check for Email columns in products
+            $prodCols2 = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasEmailSub = false;
+            foreach ($prodCols2 as $col) {
+                if ($col['name'] === 'deliverable_email_subject') $hasEmailSub = true;
+            }
+            if (!$hasEmailSub) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN deliverable_email_subject TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN deliverable_email_body TEXT;");
+            }
+
+            // Check for Email columns in order_bumps
+            $bumpCols3 = $this->conn->query("PRAGMA table_info(order_bumps)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasBumpEmailSub = false;
+            foreach ($bumpCols3 as $col) {
+                if ($col['name'] === 'deliverable_email_subject') $hasBumpEmailSub = true;
+            }
+            if (!$hasBumpEmailSub) {
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN deliverable_email_subject TEXT;");
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN deliverable_email_body TEXT;");
+            }
             // -----------------------------------------
 
         } catch (PDOException $exception) {
