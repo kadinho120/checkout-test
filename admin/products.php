@@ -501,108 +501,6 @@ require_once 'auth.php';
                     </div>
                 </div>
 
-                <hr class="border-slate-800">
-
-                <!-- Top Bar / Sticky Banner -->
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="megaphone"
-                                class="text-yellow-500 w-5 h-5"></i> Faixa Superior (Top Bar)</h4>
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm font-medium text-white"
-                                x-text="form.top_bar_enabled ? 'Ativado' : 'Desativado'"></span>
-                            <button @click="form.top_bar_enabled = !form.top_bar_enabled"
-                                class="w-10 h-6 rounded-full bg-slate-700 relative transition-colors duration-300"
-                                :class="form.top_bar_enabled ? 'bg-green-500' : 'bg-slate-700'">
-                                <span
-                                    class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-md"
-                                    :class="form.top_bar_enabled ? 'translate-x-4' : 'translate-x-0'"></span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div x-show="form.top_bar_enabled" x-transition
-                        class="bg-slate-950/50 p-4 rounded-lg border border-slate-800 space-y-4">
-
-                        <!-- Text Content -->
-                        <div>
-                            <label class="block text-sm font-medium text-slate-400 mb-1">Texto da Faixa</label>
-                            <textarea x-model="form.top_bar_text" rows="2"
-                                placeholder="🔥 Oferta Exclusiva! Termina em {datahoje}..."
-                                class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white resize-none focus:border-yellow-500 outline-none"></textarea>
-
-                            <!-- Helpers -->
-                            <div class="mt-3 space-y-2">
-                                <!-- Date Shortcodes -->
-                                <div class="flex gap-2 flex-wrap items-center">
-                                    <span class="text-xs text-slate-500 mr-1">Datas:</span>
-                                    <template
-                                        x-for="tag in ['{datahoje}', '{datahojemaiusculo}', '{datahojeminusculo}', '{datahojecapitalizado}']">
-                                        <span @click="copyToClipboard(tag)"
-                                            class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none border border-slate-700"
-                                            x-text="tag" title="Clique para copiar"></span>
-                                    </template>
-                                </div>
-
-                                <!-- Animated Icons -->
-                                <div class="flex gap-2 flex-wrap items-center">
-                                    <span class="text-xs text-slate-500 mr-1">Ícones Animados:</span>
-                                    <!-- Click to copy HTML -->
-                                    <button
-                                        @click="copyToClipboard('<i data-lucide=\'alert-circle\' class=\'w-4 h-4 animate-pulse\'></i>')"
-                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-yellow-500 transition"
-                                        title="Alerta Pulsante"><i data-lucide="alert-circle"
-                                            class="w-4 h-4"></i></button>
-                                    <button
-                                        @click="copyToClipboard('<i data-lucide=\'flame\' class=\'w-4 h-4 text-orange-500 animate-pulse\'></i>')"
-                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-orange-500 transition"
-                                        title="Fogo"><i data-lucide="flame" class="w-4 h-4"></i></button>
-                                    <button
-                                        @click="copyToClipboard('<i data-lucide=\'clock\' class=\'w-4 h-4 animate-bounce\'></i>')"
-                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-blue-400 transition"
-                                        title="Relógio"><i data-lucide="clock" class="w-4 h-4"></i></button>
-                                    <button
-                                        @click="copyToClipboard('<i data-lucide=\'credit-card\' class=\'w-4 h-4 animate-pulse\'></i>')"
-                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-green-400 transition"
-                                        title="Cartão"><i data-lucide="credit-card" class="w-4 h-4"></i></button>
-                                    <button
-                                        @click="copyToClipboard('<i data-lucide=\'star\' class=\'w-4 h-4 text-yellow-400 fill-yellow-400 animate-pulse\'></i>')"
-                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-yellow-500 transition"
-                                        title="Estrela"><i data-lucide="star" class="w-4 h-4"></i></button>
-                                    <button
-                                        @click="copyToClipboard('<i data-lucide=\'arrow-right\' class=\'w-4 h-4 animate-bounce-x\'></i>')"
-                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-white transition"
-                                        title="Seta"><i data-lucide="arrow-right" class="w-4 h-4"></i></button>
-                                </div>
-                                <p class="text-[10px] text-slate-500">Clique nos ícones para copiar o código HTML
-                                    correspondente.</p>
-                            </div>
-                        </div>
-
-                        <!-- Colors -->
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-400 mb-1">Cor de Fundo</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="color" x-model="form.top_bar_bg_color"
-                                        class="h-9 w-12 rounded cursor-pointer bg-transparent border-none p-0">
-                                    <input type="text" x-model="form.top_bar_bg_color"
-                                        class="flex-1 bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white uppercase outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-400 mb-1">Cor do Texto</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="color" x-model="form.top_bar_text_color"
-                                        class="h-9 w-12 rounded cursor-pointer bg-transparent border-none p-0">
-                                    <input type="text" x-model="form.top_bar_text_color"
-                                        class="flex-1 bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white uppercase outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="space-y-3">
                     <template x-for="(pixel, index) in form.pixels" :key="index">
                         <div
@@ -630,6 +528,81 @@ require_once 'auth.php';
                     <template x-if="form.pixels.length === 0">
                         <p class="text-slate-500 text-sm italic">Nenhum pixel configurado.</p>
                     </template>
+                </div>
+
+                <hr class="border-slate-800 my-4">
+
+                <!-- Top Bar / Sticky Banner -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="megaphone"
+                                class="text-yellow-500 w-5 h-5"></i> Faixa Superior (Top Bar)</h4>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-white"
+                                x-text="form.top_bar_enabled ? 'Ativado' : 'Desativado'"></span>
+                            <button @click="form.top_bar_enabled = !form.top_bar_enabled"
+                                class="w-10 h-6 rounded-full bg-slate-700 relative transition-colors duration-300"
+                                :class="form.top_bar_enabled ? 'bg-green-500' : 'bg-slate-700'">
+                                <span class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-md"
+                                    :class="form.top_bar_enabled ? 'translate-x-4' : 'translate-x-0'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div x-show="form.top_bar_enabled" x-transition
+                        class="bg-slate-950/50 p-4 rounded-lg border border-slate-800 space-y-4">
+                        
+                        <!-- Text Content -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-1">Texto da Faixa</label>
+                            <textarea x-model="form.top_bar_text" rows="2"
+                                placeholder="🔥 Oferta Exclusiva! Termina em {datahoje}..."
+                                class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white resize-none focus:border-yellow-500 outline-none"></textarea>
+                            
+                            <!-- Helpers -->
+                            <div class="mt-3 space-y-2">
+                                <!-- Date Shortcodes -->
+                                <div class="flex gap-2 flex-wrap items-center">
+                                    <span class="text-xs text-slate-500 mr-1">Datas:</span>
+                                    <template x-for="tag in ['{datahoje}', '{datahojemaiusculo}', '{datahojeminusculo}', '{datahojecapitalizado}']">
+                                        <span @click="copyToClipboard(tag)"
+                                            class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none border border-slate-700"
+                                            x-text="tag" title="Clique para copiar"></span>
+                                    </template>
+                                </div>
+                                
+                                <!-- Animated Icons -->
+                                <div class="flex gap-2 flex-wrap items-center">
+                                    <span class="text-xs text-slate-500 mr-1">Ícones Animados:</span>
+                                    <button @click="copyToClipboard('<i data-lucide=\'alert-circle\' class=\'w-4 h-4 animate-pulse\'></i>')" class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-yellow-500 transition" title="Alerta Pulsante"><i data-lucide="alert-circle" class="w-4 h-4"></i></button>
+                                    <button @click="copyToClipboard('<i data-lucide=\'flame\' class=\'w-4 h-4 text-orange-500 animate-pulse\'></i>')" class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-orange-500 transition" title="Fogo"><i data-lucide="flame" class="w-4 h-4"></i></button>
+                                    <button @click="copyToClipboard('<i data-lucide=\'clock\' class=\'w-4 h-4 animate-bounce\'></i>')" class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-blue-400 transition" title="Relógio"><i data-lucide="clock" class="w-4 h-4"></i></button>
+                                    <button @click="copyToClipboard('<i data-lucide=\'credit-card\' class=\'w-4 h-4 animate-pulse\'></i>')" class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-green-400 transition" title="Cartão"><i data-lucide="credit-card" class="w-4 h-4"></i></button>
+                                    <button @click="copyToClipboard('<i data-lucide=\'star\' class=\'w-4 h-4 text-yellow-400 fill-yellow-400 animate-pulse\'></i>')" class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-yellow-500 transition" title="Estrela"><i data-lucide="star" class="w-4 h-4"></i></button>
+                                    <button @click="copyToClipboard('<i data-lucide=\'arrow-right\' class=\'w-4 h-4 animate-bounce-x\'></i>')" class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-white transition" title="Seta"><i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                                </div>
+                                <p class="text-[10px] text-slate-500">Clique nos ícones para copiar o código HTML correspondente.</p>
+                            </div>
+                        </div>
+
+                        <!-- Colors -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Cor de Fundo</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" x-model="form.top_bar_bg_color" class="h-9 w-12 rounded cursor-pointer bg-transparent border-none p-0">
+                                    <input type="text" x-model="form.top_bar_bg_color" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white uppercase outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Cor do Texto</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" x-model="form.top_bar_text_color" class="h-9 w-12 rounded cursor-pointer bg-transparent border-none p-0">
+                                    <input type="text" x-model="form.top_bar_text_color" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white uppercase outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

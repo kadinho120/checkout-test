@@ -366,8 +366,10 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 price: <?= $product['price'] * 100 ?>,
                 name: <?= json_encode($product['name']) ?>,
                 sku: <?= json_encode($product['slug']) ?>,
-                enabled: <?= ($product['fake_notifications'] ?? 0) ? 'true' : 'false' ?>,
-                text: <?= json_encode($product['notification_text'] ?? '') ?>
+                notifications: {
+                    enabled: <?= ($product['fake_notifications'] ?? 0) ? 'true' : 'false' ?>,
+                    text: <?= json_encode($product['notification_text'] ?? '') ?>
+                }
             },
             topBar: {
                 enabled: <?= ($product['top_bar_enabled'] ?? 0) ? 'true' : 'false' ?>,
@@ -375,7 +377,6 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 bgColor: <?= json_encode($product['top_bar_bg_color'] ?? '#000000') ?>,
                 textColor: <?= json_encode($product['top_bar_text_color'] ?? '#ffffff') ?>
             }
-        }
         };
 
         const formatCurrency = (value) => {
