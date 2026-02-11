@@ -871,12 +871,13 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
             const bar = document.createElement('div');
-            bar.className = 'w-full py-2 px-4 text-center text-sm font-bold uppercase tracking-wide z-50 sticky top-0 shadow-lg flex items-center justify-center gap-2';
+            bar.className = 'w-full py-2 px-4 text-center text-sm font-bold uppercase tracking-wide z-[9999] fixed top-0 left-0 shadow-lg flex items-center justify-center gap-2';
             bar.style.backgroundColor = config.bgColor;
             bar.style.color = config.textColor;
             bar.innerHTML = parseDateShortcodes(config.text);
 
             document.body.prepend(bar);
+            document.body.style.paddingTop = bar.offsetHeight + 'px'; // Prevent content overlap
             lucide.createIcons(); // Updates icons inside the bar if any
         })();
     </script>

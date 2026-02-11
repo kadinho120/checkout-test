@@ -606,8 +606,6 @@ require_once 'auth.php';
                 </div>
             </div>
 
-        </div>
-
         <div class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 z-10 shrink-0">
             <button @click="closeModal()"
                 class="px-5 py-2 rounded-lg text-slate-300 hover:text-white font-medium transition">Cancelar</button>
