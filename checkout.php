@@ -369,13 +369,13 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 notifications: {
                     enabled: <?= ($product['fake_notifications'] ?? 0) ? 'true' : 'false' ?>,
                     text: <?= json_encode($product['notification_text'] ?? '') ?>
+                },
+                topBar: {
+                    enabled: <?= ($product['top_bar_enabled'] ?? 0) ? 'true' : 'false' ?>,
+                    text: <?= json_encode($product['top_bar_text'] ?? '') ?>,
+                    bgColor: <?= json_encode($product['top_bar_bg_color'] ?? '#000000') ?>,
+                    textColor: <?= json_encode($product['top_bar_text_color'] ?? '#ffffff') ?>
                 }
-            },
-            topBar: {
-                enabled: <?= ($product['top_bar_enabled'] ?? 0) ? 'true' : 'false' ?>,
-                text: <?= json_encode($product['top_bar_text'] ?? '') ?>,
-                bgColor: <?= json_encode($product['top_bar_bg_color'] ?? '#000000') ?>,
-                textColor: <?= json_encode($product['top_bar_text_color'] ?? '#ffffff') ?>
             }
         };
 
