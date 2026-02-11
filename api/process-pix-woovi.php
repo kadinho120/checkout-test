@@ -154,7 +154,7 @@ function handle_woovi_pix_payment()
     // Payload para a Woovi
     $payload = [
         'correlationID' => $correlationID,
-        'value' => $params['value'], // Centavos
+        'value' => (int) round($params['value']), // Centavos forcibly as integer
         'type' => 'DYNAMIC',
         // 'comment'    => $product_description, // Removido para não aparecer no Pix
         'customer' => [
@@ -203,10 +203,13 @@ function handle_woovi_pix_payment()
         $database = new Database();
         $db = $database->getConnection();
 
-        $stmt = $db->prepare("INSERT INTO orders (product_id, customer_name, customer_email, customer_phone, customer_cpf, total_amount, status, payment_method, transaction_id, json_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-03:00'))");
+        $externalID = $params['customer']['external_id'] ?? '';
+
+        $stmt = $db->prepare("INSERT INTO orders (product_id, customer_name, customer_email, customer_phone, customer_cpf, total_amount, status, payment_method, transaction_id, external_id, json_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-03:00'))");
 
         $json_data_store = json_encode([
             'correlation_id' => $correlationID,
+            'external_id' => $externalID,
             'pix_data' => $pix_data,
             'products' => $params['products'] ?? [],
             'tracking' => $params['tracking'] ?? []
@@ -227,6 +230,7 @@ function handle_woovi_pix_payment()
             'pending',
             'pix',
             $correlationID, // Using correlation ID as transaction ID for tracking
+            $externalID,
             $json_data_store
         ]);
 
@@ -236,6 +240,7 @@ function handle_woovi_pix_payment()
         // Constroi o payload COMPLETO para o N8N
         $full_webhook_payload = [
             'correlation_id' => $correlationID,
+            'external_id' => $externalID,
             'status' => 'pending',
             'value' => $params['value'], // Centavos
             'value_formatted' => (float) ($params['value'] / 100), // Ex: 9 ou 13.5 (Float JSON padrão)
@@ -244,7 +249,8 @@ function handle_woovi_pix_payment()
                 'name' => $params['customer']['name'],
                 'email' => $customer_email,
                 'phone' => $whatsapp_formatted, // Telefone tratado
-                'document' => $params['customer']['document'] ?? '' // Se houver
+                'document' => $params['customer']['document'] ?? '', // Se houver
+                'external_id' => $externalID
             ],
             'products' => $params['products'] ?? [],
             'tracking' => $params['tracking'] ?? [], // UTMs, FBC, FBP, User Agent

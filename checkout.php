@@ -198,8 +198,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="flex items-center gap-2"><i data-lucide="check-circle"
                             class="w-4 h-4 text-green-500"></i> Garantia de 7 Dias</div>
                     <?php
-                    $reqEmail = (int)$product['request_email'] !== 0;
-                    $reqPhone = (int)$product['request_phone'] !== 0;
+                    $reqEmail = (int) $product['request_email'] !== 0;
+                    $reqPhone = (int) $product['request_phone'] !== 0;
                     $accessText = "Acesso Imediato";
                     if ($reqEmail && $reqPhone) {
                         $accessText .= " por E-mail e WhatsApp";
@@ -362,7 +362,15 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         const BACKEND_BASE_PATH = '/api';
 
         const PLANOS = {
-            'main': { price: <?= $product['price'] * 100 ?>, name: <?= json_encode($product['name']) ?>, sku: <?= json_encode($product['slug']) ?> }
+            'main': {
+                price: <?= $product['price'] * 100 ?>,
+                name: <?= json_encode($product['name']) ?>,
+                sku: <?= json_encode($product['slug']) ?>,
+                notifications: {
+                    enabled: <?= ($product['fake_notifications'] ?? 0) ? 'true' : 'false' ?>,
+                    text: <?= json_encode($product['notification_text'] ?? '') ?>
+                }
+            }
         };
 
         const formatCurrency = (value) => {
@@ -409,9 +417,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         });
 
         window.calculateCurrentTotal = () => {
-            let total = PLANOS['main'].price;
+            let total = Math.round(PLANOS['main'].price);
             document.querySelectorAll('input[name="bumps[]"]:checked').forEach(el => {
-                total += parseFloat(el.dataset.price) * 100;
+                total += Math.round(parseFloat(el.dataset.price) * 100);
             });
             return total;
         };
@@ -481,7 +489,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 name: document.getElementById('name').value,
                 email: document.getElementById('email') ? document.getElementById('email').value : '',
                 phone: document.getElementById('whatsapp') ? document.getElementById('whatsapp').value : '',
-                document: ''
+                document: '',
+                external_id: new URLSearchParams(window.location.search).get('external_id') || ''
             };
 
             await handlePixPayment(customerData);
@@ -499,7 +508,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 allProducts.push({ sku: el.dataset.sku, name: el.dataset.name, price: parseFloat(el.dataset.price), qty: 1 });
             });
 
-            const totalValue = calculateCurrentTotal() / 100;
+            const totalValueInCents = calculateCurrentTotal();
+            const totalValue = totalValueInCents / 100;
 
             // Capture Tracking Params
             const urlParams = new URLSearchParams(window.location.search);
@@ -534,7 +544,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             trackingParams.user_agent = navigator.userAgent;
 
             const pixPayload = {
-                value: totalValue * 100,
+                value: totalValueInCents,
                 products: allProducts,
                 customer: customerData,
                 correlation_id: correlationId,
@@ -729,6 +739,84 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
             y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
         })(window, document, "clarity", "script", "szinav36s7");
+    </script>
+
+    <!-- FAKE NOTIFICATIONS ENGINE -->
+    <script>
+        (function () {
+            if (!PLANOS.main.notifications.enabled) return;
+
+            const CIDADES = ['São Paulo - SP', 'Rio de Janeiro - RJ', 'Belo Horizonte - MG', 'Curitiba - PR', 'Porto Alegre - RS', 'Salvador - BA', 'Recife - PE', 'Fortaleza - CE', 'Brasília - DF', 'Goiânia - GO', 'Campinas - SP', 'Manaus - AM', 'Vitória - ES', 'Florianópolis - SC', 'Natal - RN'];
+            const HOMENS = ['João', 'Pedro', 'Lucas', 'Matheus', 'Gabriel', 'Rafael', 'Felipe', 'Bruno', 'Gustavo', 'Daniel', 'Carlos', 'Eduardo', 'Thiago', 'Rodrigo', 'Marcos'];
+            const MULHERES = ['Maria', 'Ana', 'Julia', 'Beatriz', 'Mariana', 'Larissa', 'Camila', 'Fernanda', 'Amanda', 'Bruna', 'Gabriela', 'Luana', 'Jessica', 'Leticia', 'Carolina'];
+            const NOMES = [...HOMENS, ...MULHERES];
+
+            const config = PLANOS.main.notifications;
+            const isDark = document.documentElement.classList.contains('dark');
+
+            function getRandomItem(arr) {
+                return arr[Math.floor(Math.random() * arr.length)];
+            }
+
+            function replaceShortcodes(text) {
+                let processed = text;
+                processed = processed.replace(/{cidade}/g, getRandomItem(CIDADES));
+                processed = processed.replace(/{nome}/g, getRandomItem(NOMES));
+                processed = processed.replace(/{nome-homem}/g, getRandomItem(HOMENS));
+                processed = processed.replace(/{nome-mulher}/g, getRandomItem(MULHERES));
+                return processed;
+            }
+
+            function createNotification() {
+                const minutes = Math.floor(Math.random() * (57 - 2 + 1)) + 2;
+                const textContent = replaceShortcodes(config.text);
+
+                const notif = document.createElement('div');
+                // Styles: Mobile First, bottom-left, small padding
+                const bgClass = isDark ? 'bg-slate-900 border-slate-700 text-white shadow-blue-900/20' : 'bg-white border-gray-100 text-gray-900 shadow-xl';
+
+                notif.className = `fixed bottom-4 left-4 right-4 sm:right-auto sm:w-80 p-3 rounded-xl border shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-500 z-50 ${bgClass}`;
+                notif.innerHTML = `
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                    <i data-lucide="check-circle" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold leading-tight">${textContent}</p>
+                    <p class="text-[10px] opacity-70 mt-0.5">Há ${minutes} minutos</p>
+                </div>
+                <button class="absolute top-1 right-1 opacity-50 hover:opacity-100 p-1" onclick="this.parentElement.remove()">
+                    <i data-lucide="x" class="w-3 h-3"></i>
+                </button>
+            `;
+
+                document.body.appendChild(notif);
+                lucide.createIcons();
+
+                // Animate In
+                requestAnimationFrame(() => {
+                    notif.classList.remove('translate-y-20', 'opacity-0');
+                });
+
+                // Remove after 5s
+                setTimeout(() => {
+                    notif.classList.add('translate-y-20', 'opacity-0');
+                    setTimeout(() => notif.remove(), 500);
+                }, 5000);
+            }
+
+            // Schedule
+            function scheduleNext() {
+                const delay = Math.floor(Math.random() * (20000 - 8000 + 1)) + 8000; // 8-20 seconds
+                setTimeout(() => {
+                    createNotification();
+                    scheduleNext();
+                }, delay);
+            }
+
+            // Initial delay
+            setTimeout(scheduleNext, 3000);
+
+        })();
     </script>
 </body>
 

@@ -39,15 +39,19 @@ try {
         // O campo json_data no banco contém tracking, produtos, etc.
         $storedData = json_decode($order['json_data'], true) ?? [];
 
+        $externalID = $order['external_id'] ?? '';
+
         $payloadForN8N = [
             'id' => $order['id'],
             'correlation_id' => $order['transaction_id'],
+            'external_id' => $externalID,
             'status' => 'paid',
             'customer' => [
                 'name' => $order['customer_name'],
                 'email' => $order['customer_email'],
                 'phone' => $order['customer_phone'],
-                'document' => $order['customer_cpf']
+                'document' => $order['customer_cpf'],
+                'external_id' => $externalID
             ],
             'amount' => (float) $order['total_amount'],
             'value_formatted' => (float) $order['total_amount'], // Ex: 9 ou 13.5

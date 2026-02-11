@@ -164,6 +164,34 @@ class Database
                 $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN deliverable_email_subject TEXT;");
                 $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN deliverable_email_body TEXT;");
             }
+            // Check for external_id in orders
+            $orderCols = $this->conn->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasExternalId = false;
+            foreach ($orderCols as $col) {
+                if ($col['name'] === 'external_id') {
+                    $hasExternalId = true;
+                    break;
+                }
+            }
+            if (!$hasExternalId) {
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN external_id TEXT;");
+            }
+            // Check for fake notifications in products
+            $prodCols3 = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasFakeNotif = false;
+            $hasNotifText = false;
+            foreach ($prodCols3 as $col) {
+                if ($col['name'] === 'fake_notifications')
+                    $hasFakeNotif = true;
+                if ($col['name'] === 'notification_text')
+                    $hasNotifText = true;
+            }
+            if (!$hasFakeNotif) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN fake_notifications INTEGER DEFAULT 0;");
+            }
+            if (!$hasNotifText) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN notification_text TEXT;");
+            }
             // -----------------------------------------
 
         } catch (PDOException $exception) {

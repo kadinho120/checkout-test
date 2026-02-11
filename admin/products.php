@@ -448,6 +448,47 @@ require_once 'auth.php';
 
                 <hr class="border-slate-800">
 
+                <!-- Fake Notifications -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="bell"
+                                class="text-purple-500 w-5 h-5"></i> Notificações de Venda Fake</h4>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-white"
+                                x-text="form.fake_notifications ? 'Ativado' : 'Desativado'"></span>
+                            <button @click="form.fake_notifications = !form.fake_notifications"
+                                class="w-10 h-6 rounded-full bg-slate-700 relative transition-colors duration-300"
+                                :class="form.fake_notifications ? 'bg-green-500' : 'bg-slate-700'">
+                                <span
+                                    class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-md"
+                                    :class="form.fake_notifications ? 'translate-x-4' : 'translate-x-0'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div x-show="form.fake_notifications" x-transition
+                        class="bg-slate-950/50 p-4 rounded-lg border border-slate-800 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-1">Texto da Notificação</label>
+                            <textarea x-model="form.notification_text" rows="2"
+                                placeholder="{nome} de {cidade} comprou há 5 minutos"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white resize-none focus:border-purple-500 outline-none"></textarea>
+                            <div class="flex gap-2 mt-2 flex-wrap">
+                                <template x-for="tag in ['{cidade}', '{nome}', '{nome-homem}', '{nome-mulher}']">
+                                    <span @click="copyToClipboard(tag)"
+                                        class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none"
+                                        x-text="tag" title="Clique para copiar"></span>
+                                </template>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-2">
+                                A mensagem "Há X minutos" será adicionada automaticamente abaixo do texto.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-800">
+
                 <!-- Pixels -->
                 <div>
                     <div class="flex justify-between items-center mb-4">
@@ -532,7 +573,9 @@ require_once 'auth.php';
                     deliverable_text: '',
                     deliverable_file: '',
                     bumps: [],
-                    pixels: []
+                    pixels: [],
+                    fake_notifications: false,
+                    notification_text: ''
                 },
 
                 init() {
@@ -581,7 +624,9 @@ require_once 'auth.php';
                                     deliverable_email_subject: data.deliverable_email_subject || '',
                                     deliverable_email_body: data.deliverable_email_body || '',
                                     bumps: data.bumps || [],
-                                    pixels: data.pixels || []
+                                    pixels: data.pixels || [],
+                                    fake_notifications: data.fake_notifications == 1,
+                                    notification_text: data.notification_text || ''
                                 };
                                 // Fallback for legacy records (null/undefined => true)
                                 if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
