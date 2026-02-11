@@ -499,49 +499,152 @@ require_once 'auth.php';
                             <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
                         </button>
                     </div>
+                </div>
 
-                    <div class="space-y-3">
-                        <template x-for="(pixel, index) in form.pixels" :key="index">
-                            <div
-                                class="flex items-center gap-3 bg-slate-950 p-3 rounded-lg border border-slate-800 relative group">
-                                <button @click="removePixel(index)"
-                                    class="absolute top-3 right-3 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
-                                        data-lucide="trash" class="w-4 h-4"></i></button>
+                <hr class="border-slate-800">
 
-                                <select x-model="pixel.type"
-                                    class="bg-slate-900 border border-slate-700 text-white text-xs rounded p-2 outline-none">
-                                    <option value="facebook">Facebook Ads</option>
-                                    <option value="google">Google Ads</option>
-                                    <option value="tiktok">TikTok</option>
-                                    <option value="custom">Custom Script</option>
-                                </select>
+                <!-- Top Bar / Sticky Banner -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="megaphone"
+                                class="text-yellow-500 w-5 h-5"></i> Faixa Superior (Top Bar)</h4>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-white"
+                                x-text="form.top_bar_enabled ? 'Ativado' : 'Desativado'"></span>
+                            <button @click="form.top_bar_enabled = !form.top_bar_enabled"
+                                class="w-10 h-6 rounded-full bg-slate-700 relative transition-colors duration-300"
+                                :class="form.top_bar_enabled ? 'bg-green-500' : 'bg-slate-700'">
+                                <span
+                                    class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-md"
+                                    :class="form.top_bar_enabled ? 'translate-x-4' : 'translate-x-0'"></span>
+                            </button>
+                        </div>
+                    </div>
 
-                                <input x-model="pixel.pixel_id" type="text" placeholder="ID do Pixel / Tag"
-                                    class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
+                    <div x-show="form.top_bar_enabled" x-transition
+                        class="bg-slate-950/50 p-4 rounded-lg border border-slate-800 space-y-4">
 
-                                <input x-show="pixel.type === 'facebook'" x-model="pixel.token" type="text"
-                                    placeholder="Token API (Opcional)"
-                                    class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
+                        <!-- Text Content -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-1">Texto da Faixa</label>
+                            <textarea x-model="form.top_bar_text" rows="2"
+                                placeholder="🔥 Oferta Exclusiva! Termina em {datahoje}..."
+                                class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white resize-none focus:border-yellow-500 outline-none"></textarea>
+
+                            <!-- Helpers -->
+                            <div class="mt-3 space-y-2">
+                                <!-- Date Shortcodes -->
+                                <div class="flex gap-2 flex-wrap items-center">
+                                    <span class="text-xs text-slate-500 mr-1">Datas:</span>
+                                    <template
+                                        x-for="tag in ['{datahoje}', '{datahojemaiusculo}', '{datahojeminusculo}', '{datahojecapitalizado}']">
+                                        <span @click="copyToClipboard(tag)"
+                                            class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none border border-slate-700"
+                                            x-text="tag" title="Clique para copiar"></span>
+                                    </template>
+                                </div>
+
+                                <!-- Animated Icons -->
+                                <div class="flex gap-2 flex-wrap items-center">
+                                    <span class="text-xs text-slate-500 mr-1">Ícones Animados:</span>
+                                    <!-- Click to copy HTML -->
+                                    <button
+                                        @click="copyToClipboard('<i data-lucide=\'alert-circle\' class=\'w-4 h-4 animate-pulse\'></i>')"
+                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-yellow-500 transition"
+                                        title="Alerta Pulsante"><i data-lucide="alert-circle"
+                                            class="w-4 h-4"></i></button>
+                                    <button
+                                        @click="copyToClipboard('<i data-lucide=\'flame\' class=\'w-4 h-4 text-orange-500 animate-pulse\'></i>')"
+                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-orange-500 transition"
+                                        title="Fogo"><i data-lucide="flame" class="w-4 h-4"></i></button>
+                                    <button
+                                        @click="copyToClipboard('<i data-lucide=\'clock\' class=\'w-4 h-4 animate-bounce\'></i>')"
+                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-blue-400 transition"
+                                        title="Relógio"><i data-lucide="clock" class="w-4 h-4"></i></button>
+                                    <button
+                                        @click="copyToClipboard('<i data-lucide=\'credit-card\' class=\'w-4 h-4 animate-pulse\'></i>')"
+                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-green-400 transition"
+                                        title="Cartão"><i data-lucide="credit-card" class="w-4 h-4"></i></button>
+                                    <button
+                                        @click="copyToClipboard('<i data-lucide=\'star\' class=\'w-4 h-4 text-yellow-400 fill-yellow-400 animate-pulse\'></i>')"
+                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-yellow-500 transition"
+                                        title="Estrela"><i data-lucide="star" class="w-4 h-4"></i></button>
+                                    <button
+                                        @click="copyToClipboard('<i data-lucide=\'arrow-right\' class=\'w-4 h-4 animate-bounce-x\'></i>')"
+                                        class="p-1.5 bg-slate-800 rounded hover:bg-slate-700 text-white transition"
+                                        title="Seta"><i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                                </div>
+                                <p class="text-[10px] text-slate-500">Clique nos ícones para copiar o código HTML
+                                    correspondente.</p>
                             </div>
-                        </template>
-                        <template x-if="form.pixels.length === 0">
-                            <p class="text-slate-500 text-sm italic">Nenhum pixel configurado.</p>
-                        </template>
+                        </div>
+
+                        <!-- Colors -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Cor de Fundo</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" x-model="form.top_bar_bg_color"
+                                        class="h-9 w-12 rounded cursor-pointer bg-transparent border-none p-0">
+                                    <input type="text" x-model="form.top_bar_bg_color"
+                                        class="flex-1 bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white uppercase outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Cor do Texto</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" x-model="form.top_bar_text_color"
+                                        class="h-9 w-12 rounded cursor-pointer bg-transparent border-none p-0">
+                                    <input type="text" x-model="form.top_bar_text_color"
+                                        class="flex-1 bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white uppercase outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <div class="space-y-3">
+                    <template x-for="(pixel, index) in form.pixels" :key="index">
+                        <div
+                            class="flex items-center gap-3 bg-slate-950 p-3 rounded-lg border border-slate-800 relative group">
+                            <button @click="removePixel(index)"
+                                class="absolute top-3 right-3 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i
+                                    data-lucide="trash" class="w-4 h-4"></i></button>
+
+                            <select x-model="pixel.type"
+                                class="bg-slate-900 border border-slate-700 text-white text-xs rounded p-2 outline-none">
+                                <option value="facebook">Facebook Ads</option>
+                                <option value="google">Google Ads</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="custom">Custom Script</option>
+                            </select>
+
+                            <input x-model="pixel.pixel_id" type="text" placeholder="ID do Pixel / Tag"
+                                class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
+
+                            <input x-show="pixel.type === 'facebook'" x-model="pixel.token" type="text"
+                                placeholder="Token API (Opcional)"
+                                class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-blue-500 outline-none pb-1">
+                        </div>
+                    </template>
+                    <template x-if="form.pixels.length === 0">
+                        <p class="text-slate-500 text-sm italic">Nenhum pixel configurado.</p>
+                    </template>
+                </div>
             </div>
 
-            <div class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 z-10 shrink-0">
-                <button @click="closeModal()"
-                    class="px-5 py-2 rounded-lg text-slate-300 hover:text-white font-medium transition">Cancelar</button>
-                <button @click="saveProduct()" :disabled="isSaving"
-                    class="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition flex items-center gap-2">
-                    <span x-show="isSaving" class="animate-spin"><i data-lucide="loader-2" class="w-4 h-4"></i></span>
-                    <span x-text="isSaving ? 'Salvando...' : 'Salvar Produto'"></span>
-                </button>
-            </div>
         </div>
+
+        <div class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 z-10 shrink-0">
+            <button @click="closeModal()"
+                class="px-5 py-2 rounded-lg text-slate-300 hover:text-white font-medium transition">Cancelar</button>
+            <button @click="saveProduct()" :disabled="isSaving"
+                class="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition flex items-center gap-2">
+                <span x-show="isSaving" class="animate-spin"><i data-lucide="loader-2" class="w-4 h-4"></i></span>
+                <span x-text="isSaving ? 'Salvando...' : 'Salvar Produto'"></span>
+            </button>
+        </div>
+    </div>
     </div>
     </div>
 
@@ -575,7 +678,11 @@ require_once 'auth.php';
                     bumps: [],
                     pixels: [],
                     fake_notifications: false,
-                    notification_text: ''
+                    notification_text: '',
+                    top_bar_enabled: false,
+                    top_bar_text: '',
+                    top_bar_bg_color: '#000000',
+                    top_bar_text_color: '#ffffff'
                 },
 
                 init() {
@@ -626,7 +733,11 @@ require_once 'auth.php';
                                     bumps: data.bumps || [],
                                     pixels: data.pixels || [],
                                     fake_notifications: data.fake_notifications == 1,
-                                    notification_text: data.notification_text || ''
+                                    notification_text: data.notification_text || '',
+                                    top_bar_enabled: data.top_bar_enabled == 1,
+                                    top_bar_text: data.top_bar_text || '',
+                                    top_bar_bg_color: data.top_bar_bg_color || '#000000',
+                                    top_bar_text_color: data.top_bar_text_color || '#ffffff'
                                 };
                                 // Fallback for legacy records (null/undefined => true)
                                 if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;

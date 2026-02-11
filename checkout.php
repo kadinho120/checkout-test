@@ -366,11 +366,16 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 price: <?= $product['price'] * 100 ?>,
                 name: <?= json_encode($product['name']) ?>,
                 sku: <?= json_encode($product['slug']) ?>,
-                notifications: {
-                    enabled: <?= ($product['fake_notifications'] ?? 0) ? 'true' : 'false' ?>,
-                    text: <?= json_encode($product['notification_text'] ?? '') ?>
-                }
+                enabled: <?= ($product['fake_notifications'] ?? 0) ? 'true' : 'false' ?>,
+                text: <?= json_encode($product['notification_text'] ?? '') ?>
+            },
+            topBar: {
+                enabled: <?= ($product['top_bar_enabled'] ?? 0) ? 'true' : 'false' ?>,
+                text: <?= json_encode($product['top_bar_text'] ?? '') ?>,
+                bgColor: <?= json_encode($product['top_bar_bg_color'] ?? '#000000') ?>,
+                textColor: <?= json_encode($product['top_bar_text_color'] ?? '#ffffff') ?>
             }
+        }
         };
 
         const formatCurrency = (value) => {
@@ -833,6 +838,45 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             // Initial delay: 5 seconds
             setTimeout(scheduleNext, 5000);
 
+        })();
+    </script>
+
+    <!-- TOP BAR ENGINE -->
+    <script>
+        (function () {
+            if (!PLANOS.main.topBar || !PLANOS.main.topBar.enabled) return;
+
+            const config = PLANOS.main.topBar;
+
+            function parseDateShortcodes(text) {
+                const now = new Date();
+                const options = { weekday: 'long', day: 'numeric', month: 'long' };
+                // e.g., "terça-feira, 11 de fevereiro"
+                const dateStr = now.toLocaleDateString('pt-BR', options);
+
+                // {datahoje} -> "terça-feira, 11 de fevereiro"
+                let processed = text.replace(/{datahoje}/gi, dateStr);
+
+                // {datahojemaiusculo} -> "TERÇA-FEIRA, 11 DE FEVEREIRO"
+                processed = processed.replace(/{datahojemaiusculo}/gi, dateStr.toUpperCase());
+
+                // {datahojeminusculo} -> "terça-feira, 11 de fevereiro"
+                processed = processed.replace(/{datahojeminusculo}/gi, dateStr.toLowerCase());
+
+                // {datahojecapitalizado} -> "Terça-Feira, 11 De Fevereiro"
+                processed = processed.replace(/{datahojecapitalizado}/gi, dateStr.replace(/\b\w/g, l => l.toUpperCase()));
+
+                return processed;
+            }
+
+            const bar = document.createElement('div');
+            bar.className = 'w-full py-2 px-4 text-center text-sm font-bold uppercase tracking-wide z-50 sticky top-0 shadow-lg flex items-center justify-center gap-2';
+            bar.style.backgroundColor = config.bgColor;
+            bar.style.color = config.textColor;
+            bar.innerHTML = parseDateShortcodes(config.text);
+
+            document.body.prepend(bar);
+            lucide.createIcons(); // Updates icons inside the bar if any
         })();
     </script>
 </body>

@@ -64,7 +64,7 @@ switch ($method) {
             if (isset($data->id) && !empty($data->id)) {
                 // Update
                 // Update
-                $stmt = $db->prepare("UPDATE products SET name=?, slug=?, description=?, price=?, image_url=?, active=?, theme=?, request_email=?, request_phone=?, evolution_instance=?, evolution_token=?, evolution_url=?, deliverable_type=?, deliverable_text=?, deliverable_file=?, deliverable_email_subject=?, deliverable_email_body=?, fake_notifications=?, notification_text=? WHERE id=?");
+                $stmt = $db->prepare("UPDATE products SET name=?, slug=?, description=?, price=?, image_url=?, active=?, theme=?, request_email=?, request_phone=?, evolution_instance=?, evolution_token=?, evolution_url=?, deliverable_type=?, deliverable_text=?, deliverable_file=?, deliverable_email_subject=?, deliverable_email_body=?, fake_notifications=?, notification_text=?, top_bar_enabled=?, top_bar_text=?, top_bar_bg_color=?, top_bar_text_color=? WHERE id=?");
                 $stmt->execute([
                     $data->name,
                     $data->slug,
@@ -85,12 +85,16 @@ switch ($method) {
                     $data->deliverable_email_body ?? '',
                     isset($data->fake_notifications) ? ($data->fake_notifications ? 1 : 0) : 0,
                     $data->notification_text ?? '',
+                    isset($data->top_bar_enabled) ? ($data->top_bar_enabled ? 1 : 0) : 0,
+                    $data->top_bar_text ?? '',
+                    $data->top_bar_bg_color ?? '#000000',
+                    $data->top_bar_text_color ?? '#ffffff',
                     $data->id
                 ]);
                 $productId = $data->id;
             } else {
                 // Insert
-                $stmt = $db->prepare("INSERT INTO products (name, slug, description, price, image_url, active, theme, request_email, request_phone, evolution_instance, evolution_token, evolution_url, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, fake_notifications, notification_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $db->prepare("INSERT INTO products (name, slug, description, price, image_url, active, theme, request_email, request_phone, evolution_instance, evolution_token, evolution_url, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, fake_notifications, notification_text, top_bar_enabled, top_bar_text, top_bar_bg_color, top_bar_text_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([
                     $data->name,
                     $data->slug,
@@ -108,7 +112,13 @@ switch ($method) {
                     $data->deliverable_text ?? '',
                     $data->deliverable_file ?? '',
                     $data->deliverable_email_subject ?? '',
-                    $data->deliverable_email_body ?? ''
+                    $data->deliverable_email_body ?? '',
+                    isset($data->fake_notifications) ? ($data->fake_notifications ? 1 : 0) : 0,
+                    $data->notification_text ?? '',
+                    isset($data->top_bar_enabled) ? ($data->top_bar_enabled ? 1 : 0) : 0,
+                    $data->top_bar_text ?? '',
+                    $data->top_bar_bg_color ?? '#000000',
+                    $data->top_bar_text_color ?? '#ffffff'
                 ]);
                 $productId = $db->lastInsertId();
             }

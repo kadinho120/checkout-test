@@ -192,6 +192,32 @@ class Database
             if (!$hasNotifText) {
                 $this->conn->exec("ALTER TABLE products ADD COLUMN notification_text TEXT;");
             }
+
+            // Check for Top Bar columns
+            $prodCols4 = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasTopBarEnabled = false;
+            $hasTopBarText = false;
+            $hasTopBarBg = false;
+            $hasTopBarColor = false;
+            foreach ($prodCols4 as $col) {
+                if ($col['name'] === 'top_bar_enabled')
+                    $hasTopBarEnabled = true;
+                if ($col['name'] === 'top_bar_text')
+                    $hasTopBarText = true;
+                if ($col['name'] === 'top_bar_bg_color')
+                    $hasTopBarBg = true;
+                if ($col['name'] === 'top_bar_text_color')
+                    $hasTopBarColor = true;
+            }
+            if (!$hasTopBarEnabled)
+                $this->conn->exec("ALTER TABLE products ADD COLUMN top_bar_enabled INTEGER DEFAULT 0;");
+            if (!$hasTopBarText)
+                $this->conn->exec("ALTER TABLE products ADD COLUMN top_bar_text TEXT;");
+            if (!$hasTopBarBg)
+                $this->conn->exec("ALTER TABLE products ADD COLUMN top_bar_bg_color TEXT DEFAULT '#000000';");
+            if (!$hasTopBarColor)
+                $this->conn->exec("ALTER TABLE products ADD COLUMN top_bar_text_color TEXT DEFAULT '#ffffff';");
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {
