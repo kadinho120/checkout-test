@@ -877,15 +877,29 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             bar.innerHTML = parseDateShortcodes(config.text);
 
             document.body.prepend(bar);
-            document.body.prepend(bar);
-            const barHeight = bar.offsetHeight;
-            document.body.style.paddingTop = barHeight + 'px'; // Prevent content overlap
 
-            // Adjust sticky elements to respect the new top offset
-            const stickyElements = document.querySelectorAll('.lg\\:sticky');
-            stickyElements.forEach(el => {
-                el.style.top = (32 + barHeight) + 'px'; // 32px is the original top-8 (8 * 4px)
-            });
+            // Spacer Strategy: Push content down without overwriting body padding
+            const spacer = document.createElement('div');
+            spacer.style.width = '100%';
+            spacer.style.flexShrink = '0';
+            spacer.style.transition = 'height 0.2s ease';
+            document.body.prepend(spacer);
+
+            const updateLayout = () => {
+                const height = bar.offsetHeight;
+                spacer.style.height = height + 'px';
+
+                // Adjust sticky elements
+                // Base top-8 is 2rem (32px). We add the bar height.
+                document.querySelectorAll('.lg\\:sticky').forEach(el => {
+                    el.style.top = (32 + height) + 'px';
+                });
+            };
+
+            // Run immediately and on resize
+            updateLayout();
+            window.addEventListener('resize', updateLayout);
+            setTimeout(updateLayout, 200); // Safety check for font loading
 
             lucide.createIcons(); // Updates icons inside the bar if any
         })();
