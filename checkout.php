@@ -746,9 +746,25 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         (function () {
             if (!PLANOS.main.notifications.enabled) return;
 
-            const CIDADES = ['São Paulo - SP', 'Rio de Janeiro - RJ', 'Belo Horizonte - MG', 'Curitiba - PR', 'Porto Alegre - RS', 'Salvador - BA', 'Recife - PE', 'Fortaleza - CE', 'Brasília - DF', 'Goiânia - GO', 'Campinas - SP', 'Manaus - AM', 'Vitória - ES', 'Florianópolis - SC', 'Natal - RN'];
-            const HOMENS = ['João', 'Pedro', 'Lucas', 'Matheus', 'Gabriel', 'Rafael', 'Felipe', 'Bruno', 'Gustavo', 'Daniel', 'Carlos', 'Eduardo', 'Thiago', 'Rodrigo', 'Marcos'];
-            const MULHERES = ['Maria', 'Ana', 'Julia', 'Beatriz', 'Mariana', 'Larissa', 'Camila', 'Fernanda', 'Amanda', 'Bruna', 'Gabriela', 'Luana', 'Jessica', 'Leticia', 'Carolina'];
+            // Updated List: Mix of Capitals and medium-sized/interior cities for realism
+            const CIDADES = [
+                'São Paulo - SP', 'Campinas - SP', 'Santos - SP', 'Ribeirão Preto - SP', 'Sorocaba - SP',
+                'Rio de Janeiro - RJ', 'Niterói - RJ', 'Duque de Caxias - RJ', 'Nova Iguaçu - RJ',
+                'Belo Horizonte - MG', 'Uberlândia - MG', 'Contagem - MG', 'Juiz de Fora - MG',
+                'Curitiba - PR', 'Londrina - PR', 'Maringá - PR', 'Foz do Iguaçu - PR',
+                'Porto Alegre - RS', 'Caxias do Sul - RS', 'Pelotas - RS', 'Canoas - RS',
+                'Salvador - BA', 'Feira de Santana - BA', 'Vitória da Conquista - BA',
+                'Recife - PE', 'Jaboatão dos Guararapes - PE', 'Olinda - PE',
+                'Fortaleza - CE', 'Caucaia - CE',
+                'Brasília - DF', 'Goiânia - GO', 'Aparecida de Goiânia - GO',
+                'Manaus - AM', 'Belém - PA',
+                'Vitória - ES', 'Vila Velha - ES', 'Serra - ES',
+                'Florianópolis - SC', 'Joinville - SC', 'Blumenau - SC',
+                'São Luís - MA', 'Maceió - AL', 'Natal - RN', 'Teresina - PI', 'João Pessoa - PB', 'Aracaju - SE', 'Cuiabá - MT', 'Campo Grande - MS'
+            ];
+
+            const HOMENS = ['João', 'Pedro', 'Lucas', 'Matheus', 'Gabriel', 'Rafael', 'Felipe', 'Bruno', 'Gustavo', 'Daniel', 'Carlos', 'Eduardo', 'Thiago', 'Rodrigo', 'Marcos', 'André', 'Luiz', 'Paulo', 'Vitor', 'Guilherme'];
+            const MULHERES = ['Maria', 'Ana', 'Julia', 'Beatriz', 'Mariana', 'Larissa', 'Camila', 'Fernanda', 'Amanda', 'Bruna', 'Gabriela', 'Luana', 'Jessica', 'Leticia', 'Carolina', 'Isabela', 'Natália', 'Bianca', 'Débora', 'Vanessa'];
             const NOMES = [...HOMENS, ...MULHERES];
 
             const config = PLANOS.main.notifications;
@@ -806,15 +822,16 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Schedule
             function scheduleNext() {
-                const delay = Math.floor(Math.random() * (20000 - 8000 + 1)) + 8000; // 8-20 seconds
+                // Random Interval: 10 to 30 seconds
+                const delay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
                 setTimeout(() => {
                     createNotification();
                     scheduleNext();
                 }, delay);
             }
 
-            // Initial delay
-            setTimeout(scheduleNext, 3000);
+            // Initial delay: 5 seconds
+            setTimeout(scheduleNext, 5000);
 
         })();
     </script>
