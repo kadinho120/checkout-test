@@ -877,7 +877,16 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             bar.innerHTML = parseDateShortcodes(config.text);
 
             document.body.prepend(bar);
-            document.body.style.paddingTop = bar.offsetHeight + 'px'; // Prevent content overlap
+            document.body.prepend(bar);
+            const barHeight = bar.offsetHeight;
+            document.body.style.paddingTop = barHeight + 'px'; // Prevent content overlap
+
+            // Adjust sticky elements to respect the new top offset
+            const stickyElements = document.querySelectorAll('.lg\\:sticky');
+            stickyElements.forEach(el => {
+                el.style.top = (32 + barHeight) + 'px'; // 32px is the original top-8 (8 * 4px)
+            });
+
             lucide.createIcons(); // Updates icons inside the bar if any
         })();
     </script>
