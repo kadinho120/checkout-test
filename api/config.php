@@ -29,6 +29,19 @@ define('TRIBOPAY_API_TOKEN', getenv('TRIBOPAY_API_TOKEN') ?: '');
 
 define('TRIBOPAY_POSTBACK_URL', getenv('TRIBOPAY_POSTBACK_URL') ?: '');
 
+define('ADMIN_USER', getenv('ADMIN_USER') ?: 'admin');
+define('ADMIN_PASSWORD', getenv('ADMIN_PASSWORD') ?: '');
+
+define('UTMIFY_API_TOKEN', getenv('UTMIFY_API_TOKEN') ?: '');
+
+define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.hostinger.com');
+define('SMTP_PORT', getenv('SMTP_PORT') ?: 465);
+define('SMTP_USER', getenv('SMTP_USER') ?: '');
+define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
+
+
+
+
 // ====================================================
 // CONFIGURAÇÕES GERAIS DO PHP
 // ====================================================

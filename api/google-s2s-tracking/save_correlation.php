@@ -8,11 +8,13 @@
 
 header('Content-Type: application/json');
 
-// Função de log simples para o contexto Google
+// Função de log unificada
+require_once __DIR__ . '/../functions/log_activity.php';
+
 function log_google_activity($message) {
-    $logFile = __DIR__ . '/google_activity.log';
-    file_put_contents($logFile, date('[Y-m-d H:i:s] ') . $message . "\n", FILE_APPEND);
+    log_activity($message, 'google_activity.log', __DIR__);
 }
+
 
 log_google_activity("SAVE GOOGLE: Requisição recebida.");
 

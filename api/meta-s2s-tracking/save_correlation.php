@@ -4,11 +4,14 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/../connection.php';
 
+// Função de log unificada
+require_once __DIR__ . '/../functions/log_activity.php';
+
 function log_meta_activity($message)
 {
-    $logFile = __DIR__ . '/meta_activity.log';
-    file_put_contents($logFile, date('[Y-m-d H:i:s] ') . $message . "\n", FILE_APPEND);
+    log_activity($message, 'meta_activity.log', __DIR__);
 }
+
 
 $input = file_get_contents('php://input');
 $data = json_decode($input, true);

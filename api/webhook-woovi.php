@@ -10,12 +10,16 @@ define('FINAL_ORDER_STATUS', 'paid');
 define('LOG_FILE_PATH', __DIR__ . '/webhook_n8n_woovi.log');
 define('ENABLE_LOGGING', true);
 
+// --- LOGGING ISOLADO ---
+require_once __DIR__ . '/functions/log_activity.php';
+
 function log_message($message)
 {
     if (ENABLE_LOGGING) {
-        file_put_contents(LOG_FILE_PATH, "[" . date('Y-m-d H:i:s') . "] " . $message . "\n", FILE_APPEND);
+        log_activity($message, 'webhook_n8n_woovi.log', __DIR__);
     }
 }
+
 
 header('Content-Type: application/json');
 

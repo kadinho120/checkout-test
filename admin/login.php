@@ -1,9 +1,11 @@
 <?php
 session_start();
+require_once '../api/config.php';
 
 // Credentials
-$USER_CORRETO = 'kadinho120';
-$PASS_CORRETO = 'Houshiengi22@';
+$USER_CORRETO = ADMIN_USER;
+$PASS_CORRETO = ADMIN_PASSWORD;
+
 
 if (isset($_GET['logout'])) {
     session_destroy();

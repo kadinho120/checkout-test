@@ -8,11 +8,13 @@
 
 header('Content-Type: application/json');
 
-// Função de log específica para Taboola
+// Função de log unificada
+require_once __DIR__ . '/../functions/log_activity.php';
+
 function log_taboola_activity($message) {
-    $logFile = __DIR__ . '/taboola_activity.log';
-    file_put_contents($logFile, date('[Y-m-d H:i:s] ') . $message . "\n", FILE_APPEND);
+    log_activity($message, 'taboola_activity.log', __DIR__);
 }
+
 
 log_taboola_activity("SAVE TABOOLA: Requisição recebida.");
 

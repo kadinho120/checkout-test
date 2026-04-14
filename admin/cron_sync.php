@@ -79,25 +79,13 @@ file_put_contents(__DIR__ . '/db/facebook_cache.json', json_encode($dadosConsoli
 
 echo "Sincronização concluída.";
 
-// --- FUNÇÕES AUXILIARES ---
-
-function alterarOrcamentoFacebook($adsetId, $multiplicador) {
-    // Primeiro precisamos pegar o budget atual
-    // Implementar chamada GET para /adset_id?fields=daily_budget
-    // Calcular novo budget e fazer POST
-    // Cuidado: Implementar travas para não escalar o mesmo conjunto a cada 10 min.
-    // Sugestão: Salvar em um json 'last_scaled.json' a hora da última escala.
-}
-
-function pausarAdsetFacebook($adsetId) {
-    $url = "https://graph.facebook.com/v18.0/$adsetId";
-    $data = ['status' => 'PAUSED', 'access_token' => META_ACCESS_TOKEN];
-    
-    // Fazer CURL POST...
-}
+// --- FUNÇÕES AUXILIARES ISOLADAS ---
+require_once __DIR__ . '/../api/functions/alterar_orcamento_facebook.php';
+require_once __DIR__ . '/../api/functions/pausar_adset_facebook.php';
+require_once __DIR__ . '/../api/functions/log_activity.php';
 
 function logAction($msg) {
-    $log = date('Y-m-d H:i:s') . " - " . $msg . "\n";
-    file_put_contents(__DIR__ . '/surfscale_log.txt', $log, FILE_APPEND);
+    log_activity($msg, 'surfscale_log.txt', __DIR__);
 }
 ?>
+
