@@ -370,6 +370,24 @@ require_once 'auth.php';
                                     </template>
                                 </div>
                             </div>
+
+                            <!-- Test Email Section -->
+                            <div class="mt-4 pt-4 border-t border-slate-800 flex items-end gap-3">
+                                <div class="flex-1">
+                                    <label class="block text-xs font-bold text-slate-400 mb-1">E-mail para Teste</label>
+                                    <input type="email" x-model="testEmailAddress" placeholder="seu@email.com"
+                                        class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm focus:border-blue-500 outline-none">
+                                </div>
+                                <button @click="testEmail()" :disabled="isTestingEmail"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold text-sm transition flex items-center gap-2 h-[38px]">
+                                    <span x-show="isTestingEmail" class="animate-spin"><i data-lucide="loader-2"
+                                            class="w-4 h-4"></i></span>
+                                    <span x-show="!isTestingEmail"><i data-lucide="send" class="w-4 h-4 inline mr-1"></i> Testar
+                                        E-mail</span>
+                                </button>
+                            </div>
+                            <p x-show="testEmailResult" class="text-xs mt-2"
+                                :class="testEmailResult.success ? 'text-green-400' : 'text-red-400'" x-text="testEmailResult.message"></p>
                         </div>
                     </div>
 
@@ -492,6 +510,13 @@ require_once 'auth.php';
                                             <textarea x-model="bump.deliverable_email_body" rows="2"
                                                 placeholder="Corpo do E-mail (HTML)..."
                                                 class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs resize-none focus:border-blue-500 outline-none font-mono"></textarea>
+                                            
+                                            <div class="flex justify-end">
+                                                <button @click="testBumpEmail(bump)" type="button"
+                                                    class="text-[10px] bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-3 py-1 rounded border border-blue-600/20 flex items-center gap-1 transition font-bold">
+                                                    <i data-lucide="send" class="w-3 h-3"></i> Testar E-mail do Bump
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -768,8 +793,11 @@ require_once 'auth.php';
                 isSaving: false,
                 isUploading: false,
                 isTesting: false,
+                isTestingEmail: false,
                 testPhone: '',
+                testEmailAddress: '',
                 testResult: null,
+                testEmailResult: null,
                 form: {
                     id: null,
                     name: '',
@@ -1034,6 +1062,88 @@ require_once 'auth.php';
                         .catch(err => {
                             this.isTesting = false;
                             this.testResult = { success: false, message: 'Erro na requisição.' };
+                            console.error(err);
+                        });
+                },
+
+                testEmail() {
+                    if (!this.testEmailAddress) {
+                        alert('Digite um e-mail para teste.');
+                        return;
+                    }
+                    this.isTestingEmail = true;
+                    this.testEmailResult = null;
+
+                    const payload = {
+                        ...this.form,
+                        test_email: this.testEmailAddress
+                    };
+
+                    fetch('../api/v1/test-email.php', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isTestingEmail = false;
+                            if (data.success) {
+                                this.testEmailResult = { success: true, message: 'Sucesso! Verifique sua caixa de entrada.' };
+                            } else {
+                                this.testEmailResult = { success: false, message: 'Erro: ' + (data.error || 'Falha no envio.') };
+                            }
+                        })
+                        .catch(err => {
+                            this.isTestingEmail = false;
+                            this.testEmailResult = { success: false, message: 'Erro na requisição.' };
+                            console.error(err);
+                        });
+                },
+
+                testBumpEmail(bump) {
+                    if (!this.testEmailAddress) {
+                        alert('Digite um e-mail para teste no campo acima (nas configurações do produto principal).');
+                        return;
+                    }
+                    if (!bump.deliverable_email_subject || !bump.deliverable_email_body) {
+                        alert('Configure o assunto e corpo do e-mail do bump antes de testar.');
+                        return;
+                    }
+
+                    // Use a temporary state for bump testing if needed, or just alerts
+                    const btn = event.currentTarget;
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> Testando...';
+                    this.$nextTick(() => lucide.createIcons());
+
+                    const payload = {
+                        name: bump.title, // For shortcode replacement
+                        deliverable_email_subject: bump.deliverable_email_subject,
+                        deliverable_email_body: bump.deliverable_email_body,
+                        test_email: this.testEmailAddress
+                    };
+
+                    fetch('../api/v1/test-email.php', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            btn.disabled = false;
+                            btn.innerHTML = originalText;
+                            this.$nextTick(() => lucide.createIcons());
+
+                            if (data.success) {
+                                alert('Sucesso! E-mail de teste do bump enviado.');
+                            } else {
+                                alert('Erro: ' + (data.error || 'Falha no envio.'));
+                            }
+                        })
+                        .catch(err => {
+                            btn.disabled = false;
+                            btn.innerHTML = originalText;
+                            this.$nextTick(() => lucide.createIcons());
+                            alert('Erro na requisição.');
                             console.error(err);
                         });
                 },
