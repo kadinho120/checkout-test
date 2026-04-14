@@ -304,7 +304,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center justify-between mb-1">
                                             <span
-                                                class="font-bold text-gray-900 dark:text-white text-sm truncate pr-2"><?= htmlspecialchars($bump['title']) ?></span>
+                                                class="font-bold text-gray-900 dark:text-white text-sm pr-2"><?= htmlspecialchars($bump['title']) ?></span>
                                         </div>
                                         <p class="text-xs text-slate-400 leading-tight">
                                             <?= htmlspecialchars($bump['description']) ?>
@@ -710,34 +710,6 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
     </script>
     </script>
 
-    <!-- CUSTOM REALTIME TRACKER -->
-    <script>
-        (function () {
-            const TRACKING_URL = 'https://instaboost.com.br/realtime-stats/realtime_tracker.php';
-            let visitorId = localStorage.getItem('visitor_id');
-            if (!visitorId) {
-                visitorId = 'v' + Date.now() + Math.random().toString(16).substring(2);
-                localStorage.setItem('visitor_id', visitorId);
-            }
-
-            function track() {
-                const url = encodeURIComponent(window.location.href);
-                const ref = encodeURIComponent(document.referrer || 'direto');
-                const currentHash = encodeURIComponent(window.location.hash);
-                const endpoint = `${TRACKING_URL}?action=track&vid=${visitorId}&url=${url}&ref=${ref}&hash=${currentHash}`;
-
-                fetch(endpoint, {
-                    method: 'GET',
-                    mode: 'no-cors'
-                })
-                    .then(response => response)
-                    .catch(e => console.error('Erro ao enviar rastreamento:', e));
-            }
-
-            track();
-            setInterval(track, 15000);
-        })();
-    </script>
 
     <!-- MICROSOFT CLARITY -->
     <script type="text/javascript">
