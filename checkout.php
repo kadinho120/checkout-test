@@ -159,7 +159,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 
 <body
-    class="min-h-screen flex flex-col items-center transition-colors duration-300 <?= $isModal ? 'py-2 px-2 bg-transparent overflow-x-hidden' : 'py-6 sm:py-12 px-4 bg-gray-50 dark:bg-slate-950' ?>">
+    class="min-h-screen flex flex-col items-center transition-colors duration-300 <?= $isModal ? 'py-2 px-2 overflow-x-hidden bg-gray-50 dark:bg-slate-950' : 'py-6 sm:py-12 px-4 bg-gray-50 dark:bg-slate-950' ?>">
 
     <?php if (!$isModal): ?>
     <!-- Header / Security -->

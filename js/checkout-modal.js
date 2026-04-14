@@ -30,7 +30,7 @@
             width: 95%;
             max-width: 1100px;
             height: 90vh;
-            background: #fff;
+            background: transparent;
             border-radius: 16px;
             position: relative;
             overflow: hidden;
