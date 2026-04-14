@@ -111,9 +111,14 @@ require_once 'auth.php';
                                 <tr class="hover:bg-slate-800/50 transition">
                                     <td class="p-4 font-medium text-white">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded bg-slate-700 overflow-hidden">
-                                                <img :src="product.image_url" class="w-full h-full object-cover"
-                                                    onerror="this.src='https://placehold.co/100x100?text=IMG'">
+                                            <div class="w-8 h-8 rounded bg-slate-700 overflow-hidden flex items-center justify-center">
+                                                <template x-if="product.image_url">
+                                                    <img :src="product.image_url.startsWith('http') ? product.image_url : '../' + product.image_url" 
+                                                         class="w-full h-full object-cover">
+                                                </template>
+                                                <template x-if="!product.image_url">
+                                                    <i data-lucide="image" class="w-4 h-4 text-slate-500"></i>
+                                                </template>
                                             </div>
                                             <span x-text="product.name"></span>
                                         </div>
