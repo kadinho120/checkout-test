@@ -2,7 +2,7 @@
 /**
  * Envia e-mail formatado para o cliente
  */
-require_once __DIR__ . '/../email-sender-class.php'; // Vou mover a classe SimpleSMTP para este arquivo novo
+require_once __DIR__ . '/send_gmail_api_email.php';
 
 function sendOrderEmail($to, $subject, $body)
 {
@@ -10,12 +10,5 @@ function sendOrderEmail($to, $subject, $body)
         return ['success' => false, 'error' => 'Missing email fields'];
     }
 
-    // Credentials from config.php
-    $host = SMTP_HOST;
-    $port = SMTP_PORT;
-    $username = SMTP_USER;
-    $password = SMTP_PASS;
-
-    $smtp = new SimpleSMTP($host, $port, $username, $password);
-    return $smtp->send($to, $subject, $body, 'InstaBoost Suporte');
+    return sendGmailApiEmail($to, $subject, $body, 'InstaBoost Suporte');
 }

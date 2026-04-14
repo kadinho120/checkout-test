@@ -39,6 +39,10 @@ define('SMTP_PORT', getenv('SMTP_PORT') ?: 465);
 define('SMTP_USER', getenv('SMTP_USER') ?: '');
 define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
 
+define('GMAIL_CLIENT_ID', getenv('GMAIL_CLIENT_ID') ?: '');
+define('GMAIL_CLIENT_SECRET', getenv('GMAIL_CLIENT_SECRET') ?: '');
+define('GMAIL_REFRESH_TOKEN', getenv('GMAIL_REFRESH_TOKEN') ?: '');
+
 
 
 
