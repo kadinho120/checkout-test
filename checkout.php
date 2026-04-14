@@ -295,27 +295,33 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                                     onchange="updateTotalPrice(); toggleBumpVisual(this)">
 
                                 <div
-                                    class="bump-box border border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 p-3 rounded-xl flex items-start gap-3 transition-all duration-200 peer-checked:border-yellow-500 peer-checked:bg-yellow-500/10">
-                                    <div
-                                        class="bump-icon-box flex h-5 w-5 mt-1 shrink-0 items-center justify-center rounded border border-slate-500 text-transparent bg-transparent peer-checked:bg-yellow-500 peer-checked:border-yellow-500 peer-checked:text-black">
-                                        <i data-lucide="check" class="w-3 h-3"></i>
-                                    </div>
-
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <span
-                                                class="font-bold text-gray-900 dark:text-white text-sm pr-2"><?= htmlspecialchars($bump['title']) ?></span>
+                                    class="bump-box border border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 p-3 rounded-xl transition-all duration-200 peer-checked:border-yellow-500 peer-checked:bg-yellow-500/10">
+                                    
+                                    <!-- Top Row: Checkbox, Title and Price -->
+                                    <div class="flex items-start gap-3 mb-2">
+                                        <div
+                                            class="bump-icon-box flex h-5 w-5 mt-1 shrink-0 items-center justify-center rounded border border-slate-500 text-transparent bg-transparent peer-checked:bg-yellow-500 peer-checked:border-yellow-500 peer-checked:text-black">
+                                            <i data-lucide="check" class="w-3 h-3"></i>
                                         </div>
-                                        <p class="text-xs text-slate-400 leading-tight">
-                                            <?= htmlspecialchars($bump['description']) ?>
-                                        </p>
+
+                                        <div class="flex-1 min-w-0">
+                                            <span class="font-bold text-gray-900 dark:text-white text-sm pr-2">
+                                                <?= htmlspecialchars($bump['title']) ?>
+                                            </span>
+                                        </div>
+
+                                        <div class="text-right shrink-0">
+                                            <span class="block text-sm font-black text-yellow-500">+R$
+                                                <?= number_format($bump['price'], 2, ',', '.') ?></span>
+                                        </div>
                                     </div>
 
-                                    <div class="text-right shrink-0">
-                                        <span class="block text-sm font-black text-yellow-500">+R$
-                                            <?= number_format($bump['price'], 2, ',', '.') ?></span>
-                                    </div>
+                                    <!-- Bottom Row: Full Width Description -->
+                                    <p class="text-xs text-slate-400 leading-relaxed ml-8">
+                                        <?= htmlspecialchars($bump['description']) ?>
+                                    </p>
                                 </div>
+
                             </label>
                         <?php endforeach; ?>
                     </div>
