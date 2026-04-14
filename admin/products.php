@@ -190,9 +190,28 @@ require_once 'auth.php';
                         </div>
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-slate-400 mb-1">URL da Imagem</label>
-                                <input x-model="form.image_url" type="text"
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                                <label class="block text-sm font-medium text-slate-400 mb-2">Imagem de Capa</label>
+                                <div class="flex items-center gap-4 bg-slate-950/50 p-3 rounded-xl border border-slate-800">
+                                    <div class="w-16 h-16 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+                                        <template x-if="form.image_url">
+                                            <img :src="form.image_url.startsWith('http') ? form.image_url : '../' + form.image_url" class="w-full h-full object-cover">
+                                        </template>
+                                        <template x-if="!form.image_url">
+                                            <i data-lucide="image" class="text-slate-700 w-8 h-8"></i>
+                                        </template>
+                                    </div>
+                                    <div class="flex-1">
+                                        <button @click="$refs.mainImageInput.click()" type="button"
+                                            class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 border border-blue-600/20">
+                                            <i data-lucide="upload-cloud" class="w-4 h-4"></i> Carregar Imagem
+                                        </button>
+                                        <input type="file" x-ref="mainImageInput" class="hidden" @change="handleFileUpload($event, 'main')" accept="image/*">
+                                        <p class="text-[10px] text-slate-500 mt-1 truncate max-w-[200px]" x-text="form.image_url || 'Nenhuma imagem enviada'"></p>
+                                    </div>
+                                    <button x-show="form.image_url" @click="form.image_url = ''" type="button" class="text-slate-500 hover:text-red-400 transition">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-400 mb-1">Descrição Curta</label>
@@ -377,11 +396,27 @@ require_once 'auth.php';
                                                 class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
                                         </div>
                                         <div>
-                                            <input x-model="bump.price" type="number" step="0.01" placeholder="Preço"
-                                                class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
+                                            <div class="flex items-center gap-3 mb-2">
+                                                <div class="w-10 h-10 rounded bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+                                                    <template x-if="bump.image_url">
+                                                        <img :src="bump.image_url.startsWith('http') ? bump.image_url : '../' + bump.image_url" class="w-full h-full object-cover">
+                                                    </template>
+                                                    <template x-if="!bump.image_url">
+                                                        <i data-lucide="image" class="text-slate-800 w-5 h-5"></i>
+                                                    </template>
+                                                </div>
+                                                <button @click="$el.nextElementSibling.click()" type="button"
+                                                    class="text-[10px] bg-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded border border-slate-700 flex items-center gap-1 transition">
+                                                    <i data-lucide="upload" class="w-3 h-3"></i> Upload
+                                                </button>
+                                                <input type="file" class="hidden" @change="handleFileUpload($event, 'bump', index)" accept="image/*">
+                                                <button x-show="bump.image_url" @click="bump.image_url = ''" type="button" class="text-slate-600 hover:text-red-400 transition">
+                                                    <i data-lucide="x" class="w-3 h-3"></i>
+                                                </button>
+                                            </div>
                                             <input x-model="bump.image_url" type="text"
-                                                placeholder="URL Imagem (Opcional)"
-                                                class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
+                                                placeholder="Caminho da Imagem"
+                                                class="w-full bg-transparent border-b border-slate-700 text-[10px] text-slate-500 focus:border-yellow-500 outline-none pb-1 opacity-50">
                                         </div>
                                     </div>
 
@@ -627,6 +662,7 @@ require_once 'auth.php';
                 isLoading: true,
                 isModalOpen: false,
                 isSaving: false,
+                isUploading: false,
                 isTesting: false,
                 testPhone: '',
                 testResult: null,
@@ -802,6 +838,45 @@ require_once 'auth.php';
                             alert('Erro ao salvar');
                             this.isSaving = false;
                         });
+                },
+
+                handleFileUpload(event, type, index = null) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    // Basic client side validation
+                    if (!file.type.match('image.*')) {
+                        alert('Por favor, selecione apenas imagens.');
+                        return;
+                    }
+
+                    this.isUploading = true;
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    fetch('../api/v1/upload.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.isUploading = false;
+                        if (data.success) {
+                            if (type === 'main') {
+                                this.form.image_url = data.url;
+                            } else if (type === 'bump' && index !== null) {
+                                this.form.bumps[index].image_url = data.url;
+                            }
+                            this.$nextTick(() => lucide.createIcons());
+                        } else {
+                            alert(data.message || 'Erro no upload');
+                        }
+                    })
+                    .catch(err => {
+                        this.isUploading = false;
+                        alert('Erro na conexão com o servidor');
+                        console.error(err);
+                    });
                 },
 
                 testEvolution() {
