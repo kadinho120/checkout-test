@@ -51,8 +51,12 @@ try {
 
     if ($order) {
         if ($order['status'] !== FINAL_ORDER_STATUS) {
-            $updateStmt = $db->prepare("UPDATE orders SET status = ?, updated_at = datetime('now') WHERE id = ?");
             $updateStmt->execute([FINAL_ORDER_STATUS, $order['id']]);
+
+            // Disparo de Webhooks Customizados
+            require_once __DIR__ . '/functions/trigger_custom_webhooks.php';
+            trigger_custom_webhooks('order.paid', $order['id']);
+
             log_message("SUCCESS: Pedido ID {$order['id']} atualizado para " . FINAL_ORDER_STATUS);
             echo json_encode(['status' => 'ok', 'message' => 'Status atualizado.']);
         } else {

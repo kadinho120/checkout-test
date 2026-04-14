@@ -129,7 +129,13 @@ function handle_woovi_pix_payment()
             $json_data_store
         ]);
 
-        // Webhook N8N
+        $order_id = $db->lastInsertId();
+
+        // Disparo de Webhooks Customizados
+        require_once __DIR__ . '/trigger_custom_webhooks.php';
+        trigger_custom_webhooks('order.created', $order_id);
+
+        // Webhook N8N (Legado/Fixo)
         $n8n_webhook_url = 'https://n8n-n8n.tutv5u.easypanel.host/webhook/pix-gerado-abacatepay';
 
         $full_webhook_payload = [

@@ -53,6 +53,10 @@ if (!($_SESSION['logged_in'] ?? false)) {
                     class="flex items-center gap-3 px-4 py-3 bg-purple-600/10 text-purple-400 rounded-lg border border-purple-600/20 font-medium">
                     <i data-lucide="scan-line" class="w-5 h-5"></i> Rastreamento
                 </a>
+                <a href="webhooks.php"
+                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                    <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks
+                </a>
             </nav>
 
             <div class="p-4 border-t border-slate-800">

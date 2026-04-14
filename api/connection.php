@@ -57,6 +57,14 @@ class Database
                 FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
             )");
 
+            $this->conn->exec("CREATE TABLE IF NOT EXISTS webhooks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                url TEXT NOT NULL,
+                events TEXT,
+                active INTEGER DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )");
+
             // --- AUTO-MIGRATION FIX (Self-Healing) ---
             // Fixes "no such column: updated_at" for existing installations
             $cols = $this->conn->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_ASSOC);

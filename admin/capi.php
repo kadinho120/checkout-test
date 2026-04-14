@@ -43,6 +43,9 @@ require_once 'auth.php';
                 <a href="tracking.php"
                     class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"><i
                         data-lucide="scan-line" class="w-5 h-5"></i> Rastreamento</a>
+                <a href="webhooks.php"
+                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"><i
+                        data-lucide="webhook" class="w-5 h-5"></i> Webhooks</a>
                 <a href="capi.php"
                     class="flex items-center gap-3 px-4 py-3 bg-blue-600/10 text-blue-400 rounded-lg border border-blue-600/20 font-medium"><i
                         data-lucide="activity" class="w-5 h-5"></i> Testar CAPI</a>
