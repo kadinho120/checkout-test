@@ -88,7 +88,6 @@ switch ($method) {
                     isset($data->top_bar_enabled) ? ($data->top_bar_enabled ? 1 : 0) : 0,
                     $data->top_bar_text ?? '',
                     $data->top_bar_bg_color ?? '#000000',
-                    $data->top_bar_bg_color ?? '#000000',
                     $data->top_bar_text_color ?? '#ffffff',
                     isset($data->downsell_enabled) ? ($data->downsell_enabled ? 1 : 0) : 0,
                     $data->downsell_discount_type ?? 'fixed',
