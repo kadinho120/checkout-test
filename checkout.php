@@ -168,9 +168,10 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             <div
                 class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl">
                 <div
-                    class="aspect-video w-full bg-slate-800 rounded-lg overflow-hidden mb-6 relative border border-slate-700">
+                    class="aspect-square w-full bg-slate-800 rounded-lg overflow-hidden mb-6 relative border border-slate-700">
                     <img src="<?= htmlspecialchars($product['image_url'] ?: 'https://placehold.co/600x400?text=Produto') ?>"
                         class="w-full h-full object-cover">
+
                     <!-- Badge -->
                     <div
                         class="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-lg">
