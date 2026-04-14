@@ -64,7 +64,41 @@ switch ($method) {
             if (isset($data->id) && !empty($data->id)) {
                 // Update
                 // Update
-                $stmt = $db->prepare("UPDATE products SET name=?, slug=?, description=?, price=?, image_url=?, active=?, theme=?, request_email=?, request_phone=?, evolution_instance=?, evolution_token=?, evolution_url=?, deliverable_type=?, deliverable_text=?, deliverable_file=?, deliverable_email_subject=?, deliverable_email_body=?, fake_notifications=?, notification_text=?, top_bar_enabled=?, top_bar_text=?, top_bar_bg_color=?, top_bar_text_color=? WHERE id=?");
+                $stmt = $db->prepare("UPDATE products SET name=?, slug=?, description=?, price=?, image_url=?, active=?, theme=?, request_email=?, request_phone=?, evolution_instance=?, evolution_token=?, evolution_url=?, deliverable_type=?, deliverable_text=?, deliverable_file=?, deliverable_email_subject=?, deliverable_email_body=?, fake_notifications=?, notification_text=?, top_bar_enabled=?, top_bar_text=?, top_bar_bg_color=?, top_bar_text_color=?, downsell_enabled=?, downsell_discount_type=?, downsell_discount_amount=? WHERE id=?");
+                $stmt->execute([
+                    $data->name,
+                    $data->slug,
+                    $data->description ?? '',
+                    $data->price,
+                    $data->image_url ?? '',
+                    $data->active ?? 1,
+                    $data->theme ?? 'dark',
+                    isset($data->request_email) ? ($data->request_email ? 1 : 0) : 1,
+                    isset($data->request_phone) ? ($data->request_phone ? 1 : 0) : 1,
+                    $data->evolution_instance ?? '',
+                    $data->evolution_token ?? '',
+                    $data->evolution_url ?? '',
+                    $data->deliverable_type ?? 'text',
+                    $data->deliverable_text ?? '',
+                    $data->deliverable_file ?? '',
+                    $data->deliverable_email_subject ?? '',
+                    $data->deliverable_email_body ?? '',
+                    isset($data->fake_notifications) ? ($data->fake_notifications ? 1 : 0) : 0,
+                    $data->notification_text ?? '',
+                    isset($data->top_bar_enabled) ? ($data->top_bar_enabled ? 1 : 0) : 0,
+                    $data->top_bar_text ?? '',
+                    $data->top_bar_bg_color ?? '#000000',
+                    $data->top_bar_bg_color ?? '#000000',
+                    $data->top_bar_text_color ?? '#ffffff',
+                    isset($data->downsell_enabled) ? ($data->downsell_enabled ? 1 : 0) : 0,
+                    $data->downsell_discount_type ?? 'fixed',
+                    $data->downsell_discount_amount ?? 0,
+                    $data->id
+                ]);
+                $productId = $data->id;
+            } else {
+                // Insert
+                $stmt = $db->prepare("INSERT INTO products (name, slug, description, price, image_url, active, theme, request_email, request_phone, evolution_instance, evolution_token, evolution_url, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, fake_notifications, notification_text, top_bar_enabled, top_bar_text, top_bar_bg_color, top_bar_text_color, downsell_enabled, downsell_discount_type, downsell_discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([
                     $data->name,
                     $data->slug,
@@ -89,36 +123,9 @@ switch ($method) {
                     $data->top_bar_text ?? '',
                     $data->top_bar_bg_color ?? '#000000',
                     $data->top_bar_text_color ?? '#ffffff',
-                    $data->id
-                ]);
-                $productId = $data->id;
-            } else {
-                // Insert
-                $stmt = $db->prepare("INSERT INTO products (name, slug, description, price, image_url, active, theme, request_email, request_phone, evolution_instance, evolution_token, evolution_url, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, fake_notifications, notification_text, top_bar_enabled, top_bar_text, top_bar_bg_color, top_bar_text_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([
-                    $data->name,
-                    $data->slug,
-                    $data->description ?? '',
-                    $data->price,
-                    $data->image_url ?? '',
-                    $data->active ?? 1,
-                    $data->theme ?? 'dark',
-                    isset($data->request_email) ? ($data->request_email ? 1 : 0) : 1,
-                    isset($data->request_phone) ? ($data->request_phone ? 1 : 0) : 1,
-                    $data->evolution_instance ?? '',
-                    $data->evolution_token ?? '',
-                    $data->evolution_url ?? '',
-                    $data->deliverable_type ?? 'text',
-                    $data->deliverable_text ?? '',
-                    $data->deliverable_file ?? '',
-                    $data->deliverable_email_subject ?? '',
-                    $data->deliverable_email_body ?? '',
-                    isset($data->fake_notifications) ? ($data->fake_notifications ? 1 : 0) : 0,
-                    $data->notification_text ?? '',
-                    isset($data->top_bar_enabled) ? ($data->top_bar_enabled ? 1 : 0) : 0,
-                    $data->top_bar_text ?? '',
-                    $data->top_bar_bg_color ?? '#000000',
-                    $data->top_bar_text_color ?? '#ffffff'
+                    isset($data->downsell_enabled) ? ($data->downsell_enabled ? 1 : 0) : 0,
+                    $data->downsell_discount_type ?? 'fixed',
+                    $data->downsell_discount_amount ?? 0
                 ]);
                 $productId = $db->lastInsertId();
             }
