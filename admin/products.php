@@ -389,12 +389,20 @@ require_once 'auth.php';
 
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                                         <div class="md:col-span-2">
-                                            <input x-model="bump.title" type="text" placeholder="Título da Oferta"
-                                                class="w-full bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none mb-2 pb-1">
+                                            <div class="flex gap-4 mb-2">
+                                                <input x-model="bump.title" type="text" placeholder="Título da Oferta"
+                                                    class="flex-1 bg-transparent border-b border-slate-700 text-sm text-white focus:border-yellow-500 outline-none pb-1">
+                                                <div class="flex items-center gap-1 border-b border-slate-700 focus-within:border-yellow-500">
+                                                    <span class="text-xs text-slate-500">R$</span>
+                                                    <input x-model="bump.price" type="number" step="0.01" placeholder="0,00"
+                                                        class="w-20 bg-transparent text-sm text-yellow-500 font-bold outline-none pb-1">
+                                                </div>
+                                            </div>
                                             <input x-model="bump.description" type="text"
                                                 placeholder="Descrição curta (ex: Receita secreta...)"
                                                 class="w-full bg-transparent border-b border-slate-700 text-xs text-slate-400 focus:border-yellow-500 outline-none pb-1">
                                         </div>
+
                                         <div>
                                             <div class="flex items-center gap-3 mb-2">
                                                 <div class="w-10 h-10 rounded bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
