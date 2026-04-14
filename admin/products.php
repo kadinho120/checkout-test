@@ -144,6 +144,11 @@ require_once 'auth.php';
                                             title="Editar">
                                             <i data-lucide="edit" class="w-4 h-4"></i>
                                         </button>
+                                        <button @click="openEmbedModal(product)"
+                                            class="p-2 text-purple-400 hover:text-purple-300 bg-slate-800 rounded hover:bg-slate-700"
+                                            title="Código do Modal iFrame">
+                                            <i data-lucide="code" class="w-4 h-4"></i>
+                                        </button>
                                         <button @click="deleteProduct(product.id)"
                                             class="p-2 text-red-400 hover:text-red-300 bg-slate-800 rounded hover:bg-slate-700"
                                             title="Excluir">
@@ -669,6 +674,50 @@ require_once 'auth.php';
         </div>
     </div>
     </div>
+
+    <!-- Embed Code Modal -->
+    <div x-show="isEmbedModalOpen" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div x-show="isEmbedModalOpen" x-transition.opacity class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" @click="closeEmbedModal()"></div>
+        <div x-show="isEmbedModalOpen" x-transition.scale.95 class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col">
+            <header class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="code" class="text-purple-500"></i> Código de Integração (Modal)
+                </h3>
+                <button @click="closeEmbedModal()" class="text-slate-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </header>
+            
+            <div class="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
+                <p class="text-sm text-slate-400">Siga os passos abaixo para integrar o checkout como um modal na sua Landing Page.</p>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">1. Adicione o Script no Cabeçalho (Head)</label>
+                    <div class="relative group">
+                        <pre class="bg-slate-950 p-4 rounded-lg text-xs text-blue-400 overflow-x-auto border border-slate-800"
+                             x-text="getEmbedScript()"></pre>
+                        <button @click="copyToClipboard(getEmbedScript())" class="absolute top-2 right-2 p-2 bg-slate-800 text-slate-400 rounded hover:text-white transition opacity-0 group-hover:opacity-100">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">2. Adicione o Atributo no seu Botão</label>
+                    <div class="relative group">
+                        <pre class="bg-slate-950 p-4 rounded-lg text-xs text-purple-400 overflow-x-auto border border-slate-800"
+                             x-text="getEmbedButton()"></pre>
+                        <button @click="copyToClipboard(getEmbedButton())" class="absolute top-2 right-2 p-2 bg-slate-800 text-slate-400 rounded hover:text-white transition opacity-0 group-hover:opacity-100">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-2">Dica: Você pode adicionar o atributo <code class="text-white">data-checkout-modal</code> em qualquer link ou botão que já exista na sua página.</p>
+                </div>
+            </div>
+
+            <footer class="p-6 border-t border-slate-800 bg-slate-900 flex justify-end">
+                <button @click="closeEmbedModal()" class="px-6 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold transition">Fechar</button>
+            </footer>
+        </div>
+    </div>
     </div>
 
     <!-- App Logic -->
@@ -678,6 +727,8 @@ require_once 'auth.php';
                 products: [],
                 isLoading: true,
                 isModalOpen: false,
+                isEmbedModalOpen: false,
+                embedProduct: null,
                 isSaving: false,
                 isUploading: false,
                 isTesting: false,
@@ -798,6 +849,25 @@ require_once 'auth.php';
 
                 closeModal() {
                     this.isModalOpen = false;
+                },
+
+                openEmbedModal(product) {
+                    this.embedProduct = product;
+                    this.isEmbedModalOpen = true;
+                    this.$nextTick(() => lucide.createIcons());
+                },
+                closeEmbedModal() {
+                    this.isEmbedModalOpen = false;
+                    this.embedProduct = null;
+                },
+                getEmbedScript() {
+                    const url = window.location.origin + '/js/checkout-modal.js';
+                    return `<script src="${url}"><\/script>`;
+                },
+                getEmbedButton() {
+                    if (!this.embedProduct) return '';
+                    const url = window.location.origin + '/checkout.php?slug=' + this.embedProduct.slug;
+                    return `<a href="${url}" data-checkout-modal>Comprar Agora</a>`;
                 },
 
                 copyToClipboard(text) {

@@ -6,6 +6,12 @@ $db = $database->getConnection();
 // Theme determination moved below product fetch
 
 $slug = $_GET['slug'] ?? '';
+$isModal = ($_GET['modal'] ?? '') === 'true';
+
+// Cabeçalhos para permitir iFrame (opcionalmente pode ser restrito por domínio se o usuário preferir)
+header('X-Frame-Options: ALLOWALL'); 
+header('Content-Security-Policy: frame-ancestors *');
+
 if (!$slug) {
     $stmt = $db->query("SELECT * FROM products ORDER BY id ASC LIMIT 1");
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -153,15 +159,17 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 
 <body
-    class="min-h-screen flex flex-col items-center py-6 sm:py-12 px-4 bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
+    class="min-h-screen flex flex-col items-center transition-colors duration-300 <?= $isModal ? 'py-2 px-2 bg-transparent overflow-x-hidden' : 'py-6 sm:py-12 px-4 bg-gray-50 dark:bg-slate-950' ?>">
 
+    <?php if (!$isModal): ?>
     <!-- Header / Security -->
     <div
         class="mb-8 text-center opacity-70 flex items-center justify-center gap-2 text-sm text-slate-600 dark:text-slate-400">
         <i data-lucide="lock" class="w-4 h-4"></i> Pagamento 100% Seguro e Criptografado
     </div>
+    <?php endif; ?>
 
-    <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+    <div class="w-full <?= $isModal ? 'max-w-4xl' : 'max-w-5xl' ?> grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
         <!-- COLUMN 1: PRODUCT INFO -->
         <div class="lg:sticky lg:top-8 space-y-6">
