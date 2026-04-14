@@ -272,31 +272,31 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <!-- Downsell Modal HTML -->
                     <div id="downsell-modal" class="fixed inset-0 z-[99999] hidden flex items-center justify-center p-4">
                         <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm shadow-2xl"></div>
-                        <div class="downsell-content relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-orange-500/30 p-8 text-center shadow-2xl">
-                            <div class="mb-6 inline-flex p-4 bg-orange-500/10 rounded-full">
-                                <i data-lucide="gift" class="w-12 h-12 text-orange-500"></i>
+                        <div class="downsell-content relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl overflow-y-auto max-h-[95vh] border border-orange-500/30 p-6 sm:p-8 text-center shadow-2xl">
+                            <div class="mb-4 sm:mb-6 inline-flex p-3 sm:p-4 bg-orange-500/10 rounded-full">
+                                <i data-lucide="gift" class="w-10 h-10 sm:w-12 sm:h-12 text-orange-500"></i>
                             </div>
                             
-                            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight">Espera aí! 🛑</h2>
-                            <p class="text-slate-600 dark:text-slate-400 mb-6 font-medium leading-relaxed">
+                            <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight">Espera aí! 🛑</h2>
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-4 sm:mb-6 font-medium leading-relaxed">
                                 Notamos que você está prestes a sair. Queremos te dar uma última chance de levar o 
                                 <span class="text-orange-500 font-bold"><?= htmlspecialchars($product['name']) ?></span> 
                                 com um desconto especial de liberação imediata.
                             </p>
 
-                            <div class="bg-orange-500/5 rounded-2xl p-6 mb-8 border border-orange-500/20">
-                                <span class="block text-xs text-slate-500 uppercase font-bold mb-1">Preço Atualizado</span>
-                                <div class="flex items-center justify-center gap-3">
-                                    <span class="text-lg text-slate-500 line-through">R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
-                                    <span class="text-4xl font-black text-orange-500">R$ <span id="downsell-new-price">0,00</span></span>
+                            <div class="bg-orange-500/5 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-orange-500/20">
+                                <span class="block text-[10px] sm:text-xs text-slate-500 uppercase font-bold mb-1">Preço Atualizado</span>
+                                <div class="flex items-center justify-center gap-2 sm:gap-3">
+                                    <span class="text-sm sm:text-lg text-slate-500 line-through">R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
+                                    <span class="text-3xl sm:text-4xl font-black text-orange-500">R$ <span id="downsell-new-price">0,00</span></span>
                                 </div>
                             </div>
 
                             <div class="space-y-3">
-                                <button type="button" onclick="acceptDownsell()" class="cta-button w-full py-5 rounded-2xl text-white font-black text-lg uppercase tracking-wider flex items-center justify-center gap-2">
+                                <button type="button" onclick="acceptDownsell()" class="cta-button w-full py-4 sm:py-5 rounded-2xl text-white font-black text-base sm:text-lg uppercase tracking-wider flex items-center justify-center gap-2">
                                     APROVEITAR DESCONTO AGORA
                                 </button>
-                                <button type="button" onclick="closeDownsell()" class="w-full py-3 text-slate-500 hover:text-red-400 text-sm font-bold transition">
+                                <button type="button" onclick="closeDownsell()" class="w-full py-2 text-slate-500 hover:text-red-400 text-xs sm:text-sm font-bold transition">
                                     Não, prefiro pagar o valor cheio depois
                                 </button>
                             </div>
