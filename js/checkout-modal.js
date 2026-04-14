@@ -144,11 +144,23 @@
             }, 300);
         }
 
+        // Listen for messages from the iframe (e.g., close request after downsell)
+        window.addEventListener('message', function (event) {
+            if (event.data === 'close-checkout-modal') {
+                closeModal();
+            }
+        });
+
         iframe.onload = function () {
             loader.style.display = 'none';
         };
 
-        closeBtn.onclick = closeModal;
+        closeBtn.onclick = function() {
+            // Instead of closing directly, we tell the iframe to try and show a downsell
+            if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage('trigger-downsell', '*');
+            }
+        };
         overlay.onclick = function (e) {
             if (e.target === overlay) closeModal();
         };

@@ -660,6 +660,42 @@ require_once 'auth.php';
                             </div>
                         </div>
                     </div>
+
+                    <!-- Downsell Settings -->
+                    <div class="p-6 border-t border-slate-800 bg-slate-900/30">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h4 class="text-sm font-bold text-white uppercase tracking-wider">Popup de Downsell</h4>
+                                <p class="text-xs text-slate-500">Ofereça um desconto na intenção de saída para recuperar a venda.</p>
+                            </div>
+                            <button @click="form.downsell_enabled = !form.downsell_enabled" 
+                                    class="w-12 h-6 rounded-full bg-slate-700 relative transition-colors duration-300"
+                                    :class="form.downsell_enabled ? 'bg-orange-500' : 'bg-slate-700'">
+                                <span class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-md"
+                                      :class="form.downsell_enabled ? 'translate-x-6' : 'translate-x-0'"></span>
+                            </button>
+                        </div>
+
+                        <div x-show="form.downsell_enabled" x-collapse x-cloak class="space-y-4 pt-2">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-400 mb-1">Tipo de Desconto</label>
+                                    <select x-model="form.downsell_discount_type" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white outline-none focus:border-blue-500">
+                                        <option value="fixed">Valor Fixo (R$)</option>
+                                        <option value="percentage">Porcentagem (%)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-400 mb-1">Valor do Desconto</label>
+                                    <input type="number" step="0.01" x-model="form.downsell_discount_amount" placeholder="Ex: 5.00 ou 10"
+                                           class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-slate-500 border-l-2 border-orange-500/50 pl-2">
+                                Nota: O desconto será aplicado somente sobre o preço base do produto principal.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -757,7 +793,10 @@ require_once 'auth.php';
                     top_bar_enabled: false,
                     top_bar_text: '',
                     top_bar_bg_color: '#000000',
-                    top_bar_text_color: '#ffffff'
+                    top_bar_text_color: '#ffffff',
+                    downsell_enabled: false,
+                    downsell_discount_type: 'fixed',
+                    downsell_discount_amount: 0
                 },
 
                 init() {
@@ -812,7 +851,10 @@ require_once 'auth.php';
                                     top_bar_enabled: data.top_bar_enabled == 1,
                                     top_bar_text: data.top_bar_text || '',
                                     top_bar_bg_color: data.top_bar_bg_color || '#000000',
-                                    top_bar_text_color: data.top_bar_text_color || '#ffffff'
+                                    top_bar_text_color: data.top_bar_text_color || '#ffffff',
+                                    downsell_enabled: data.downsell_enabled == 1,
+                                    downsell_discount_type: data.downsell_discount_type || 'fixed',
+                                    downsell_discount_amount: data.downsell_discount_amount || 0
                                 };
                                 // Fallback for legacy records (null/undefined => true)
                                 if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
@@ -830,16 +872,13 @@ require_once 'auth.php';
                             description: '',
                             price: '',
                             image_url: '',
-                            active: true,
-                            theme: 'dark',
-                            request_email: true,
-                            request_phone: true,
-                            evolution_instance: '',
-                            evolution_token: '',
-                            evolution_url: '',
-                            deliverable_type: 'text',
-                            deliverable_text: '',
-                            deliverable_file: '',
+                            top_bar_enabled: false,
+                            top_bar_text: '',
+                            top_bar_bg_color: '#000000',
+                            top_bar_text_color: '#ffffff',
+                            downsell_enabled: false,
+                            downsell_discount_type: 'fixed',
+                            downsell_discount_amount: 0,
                             bumps: [],
                             pixels: []
                         };

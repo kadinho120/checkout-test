@@ -226,6 +226,18 @@ class Database
             if (!$hasTopBarColor)
                 $this->conn->exec("ALTER TABLE products ADD COLUMN top_bar_text_color TEXT DEFAULT '#ffffff';");
 
+            // Check for Downsell columns
+            $prodCols5 = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasDownsellEnabled = false;
+            foreach ($prodCols5 as $col) {
+                if ($col['name'] === 'downsell_enabled') $hasDownsellEnabled = true;
+            }
+            if (!$hasDownsellEnabled) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN downsell_enabled INTEGER DEFAULT 0;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN downsell_discount_type TEXT DEFAULT 'fixed';");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN downsell_discount_amount REAL DEFAULT 0;");
+            }
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {

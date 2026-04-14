@@ -140,6 +140,18 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             border-color: #D4AF37;
             color: black;
         }
+
+        /* DOWNSELL MODAL STYLES */
+        #downsell-modal {
+            transition: opacity 0.3s ease;
+        }
+        .downsell-content {
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        #downsell-modal.active .downsell-content {
+            transform: scale(1);
+        }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -256,6 +268,40 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                                 required>
                         </div>
                     <?php endif; ?>
+
+                    <!-- Downsell Modal HTML -->
+                    <div id="downsell-modal" class="fixed inset-0 z-[99999] hidden flex items-center justify-center p-4">
+                        <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm shadow-2xl"></div>
+                        <div class="downsell-content relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-orange-500/30 p-8 text-center shadow-2xl">
+                            <div class="mb-6 inline-flex p-4 bg-orange-500/10 rounded-full">
+                                <i data-lucide="gift" class="w-12 h-12 text-orange-500"></i>
+                            </div>
+                            
+                            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight">Espera aí! 🛑</h2>
+                            <p class="text-slate-600 dark:text-slate-400 mb-6 font-medium leading-relaxed">
+                                Notamos que você está prestes a sair. Queremos te dar uma última chance de levar o 
+                                <span class="text-orange-500 font-bold"><?= htmlspecialchars($product['name']) ?></span> 
+                                com um desconto especial de liberação imediata.
+                            </p>
+
+                            <div class="bg-orange-500/5 rounded-2xl p-6 mb-8 border border-orange-500/20">
+                                <span class="block text-xs text-slate-500 uppercase font-bold mb-1">Preço Atualizado</span>
+                                <div class="flex items-center justify-center gap-3">
+                                    <span class="text-lg text-slate-500 line-through">R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
+                                    <span class="text-4xl font-black text-orange-500">R$ <span id="downsell-new-price">0,00</span></span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <button type="button" onclick="acceptDownsell()" class="cta-button w-full py-5 rounded-2xl text-white font-black text-lg uppercase tracking-wider flex items-center justify-center gap-2">
+                                    APROVEITAR DESCONTO AGORA
+                                </button>
+                                <button type="button" onclick="closeDownsell()" class="w-full py-3 text-slate-500 hover:text-red-400 text-sm font-bold transition">
+                                    Não, prefiro pagar o valor cheio depois
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <?php if ((int) $product['request_phone'] !== 0): ?>
                         <div>
                             <label
@@ -376,6 +422,17 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         lucide.createIcons();
         const BACKEND_BASE_PATH = '/api';
 
+        // Preço base do produto vindo do PHP
+        let baseProductPrice = <?= (float) $product['price'] ?>;
+        let currentProductPrice = baseProductPrice;
+
+        // Configurações de Downsell vindas do PHP
+        const downsellEnabled = <?= (int) ($product['downsell_enabled'] ?? 0) ?> === 1;
+        const downsellType = '<?= $product['downsell_discount_type'] ?? 'fixed' ?>';
+        const downsellAmount = <?= (float) ($product['downsell_discount_amount'] ?? 0) ?>;
+        let downsellTriggered = false;
+        let downsellAccepted = false;
+
         const PLANOS = {
             'main': {
                 price: <?= $product['price'] * 100 ?>,
@@ -438,7 +495,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         });
 
         window.calculateCurrentTotal = () => {
-            let total = Math.round(PLANOS['main'].price);
+            let total = Math.round(currentProductPrice * 100);
             document.querySelectorAll('input[name="bumps[]"]:checked').forEach(el => {
                 total += Math.round(parseFloat(el.dataset.price) * 100);
             });
@@ -523,7 +580,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         const handlePixPayment = async (customerData) => {
             const correlationId = generateCorrelationId();
             const mainProduct = PLANOS['main'];
-            const allProducts = [{ sku: mainProduct.sku, name: mainProduct.name, price: mainProduct.price / 100, qty: 1 }];
+            const allProducts = [{ sku: mainProduct.sku, name: mainProduct.name, price: currentProductPrice, qty: 1 }];
 
             document.querySelectorAll('input[name="bumps[]"]:checked').forEach(el => {
                 allProducts.push({ sku: el.dataset.sku, name: el.dataset.name, price: parseFloat(el.dataset.price), qty: 1 });
@@ -721,7 +778,88 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             // Backend tracking handles Purchase event via N8N/S2S
         }
 
-    </script>
+        // ---- DOWNSELL LOGIC ----
+
+        function showDownsell() {
+            if (!downsellEnabled || downsellTriggered || downsellAccepted) return;
+            
+            // Calcula o novo preço para exibir no modal
+            let newPrice = baseProductPrice;
+            if (downsellType === 'fixed') {
+                newPrice = Math.max(0, baseProductPrice - downsellAmount);
+            } else {
+                newPrice = baseProductPrice * (1 - (downsellAmount / 100));
+            }
+
+            document.getElementById('downsell-new-price').innerText = newPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
+            const modal = document.getElementById('downsell-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('active'), 10);
+            
+            downsellTriggered = true;
+        }
+
+        function acceptDownsell() {
+            downsellAccepted = true;
+            
+            // Reaplica o desconto no preço corrente do produto principal
+            if (downsellType === 'fixed') {
+                currentProductPrice = Math.max(0, baseProductPrice - downsellAmount);
+            } else {
+                currentProductPrice = baseProductPrice * (1 - (downsellAmount / 100));
+            }
+
+            // Atualiza a UI do produto principal (o texto do preço na sidebar)
+            const productPriceEls = document.querySelectorAll('.text-green-400');
+            productPriceEls.forEach(el => {
+                if (el.innerText.includes('R$')) {
+                    el.innerText = 'R$ ' + currentProductPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+            });
+
+            updateTotalPrice();
+            closeDownsell(false);
+        }
+
+        function closeDownsell(isCancel = true) {
+            const modal = document.getElementById('downsell-modal');
+            modal.classList.remove('active');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+
+            // Se for cancelamento (fechar sem aceitar) e for modal, avisa o pai para fechar de vez
+            if (isCancel && window.self !== window.top) {
+                window.parent.postMessage('close-checkout-modal', '*');
+            }
+        }
+
+        // Trigger: Exit Intent (Desktop)
+        document.addEventListener('mouseleave', (e) => {
+            if (e.clientY < 10) showDownsell();
+        });
+
+        // Trigger: Back Button (Mobile/Desktop)
+        history.pushState(null, null, window.location.href);
+        window.addEventListener('popstate', function () {
+            if (downsellEnabled && !downsellTriggered && !downsellAccepted) {
+                showDownsell();
+                // Push denovo para interceptar a próxima tentativa se ele fechar o downsell
+                history.pushState(null, null, window.location.href);
+            }
+        });
+
+        // Trigger: Message from Parent (Modal Close Click)
+        window.addEventListener('message', function (event) {
+            if (event.data === 'trigger-downsell') {
+                if (downsellEnabled && !downsellTriggered && !downsellAccepted) {
+                    showDownsell();
+                } else {
+                    // Se não houver downsell ou já foi negado/aceito, avisa o pai para fechar
+                    window.parent.postMessage('close-checkout-modal', '*');
+                }
+            }
+        });
+
     </script>
 
 
