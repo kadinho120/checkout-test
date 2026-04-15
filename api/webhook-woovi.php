@@ -81,48 +81,11 @@ try {
             $pixData = $orderJsonData['pix_data'] ?? [];
             $externalID = $order['external_id'] ?? '';
 
-            // 1. Notificar N8N (Webhook de Pagamento Confirmado) - IMPORTANTE: Igual ao manual
-            $n8n_webhook_url = 'https://n8n-n8n.tutv5u.easypanel.host/webhook/pix-pago-abacatepay-envio';
-            
-            $payloadForN8N = [
-                'id' => $order['id'],
-                'correlation_id' => $order['transaction_id'],
-                'external_id' => $externalID,
-                'status' => 'paid',
-                'customer' => [
-                    'name' => $order['customer_name'],
-                    'email' => $order['customer_email'],
-                    'phone' => $order['customer_phone'],
-                    'document' => $order['customer_cpf'],
-                    'external_id' => $externalID
-                ],
-                'amount' => (float) $order['total_amount'],
-                'value_formatted' => (float) $order['total_amount'],
-                'updated_at' => date('Y-m-d H:i:s'),
-                'products' => $productsList,
-                'tracking' => $trackingData,
-                'fbclid' => $trackingData['fbclid'] ?? null,
-                'pixel_id' => $trackingData['pixel_id'] ?? null,
-                'pix_data' => $pixData
-            ];
-
-            $ch = curl_init($n8n_webhook_url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payloadForN8N));
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'Content-Length: ' . strlen(json_encode($payloadForN8N))
-            ]);
-            $n8n_res = curl_exec($ch);
-            curl_close($ch);
-            log_message("INFO: Notificação N8N disparada.");
-
-            // 2. Disparo de Webhooks Customizados (Integrações externas secundárias)
+            // 1. Disparo de Webhooks Customizados (Integrações externas secundárias)
             require_once __DIR__ . '/functions/trigger_custom_webhooks.php';
             trigger_custom_webhooks('order.paid', $order['id']);
 
-            // 3. Processamento de Entregáveis (E-mail e WhatsApp via PHP interno)
+            // 2. Processamento de Entregáveis (E-mail e WhatsApp via PHP interno)
             require_once __DIR__ . '/functions/process_order_deliverables.php';
             require_once __DIR__ . '/functions/replace_shortcodes.php';
             require_once __DIR__ . '/functions/send_evolution_message.php';

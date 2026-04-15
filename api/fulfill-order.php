@@ -35,50 +35,7 @@ try {
             $order['status'] = 'paid'; // Atualiza array local para envio
         }
 
-        // 3. Prepara o payload para o N8N
-        // O campo json_data no banco contém tracking, produtos, etc.
-        $storedData = json_decode($order['json_data'], true) ?? [];
-
-        $externalID = $order['external_id'] ?? '';
-
-        $payloadForN8N = [
-            'id' => $order['id'],
-            'correlation_id' => $order['transaction_id'],
-            'external_id' => $externalID,
-            'status' => 'paid',
-            'customer' => [
-                'name' => $order['customer_name'],
-                'email' => $order['customer_email'],
-                'phone' => $order['customer_phone'],
-                'document' => $order['customer_cpf'],
-                'external_id' => $externalID
-            ],
-            'amount' => (float) $order['total_amount'],
-            'value_formatted' => (float) $order['total_amount'], // Ex: 9 ou 13.5
-            'updated_at' => date('Y-m-d H:i:s'),
-            'products' => $storedData['products'] ?? [],
-            'tracking' => $storedData['tracking'] ?? [],
-            'fbclid' => $storedData['tracking']['fbclid'] ?? null, // <--- STANDALONE FBCLID
-            'pixel_id' => $storedData['tracking']['pixel_id'] ?? null,
-            'pix_data' => $storedData['pix_data'] ?? []
-        ];
-
-        // 4. Envia para o N8N (Webhook de Pagamento Confirmado)
-        $n8n_webhook_url = 'https://n8n-n8n.tutv5u.easypanel.host/webhook/pix-pago-abacatepay-envio';
-
-        $ch = curl_init($n8n_webhook_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payloadForN8N));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Content-Length: ' . strlen(json_encode($payloadForN8N))
-        ]);
-
-        $response = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        curl_close($ch);
+        $pixData = $storedData['pix_data'] ?? [];
 
         // --- UTMIFY PAID HOOK ---
         require_once __DIR__ . '/utmify-helper.php';
