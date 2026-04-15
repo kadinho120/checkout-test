@@ -6,6 +6,7 @@
 
 // --- CONFIGURAÇÕES ---
 require_once __DIR__ . '/connection.php';
+require_once __DIR__ . '/config.php';
 define('FINAL_ORDER_STATUS', 'paid');
 define('LOG_FILE_PATH', __DIR__ . '/webhook_n8n_woovi.log');
 define('ENABLE_LOGGING', true);
@@ -67,44 +68,88 @@ try {
 
     if ($order) {
         if ($order['status'] !== FINAL_ORDER_STATUS) {
-            // Prepara e executa o update (Corrigindo o bug anterior)
+            // Prepara e executa o update
             $updateStmt = $db->prepare("UPDATE orders SET status = ?, updated_at = datetime('now', '-03:00') WHERE id = ?");
             $updateStmt->execute([FINAL_ORDER_STATUS, $order['id']]);
+            $order['status'] = FINAL_ORDER_STATUS; // Atualiza objeto local para que helpers vejam status pago
 
-            // 1. Disparo de Webhooks Customizados (Integrações externas)
+            log_message("INFO: Status atualizado para " . FINAL_ORDER_STATUS);
+
+            $orderJsonData = json_decode($order['json_data'] ?? '{}', true);
+            $productsList = $orderJsonData['products'] ?? [];
+            $trackingData = $orderJsonData['tracking'] ?? [];
+            $pixData = $orderJsonData['pix_data'] ?? [];
+            $externalID = $order['external_id'] ?? '';
+
+            // 1. Notificar N8N (Webhook de Pagamento Confirmado) - IMPORTANTE: Igual ao manual
+            $n8n_webhook_url = 'https://n8n-n8n.tutv5u.easypanel.host/webhook/pix-pago-abacatepay-envio';
+            
+            $payloadForN8N = [
+                'id' => $order['id'],
+                'correlation_id' => $order['transaction_id'],
+                'external_id' => $externalID,
+                'status' => 'paid',
+                'customer' => [
+                    'name' => $order['customer_name'],
+                    'email' => $order['customer_email'],
+                    'phone' => $order['customer_phone'],
+                    'document' => $order['customer_cpf'],
+                    'external_id' => $externalID
+                ],
+                'amount' => (float) $order['total_amount'],
+                'value_formatted' => (float) $order['total_amount'],
+                'updated_at' => date('Y-m-d H:i:s'),
+                'products' => $productsList,
+                'tracking' => $trackingData,
+                'fbclid' => $trackingData['fbclid'] ?? null,
+                'pixel_id' => $trackingData['pixel_id'] ?? null,
+                'pix_data' => $pixData
+            ];
+
+            $ch = curl_init($n8n_webhook_url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payloadForN8N));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen(json_encode($payloadForN8N))
+            ]);
+            $n8n_res = curl_exec($ch);
+            curl_close($ch);
+            log_message("INFO: Notificação N8N disparada.");
+
+            // 2. Disparo de Webhooks Customizados (Integrações externas secundárias)
             require_once __DIR__ . '/functions/trigger_custom_webhooks.php';
             trigger_custom_webhooks('order.paid', $order['id']);
 
-            // 2. Processamento de Entregáveis (E-mail e WhatsApp para o cliente)
+            // 3. Processamento de Entregáveis (E-mail e WhatsApp via PHP interno)
             require_once __DIR__ . '/functions/process_order_deliverables.php';
             require_once __DIR__ . '/functions/replace_shortcodes.php';
             require_once __DIR__ . '/functions/send_evolution_message.php';
             require_once __DIR__ . '/functions/send_order_email.php';
             require_once __DIR__ . '/functions/send_utmify_event.php';
 
-            $orderJsonData = json_decode($order['json_data'] ?? '{}', true);
-            $productsList = $orderJsonData['products'] ?? [];
-            $customerData = [
+            $customerDataForHelper = [
                 'name' => $order['customer_name'] ?? '',
                 'email' => $order['customer_email'] ?? '',
                 'phone' => $order['customer_phone'] ?? '',
                 'document' => $order['customer_cpf'] ?? ''
             ];
 
-            // Dispara para UTMIFY se configurado
+            // Dispara para UTMIFY
             sendUtmifyEvent($order, 'paid');
 
-            // Envia os produtos
+            // Envia os produtos via Evolution/Gmail
             log_message("INFO: Iniciando entrega de produtos para Pedido ID {$order['id']}");
-            $deliveryResult = processOrderDeliverables($productsList, $customerData, $db);
+            $deliveryResult = processOrderDeliverables($productsList, $customerDataForHelper, $db);
             log_message("INFO: Resultado entrega: " . json_encode($deliveryResult));
 
-            // 3. Disparo Meta CAPI (Purchase)
+            // 4. Disparo Meta CAPI (Purchase) - CENTRALIZADO
             require_once __DIR__ . '/functions/track_meta_purchase.php';
             trackMetaPurchase($order['id'], $db);
 
-            log_message("SUCCESS: Pedido ID {$order['id']} atualizado para " . FINAL_ORDER_STATUS);
-            echo json_encode(['status' => 'ok', 'message' => 'Status atualizado e produtos entregues.']);
+            log_message("SUCCESS: Pedido ID {$order['id']} processado completamente.");
+            echo json_encode(['status' => 'ok', 'message' => 'Status atualizado e fluxos disparados.']);
         } else {
             log_message("INFO: Pedido já estava pago.");
             echo json_encode(['status' => 'ok', 'message' => 'Já atualizado.']);
@@ -116,7 +161,7 @@ try {
     }
 
 } catch (Exception $e) {
-    log_message("ERROR: " . $e->getMessage());
+    log_message("ERROR FATAL: " . $e->getMessage());
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => 'Erro interno BD: ' . $e->getMessage()]);
 }
