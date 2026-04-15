@@ -99,6 +99,10 @@ try {
             $deliveryResult = processOrderDeliverables($productsList, $customerData, $db);
             log_message("INFO: Resultado entrega: " . json_encode($deliveryResult));
 
+            // 3. Disparo Meta CAPI (Purchase)
+            require_once __DIR__ . '/functions/track_meta_purchase.php';
+            trackMetaPurchase($order['id'], $db);
+
             log_message("SUCCESS: Pedido ID {$order['id']} atualizado para " . FINAL_ORDER_STATUS);
             echo json_encode(['status' => 'ok', 'message' => 'Status atualizado e produtos entregues.']);
         } else {
