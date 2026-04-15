@@ -48,7 +48,7 @@ require_once 'auth.php';
                 </a>
                 <a href="meta-events.php"
                     class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="facebook" class="w-5 h-5"></i> Monitor Meta
+                    <i data-lucide="activity" class="w-5 h-5"></i> Monitor Meta
                 </a>
                 <a href="tracking.php"
                     class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">

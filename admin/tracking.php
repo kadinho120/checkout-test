@@ -51,7 +51,7 @@ if (!($_SESSION['logged_in'] ?? false)) {
                 </a>
                 <a href="meta-events.php"
                     class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="facebook" class="w-5 h-5"></i> Monitor Meta
+                    <i data-lucide="activity" class="w-5 h-5"></i> Monitor Meta
                 </a>
                 <a href="tracking.php"
                     class="flex items-center gap-3 px-4 py-3 bg-purple-600/10 text-purple-400 rounded-lg border border-purple-600/20 font-medium">
