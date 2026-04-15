@@ -186,6 +186,7 @@ require_once 'auth.php';
     </div>
 
     <script>
+        lucide.createIcons();
         function metaMonitorApp() {
             return {
                 logs: [],

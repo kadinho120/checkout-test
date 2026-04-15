@@ -295,6 +295,7 @@ require_once 'auth.php';
     </div>
 
     <script>
+        lucide.createIcons();
         function dashboardApp() {
             return {
                 stats: {

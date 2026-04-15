@@ -787,6 +787,7 @@ require_once 'auth.php';
 
     <!-- App Logic -->
     <script>
+        lucide.createIcons();
         function productsApp() {
             return {
                 products: [],

@@ -190,6 +190,7 @@ if (!($_SESSION['logged_in'] ?? false)) {
     </div>
 
     <script>
+        lucide.createIcons();
         function trackingPage() {
             return {
                 items: [],

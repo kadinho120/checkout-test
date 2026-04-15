@@ -199,6 +199,7 @@ require_once 'auth.php';
 
     <!-- App Logic -->
     <script>
+        lucide.createIcons();
         function ordersApp() {
             return {
                 orders: [],

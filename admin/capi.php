@@ -147,7 +147,6 @@ require_once 'auth.php';
 
     <script>
         lucide.createIcons();
-
         function capiTester() {
             return {
                 pixelId: '',
