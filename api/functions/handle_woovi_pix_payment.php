@@ -76,7 +76,7 @@ function handle_woovi_pix_payment()
 
     if ($response['error']) {
         http_response_code(500);
-        error_log('Woovi API Curl Error: ' . $response['error']);
+        log_activity('Woovi API Curl Error: ' . $response['error'], 'woovi_errors.log', __DIR__ . '/..');
         die(json_encode(['success' => false, 'message' => 'Erro de conexão com o gateway: ' . $response['error']]));
     }
 
@@ -85,7 +85,7 @@ function handle_woovi_pix_payment()
     if ($response['http_code'] >= 400 || isset($data['error']) || !isset($data['charge']['brCode'])) {
         http_response_code($response['http_code']);
         $msg_erro = $data['error'] ?? 'Resposta inesperada da Woovi.';
-        error_log('Woovi Gateway Error: ' . $msg_erro . ' Body: ' . $response['body']);
+        log_activity('Woovi Gateway Error: ' . $msg_erro . ' | Body: ' . $response['body'], 'woovi_errors.log', __DIR__ . '/..');
         die(json_encode(['success' => false, 'message' => 'Gateway Woovi: ' . $msg_erro]));
     }
 
