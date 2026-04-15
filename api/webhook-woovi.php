@@ -47,8 +47,10 @@ if (!$correlation_id && isset($payload['pix']['charge']['correlationID'])) {
 }
 
 if (!$correlation_id) {
-    http_response_code(400);
-    echo json_encode(['status' => 'error', 'message' => "correlationID ausente no payload."]);
+    // Retornamos 200 aqui para permitir que a Woovi valide a URL no painel administrativo
+    log_message("INFO: Webhook recebido sem correlationID (provavelmente um teste de conexão do gateway).");
+    http_response_code(200);
+    echo json_encode(['status' => 'ok', 'message' => "Webhook ativo. Aguardando eventos reais."]);
     exit;
 }
 
