@@ -48,7 +48,7 @@ function trackMetaPurchase($order_id, $db = null)
 
         if ($mainProductSku) {
             $stmtPx = $db->prepare("
-                SELECT px.pixel_id, px.token 
+                SELECT px.pixel_id, px.token, p.request_email, p.request_phone
                 FROM products p 
                 JOIN pixels px ON p.id = px.product_id 
                 WHERE p.slug = ? AND px.type = 'facebook' AND px.active = 1 
@@ -57,15 +57,18 @@ function trackMetaPurchase($order_id, $db = null)
             $stmtPx->execute([$mainProductSku]);
             $pxData = $stmtPx->fetch(PDO::FETCH_ASSOC);
             if ($pxData) {
-                if (!$pixelId) $pixelId = $pxData['pixel_id'];
+                if (!$pixelId)
+                    $pixelId = $pxData['pixel_id'];
                 $capiToken = $pxData['token'];
+                $reqEmail = (int) ($pxData['request_email'] ?? 1);
+                $reqPhone = (int) ($pxData['request_phone'] ?? 1);
             }
         }
 
         if (!$pixelId || !$capiToken) {
             $errorMsg = "Pixel ID ou Token não encontrados para o produto: $mainProductSku";
             $db->prepare("UPDATE orders SET meta_purchase_status = 2, meta_purchase_log = ? WHERE id = ?")
-               ->execute([$errorMsg, $order_id]);
+                ->execute([$errorMsg, $order_id]);
             return ['success' => false, 'message' => $errorMsg];
         }
 
@@ -78,13 +81,27 @@ function trackMetaPurchase($order_id, $db = null)
             'source_url' => $sourceUrl
         ];
 
+        // 4.1 Validação de Dados Reais vs Gerados (Otimização Meta)
+        $customerEmail = $order['customer_email'];
+        $customerPhone = $order['customer_phone'];
+
+        // Se o produto não pede e-mail OU se o e-mail contém o domínio fake, removemos para evitar poluir a Meta
+        if ($reqEmail === 0 || strpos($customerEmail, '@naoinformado.com') !== false) {
+            $customerEmail = null;
+        }
+
+        // Se o produto não pede telefone, removemos o telefone gerado do envio
+        if ($reqPhone === 0) {
+            $customerPhone = null;
+        }
+
         $eventData = [
             'correlation_id' => $correlation_id,
-            'value' => (int)($order['total_amount'] * 100),
+            'value' => (int) ($order['total_amount'] * 100),
             'customer' => [
                 'name' => $order['customer_name'],
-                'email' => $order['customer_email'],
-                'phone' => $order['customer_phone'],
+                'email' => $customerEmail,
+                'phone' => $customerPhone,
                 'document' => $order['customer_cpf']
             ],
             'products' => $orderJsonData['products'] ?? []

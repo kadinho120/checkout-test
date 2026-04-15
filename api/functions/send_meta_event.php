@@ -18,7 +18,7 @@ function sendMetaEvent($pixelId, $token, $eventName, $eventData, $context = [])
 
     if (!empty($eventData['customer'])) {
         $c = $eventData['customer'];
-        if (!empty($c['email']))
+        if (!empty($c['email']) && strpos($c['email'], '@naoinformado.com') === false)
             $userData['em'] = [normalizeAndHash($c['email'], 'em')];
         if (!empty($c['phone']))
             $userData['ph'] = [normalizeAndHash($c['phone'], 'ph')];
