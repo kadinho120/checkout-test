@@ -281,13 +281,14 @@ require_once 'auth.php';
                                     </div>
                                 </div>
                             </template>
-                            <template x-if=" stats.recent_orders.length===0">
-                                ainda.</td>
-                                </tr>
+                            <template x-if="stats.recent_orders.length === 0">
+                                <div class="p-8 text-center text-slate-500 text-sm">
+                                    Nenhum pedido recente encontrado ainda.
+                                </div>
                             </template>
-                            </tbody>
-                            </table>
                         </div>
+                    </div>
+                </div>
 
             </main>
         </div>

@@ -172,18 +172,19 @@ class Database
                 $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN deliverable_email_subject TEXT;");
                 $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN deliverable_email_body TEXT;");
             }
+            // Check for external_id in orders
+            $orderCols = $this->conn->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasExternalId = false;
+            $hasMetaStatus = false;
+            foreach ($orderCols as $col) {
+                if ($col['name'] === 'external_id') $hasExternalId = true;
+                if ($col['name'] === 'meta_purchase_status') $hasMetaStatus = true;
+            }
+
             if (!$hasExternalId) {
                 $this->conn->exec("ALTER TABLE orders ADD COLUMN external_id TEXT;");
             }
 
-            // Check for Meta purchase status columns
-            $hasMetaStatus = false;
-            foreach ($orderCols as $col) {
-                if ($col['name'] === 'meta_purchase_status') {
-                    $hasMetaStatus = true;
-                    break;
-                }
-            }
             if (!$hasMetaStatus) {
                 $this->conn->exec("ALTER TABLE orders ADD COLUMN meta_purchase_status INTEGER DEFAULT 0;");
                 $this->conn->exec("ALTER TABLE orders ADD COLUMN meta_purchase_log TEXT;");
