@@ -911,6 +911,17 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 processed = processed.replace(/{nome}/g, getRandomItem(NOMES));
                 processed = processed.replace(/{nome-homem}/g, getRandomItem(HOMENS));
                 processed = processed.replace(/{nome-mulher}/g, getRandomItem(MULHERES));
+
+                // {2horas} -> 2 hours after current time in GMT-3, format "XXH"
+                const now = new Date();
+                const future = new Date(now.getTime() + (2 * 60 * 60 * 1000));
+                const hours2 = new Intl.DateTimeFormat('pt-BR', {
+                    hour: '2-digit',
+                    hour12: false,
+                    timeZone: 'America/Sao_Paulo'
+                }).format(future);
+                processed = processed.replace(/{2horas}/gi, hours2 + 'H');
+
                 return processed;
             }
 

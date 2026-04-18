@@ -560,7 +560,7 @@ require_once 'auth.php';
                                 placeholder="{nome} de {cidade} comprou há 5 minutos"
                                 class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white resize-none focus:border-purple-500 outline-none"></textarea>
                             <div class="flex gap-2 mt-2 flex-wrap">
-                                <template x-for="tag in ['{cidade}', '{nome}', '{nome-homem}', '{nome-mulher}']">
+                                <template x-for="tag in ['{cidade}', '{nome}', '{nome-homem}', '{nome-mulher}', '{2horas}']">
                                     <span @click="copyToClipboard(tag)"
                                         class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none"
                                         x-text="tag" title="Clique para copiar"></span>
@@ -650,7 +650,7 @@ require_once 'auth.php';
                                 <!-- Date Shortcodes -->
                                 <div class="flex gap-2 flex-wrap items-center">
                                     <span class="text-xs text-slate-500 mr-1">Datas:</span>
-                                    <template x-for="tag in ['{datahoje}', '{datahojemaiusculo}', '{datahojeminusculo}', '{datahojecapitalizado}']">
+                                    <template x-for="tag in ['{datahoje}', '{datahojemaiusculo}', '{datahojeminusculo}', '{datahojecapitalizado}', '{2horas}']">
                                         <span @click="copyToClipboard(tag)"
                                             class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none border border-slate-700"
                                             x-text="tag" title="Clique para copiar"></span>
