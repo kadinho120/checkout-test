@@ -116,7 +116,7 @@
                     <div class="checkout-spinner"></div>
                     <span style="font-family: sans-serif; font-size: 14px; font-weight: 600;">Carregando Checkout Seguro...</span>
                 </div>
-                <iframe class="checkout-modal-iframe" src="about:blank"></iframe>
+                <iframe class="checkout-modal-iframe" src="about:blank" allow="clipboard-write"></iframe>
             </div>
         `;
         document.body.appendChild(overlay);

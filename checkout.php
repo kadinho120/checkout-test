@@ -718,13 +718,45 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Copy to clipboard helper
         window.copyToClipboard = (text) => {
-            navigator.clipboard.writeText(text).then(() => {
-                const btn = document.getElementById('btn-copy-pix');
-                const original = btn.innerHTML;
+            const btn = document.getElementById('btn-copy-pix');
+            const original = btn.innerHTML;
+
+            const updateButton = () => {
                 btn.innerHTML = 'COPIADO!';
                 setTimeout(() => btn.innerHTML = original, 2000);
-            }).catch(err => console.error('Erro ao copiar', err));
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(updateButton).catch(err => {
+                    console.error('navigator.clipboard failed, trying fallback', err);
+                    fallbackCopyToClipboard(text, updateButton);
+                });
+            } else {
+                fallbackCopyToClipboard(text, updateButton);
+            }
         };
+
+        function fallbackCopyToClipboard(text, callback) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            
+            // Ensure it's not visible and doesn't scroll the page
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful && callback) callback();
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+
+            document.body.removeChild(textArea);
+        }
 
         const showPixWaitView = (pixData, correlationId) => {
             form.classList.add('hidden');
