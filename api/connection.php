@@ -161,6 +161,15 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN deliverable_email_body TEXT;");
             }
 
+            // Check for request_name in products
+            $hasReqName = false;
+            foreach ($prodCols2 as $col) {
+                if ($col['name'] === 'request_name') $hasReqName = true;
+            }
+            if (!$hasReqName) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN request_name INTEGER DEFAULT 1;");
+            }
+
             // Check for Email columns in order_bumps
             $bumpCols3 = $this->conn->query("PRAGMA table_info(order_bumps)")->fetchAll(PDO::FETCH_ASSOC);
             $hasBumpEmailSub = false;
