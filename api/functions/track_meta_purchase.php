@@ -48,7 +48,7 @@ function trackMetaPurchase($order_id, $db = null)
 
         if ($mainProductSku) {
             $stmtPx = $db->prepare("
-                SELECT px.pixel_id, px.token, p.request_email, p.request_phone
+                SELECT px.pixel_id, px.token, p.request_email, p.request_phone, p.request_name
                 FROM products p 
                 JOIN pixels px ON p.id = px.product_id 
                 WHERE p.slug = ? AND px.type = 'facebook' AND px.active = 1 
@@ -62,6 +62,7 @@ function trackMetaPurchase($order_id, $db = null)
                 $capiToken = $pxData['token'];
                 $reqEmail = (int) ($pxData['request_email'] ?? 1);
                 $reqPhone = (int) ($pxData['request_phone'] ?? 1);
+                $reqName = (int) ($pxData['request_name'] ?? 1);
             }
         }
 
@@ -97,8 +98,8 @@ function trackMetaPurchase($order_id, $db = null)
 
         $customerName = $order['customer_name'];
 
-        // Se o nome for genérico (ex: Cliente #XXXX), removemos apenas o NOME do envio para a Meta, mantendo os demais dados
-        if (strpos($customerName, 'Cliente #') === 0) {
+        // Se o nome for genérico (ex: Cliente #XXXX) ou se o produto não solicita nome, removemos apenas o NOME do envio para a Meta
+        if ($reqName === 0 || strpos($customerName, 'Cliente #') === 0) {
             $customerName = null;
         }
 
