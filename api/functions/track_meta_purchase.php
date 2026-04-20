@@ -95,6 +95,13 @@ function trackMetaPurchase($order_id, $db = null)
             $customerPhone = null;
         }
 
+        // Se o nome for genérico (ex: Cliente #XXXX), não enviamos o evento para a Meta conforme solicitação do usuário
+        if (strpos($order['customer_name'], 'Cliente #') === 0) {
+            $db->prepare("UPDATE orders SET meta_purchase_status = 2, meta_purchase_log = ? WHERE id = ?")
+                ->execute(['Evento ignorado: Nome genérico (Anonymous)', $order_id]);
+            return ['success' => true, 'message' => 'Evento ignorado (Anonymous)'];
+        }
+
         $eventData = [
             'correlation_id' => $correlation_id,
             'value' => (int) ($order['total_amount'] * 100),
