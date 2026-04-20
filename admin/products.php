@@ -261,6 +261,11 @@ require_once 'auth.php';
                                         class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500">
                                     <label for="req_phone" class="text-slate-300 text-sm">Solicitar WhatsApp</label>
                                 </div>
+                                <div class="flex items-center gap-2">
+                                    <input x-model="form.request_name" type="checkbox" id="req_name"
+                                        class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500">
+                                    <label for="req_name" class="text-slate-300 text-sm">Solicitar Nome</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -813,6 +818,7 @@ require_once 'auth.php';
                     theme: 'dark',
                     request_email: true,
                     request_phone: true,
+                    request_name: true,
                     evolution_instance: '',
                     evolution_token: '',
                     evolution_url: '',
@@ -868,6 +874,7 @@ require_once 'auth.php';
                                     theme: data.theme || 'dark',
                                     request_email: data.request_email == 1,
                                     request_phone: data.request_phone == 1,
+                                    request_name: data.request_name == 1,
                                     evolution_instance: data.evolution_instance || '',
                                     evolution_token: data.evolution_token || '',
                                     evolution_url: data.evolution_url || '',
@@ -892,6 +899,7 @@ require_once 'auth.php';
                                 // Fallback for legacy records (null/undefined => true)
                                 if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
                                 if (data.request_phone === undefined || data.request_phone === null) this.form.request_phone = true;
+                                if (data.request_name === undefined || data.request_name === null) this.form.request_name = true;
 
                                 this.isModalOpen = true;
                                 this.$nextTick(() => lucide.createIcons());
@@ -912,6 +920,9 @@ require_once 'auth.php';
                             downsell_enabled: false,
                             downsell_discount_type: 'fixed',
                             downsell_discount_amount: 0,
+                            request_name: true,
+                            request_email: true,
+                            request_phone: true,
                             bumps: [],
                             pixels: []
                         };

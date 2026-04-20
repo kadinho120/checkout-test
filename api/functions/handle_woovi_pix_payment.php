@@ -23,6 +23,14 @@ function handle_woovi_pix_payment()
     $api_key = WOOVI_APP_ID;
     $correlationID = $params['correlation_id'];
 
+    // Tratamento de Nome
+    $customer_name = $params['customer']['name'] ?? '';
+    if (empty($customer_name)) {
+        // Gera um nome genérico usando os últimos 4 caracteres do correlation_id
+        $customer_name = 'Cliente #' . strtoupper(substr($correlationID, -4));
+        $params['customer']['name'] = $customer_name;
+    }
+
     // Tratamento de Telefone
     $raw_phone = $params['customer']['phone'] ?? '';
     $clean_phone = preg_replace('/[^0-9]/', '', $raw_phone);
