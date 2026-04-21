@@ -253,6 +253,21 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN downsell_discount_amount REAL DEFAULT 0;");
             }
 
+            // Check for tracking toggles
+            $prodCols6 = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasTrackIC = false;
+            $hasTrackAPI = false;
+            foreach ($prodCols6 as $col) {
+                if ($col['name'] === 'track_initiate_checkout') $hasTrackIC = true;
+                if ($col['name'] === 'track_add_payment_info') $hasTrackAPI = true;
+            }
+            if (!$hasTrackIC) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN track_initiate_checkout INTEGER DEFAULT 1;");
+            }
+            if (!$hasTrackAPI) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN track_add_payment_info INTEGER DEFAULT 1;");
+            }
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {

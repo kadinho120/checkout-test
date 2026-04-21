@@ -930,6 +930,8 @@ require_once 'auth.php';
                                 if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
                                 if (data.request_phone === undefined || data.request_phone === null) this.form.request_phone = true;
                                 if (data.request_name === undefined || data.request_name === null) this.form.request_name = true;
+                                if (data.track_initiate_checkout === undefined || data.track_initiate_checkout === null) this.form.track_initiate_checkout = true;
+                                if (data.track_add_payment_info === undefined || data.track_add_payment_info === null) this.form.track_add_payment_info = true;
 
                                 this.isModalOpen = true;
                                 this.$nextTick(() => lucide.createIcons());
