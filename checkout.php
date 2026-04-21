@@ -73,7 +73,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     'https://connect.facebook.net/en_US/fbevents.js');
                 fbq('init', '<?= $pixel['pixel_id'] ?>');
                 fbq('track', 'PageView');
+                <?php if ((int)($product['track_initiate_checkout'] ?? 1) !== 0): ?>
                 fbq('track', 'InitiateCheckout'); 
+                <?php endif; ?>
             </script>
             <noscript><img height="1" width="1" style="display:none"
                     src="https://www.facebook.com/tr?id=<?= $pixel['pixel_id'] ?>&ev=PageView&noscript=1" /></noscript>
@@ -449,6 +451,10 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     text: <?= json_encode($product['top_bar_text'] ?? '') ?>,
                     bgColor: <?= json_encode($product['top_bar_bg_color'] ?? '#000000') ?>,
                     textColor: <?= json_encode($product['top_bar_text_color'] ?? '#ffffff') ?>
+                },
+                tracking: {
+                    initiateCheckout: <?= (int)($product['track_initiate_checkout'] ?? 1) !== 0 ? 'true' : 'false' ?>,
+                    addPaymentInfo: <?= (int)($product['track_add_payment_info'] ?? 1) !== 0 ? 'true' : 'false' ?>
                 }
             }
         };
@@ -477,7 +483,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         // Trigger AddPaymentInfo on first interaction
         let hasTrackedInfo = false;
         const trackAddPaymentInfo = () => {
-            if (hasTrackedInfo) return;
+            if (hasTrackedInfo || !PLANOS['main'].tracking.addPaymentInfo) return;
             hasTrackedInfo = true;
 
             if (typeof fbq === 'function') {
@@ -632,7 +638,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             };
 
             // Track AddPaymentInfo
-            if (typeof fbq === 'function') {
+            if (typeof fbq === 'function' && PLANOS['main'].tracking.addPaymentInfo) {
                 fbq('track', 'AddPaymentInfo', {
                     content_name: allProducts.map(p => p.name).join(', '),
                     content_ids: allProducts.map(p => p.sku),

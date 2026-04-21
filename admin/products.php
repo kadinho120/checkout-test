@@ -590,6 +590,33 @@ require_once 'auth.php';
                             <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
                         </button>
                     </div>
+
+                    <div class="bg-slate-950/50 p-4 rounded-lg border border-slate-800 space-y-3 mb-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="activity" class="w-4 h-4 text-blue-400"></i>
+                                <span class="text-sm font-medium text-slate-300">Disparar Initiate Checkout</span>
+                            </div>
+                            <button @click="form.track_initiate_checkout = !form.track_initiate_checkout"
+                                class="w-10 h-5 rounded-full bg-slate-700 relative transition-colors duration-300"
+                                :class="form.track_initiate_checkout ? 'bg-blue-600' : 'bg-slate-700'">
+                                <span class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform duration-300 shadow-md"
+                                    :class="form.track_initiate_checkout ? 'translate-x-5' : 'translate-x-0'"></span>
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="credit-card" class="w-4 h-4 text-green-400"></i>
+                                <span class="text-sm font-medium text-slate-300">Disparar Add Payment Info</span>
+                            </div>
+                            <button @click="form.track_add_payment_info = !form.track_add_payment_info"
+                                class="w-10 h-5 rounded-full bg-slate-700 relative transition-colors duration-300"
+                                :class="form.track_add_payment_info ? 'bg-blue-600' : 'bg-slate-700'">
+                                <span class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform duration-300 shadow-md"
+                                    :class="form.track_add_payment_info ? 'translate-x-5' : 'translate-x-0'"></span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="space-y-3">
@@ -835,7 +862,9 @@ require_once 'auth.php';
                     top_bar_text_color: '#ffffff',
                     downsell_enabled: false,
                     downsell_discount_type: 'fixed',
-                    downsell_discount_amount: 0
+                    downsell_discount_amount: 0,
+                    track_initiate_checkout: true,
+                    track_add_payment_info: true
                 },
 
                 init() {
@@ -893,7 +922,9 @@ require_once 'auth.php';
                                     top_bar_text_color: data.top_bar_text_color || '#ffffff',
                                     downsell_enabled: data.downsell_enabled == 1,
                                     downsell_discount_type: data.downsell_discount_type || 'fixed',
-                                    downsell_discount_amount: data.downsell_discount_amount || 0
+                                    downsell_discount_amount: data.downsell_discount_amount || 0,
+                                    track_initiate_checkout: data.track_initiate_checkout != 0,
+                                    track_add_payment_info: data.track_add_payment_info != 0
                                 };
                                 // Fallback for legacy records (null/undefined => true)
                                 if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
@@ -923,7 +954,9 @@ require_once 'auth.php';
                             request_email: true,
                             request_phone: true,
                             bumps: [],
-                            pixels: []
+                            pixels: [],
+                            track_initiate_checkout: true,
+                            track_add_payment_info: true
                         };
                         this.isModalOpen = true;
                     }

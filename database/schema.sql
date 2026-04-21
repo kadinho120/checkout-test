@@ -15,6 +15,12 @@ CREATE TABLE IF NOT EXISTS products (
     price DECIMAL(10, 2) NOT NULL,
     image_url TEXT, -- Hero image/gif
     active BOOLEAN DEFAULT 1,
+    theme TEXT DEFAULT 'dark',
+    request_email INTEGER DEFAULT 1,
+    request_phone INTEGER DEFAULT 1,
+    request_name INTEGER DEFAULT 1,
+    track_initiate_checkout INTEGER DEFAULT 1,
+    track_add_payment_info INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
