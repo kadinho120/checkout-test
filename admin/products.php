@@ -597,24 +597,32 @@ require_once 'auth.php';
                                 <i data-lucide="activity" class="w-4 h-4 text-blue-400"></i>
                                 <span class="text-sm font-medium text-slate-300">Disparar Initiate Checkout</span>
                             </div>
-                            <button @click="form.track_initiate_checkout = !form.track_initiate_checkout"
-                                class="w-10 h-5 rounded-full bg-slate-700 relative transition-colors duration-300"
-                                :class="form.track_initiate_checkout ? 'bg-blue-600' : 'bg-slate-700'">
-                                <span class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform duration-300 shadow-md"
-                                    :class="form.track_initiate_checkout ? 'translate-x-5' : 'translate-x-0'"></span>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium text-slate-400"
+                                    x-text="form.track_initiate_checkout ? 'Ativado' : 'Desativado'"></span>
+                                <button @click="form.track_initiate_checkout = !form.track_initiate_checkout"
+                                    class="w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none"
+                                    :class="form.track_initiate_checkout ? 'bg-green-500' : 'bg-slate-700'">
+                                    <span class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm"
+                                        :class="form.track_initiate_checkout ? 'translate-x-5' : 'translate-x-0'"></span>
+                                </button>
+                            </div>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="credit-card" class="w-4 h-4 text-green-400"></i>
                                 <span class="text-sm font-medium text-slate-300">Disparar Add Payment Info</span>
                             </div>
-                            <button @click="form.track_add_payment_info = !form.track_add_payment_info"
-                                class="w-10 h-5 rounded-full bg-slate-700 relative transition-colors duration-300"
-                                :class="form.track_add_payment_info ? 'bg-blue-600' : 'bg-slate-700'">
-                                <span class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform duration-300 shadow-md"
-                                    :class="form.track_add_payment_info ? 'translate-x-5' : 'translate-x-0'"></span>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium text-slate-400"
+                                    x-text="form.track_add_payment_info ? 'Ativado' : 'Desativado'"></span>
+                                <button @click="form.track_add_payment_info = !form.track_add_payment_info"
+                                    class="w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none"
+                                    :class="form.track_add_payment_info ? 'bg-green-500' : 'bg-slate-700'">
+                                    <span class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm"
+                                        :class="form.track_add_payment_info ? 'translate-x-5' : 'translate-x-0'"></span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
