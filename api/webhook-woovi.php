@@ -107,9 +107,10 @@ try {
             $deliveryResult = processOrderDeliverables($productsList, $customerDataForHelper, $db);
             log_message("INFO: Resultado entrega: " . json_encode($deliveryResult));
 
-            // 4. Disparo Meta CAPI (Purchase) - CENTRALIZADO
+            log_message("INFO: Iniciando trackMetaPurchase para Pedido #" . $order['id']);
             require_once __DIR__ . '/functions/track_meta_purchase.php';
-            trackMetaPurchase($order['id'], $db);
+            $metaResult = trackMetaPurchase($order['id'], $db);
+            log_message("INFO: Resultado trackMetaPurchase: " . json_encode($metaResult));
 
             log_message("SUCCESS: Pedido ID {$order['id']} processado completamente.");
             echo json_encode(['status' => 'ok', 'message' => 'Status atualizado e fluxos disparados.']);

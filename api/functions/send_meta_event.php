@@ -32,7 +32,11 @@ function sendMetaEvent($pixelId, $token, $eventName, $eventData, $context = [])
         }
     }
 
-    // ID Externo se disponível (para match)
+    // ID Externo se disponível (para match de alta qualidade)
+    if (!empty($eventData['external_id'])) {
+        $userData['external_id'] = [normalizeAndHash($eventData['external_id'], 'external_id')];
+    }
+
     if (!empty($context['fbp']))
         $userData['fbp'] = $context['fbp'];
     if (!empty($context['fbc']))
@@ -43,6 +47,16 @@ function sendMetaEvent($pixelId, $token, $eventName, $eventData, $context = [])
         'currency' => 'BRL',
         'value' => isset($eventData['value']) ? $eventData['value'] / 100 : 0
     ];
+
+    // UTMs para Atribuição
+    if (!empty($eventData['tracking'])) {
+        $t = $eventData['tracking'];
+        if (!empty($t['utm_source'])) $customData['utm_source'] = $t['utm_source'];
+        if (!empty($t['utm_medium'])) $customData['utm_medium'] = $t['utm_medium'];
+        if (!empty($t['utm_campaign'])) $customData['utm_campaign'] = $t['utm_campaign'];
+        if (!empty($t['utm_content'])) $customData['utm_content'] = $t['utm_content'];
+        if (!empty($t['utm_term'])) $customData['utm_term'] = $t['utm_term'];
+    }
 
     // Adicionar produtos se houver
     if (!empty($eventData['products'])) {

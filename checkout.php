@@ -645,10 +645,12 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     content_type: 'product',
                     value: totalValue,
                     currency: 'BRL',
+                    external_id: correlationId,
                     user_data: {
-                        ph: customerData.phone, // We could hash this if strict compliance needed, but standard pixel often accepts raw if matched
+                        ph: customerData.phone,
                         em: customerData.email,
-                        fn: customerData.name.split(' ')[0]
+                        fn: customerData.name.split(' ')[0],
+                        external_id: correlationId
                     }
                 });
             }

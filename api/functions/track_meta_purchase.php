@@ -28,23 +28,31 @@ function trackMetaPurchase($order_id, $db = null)
 
         $orderJsonData = json_decode($order['json_data'] ?? '{}', true);
         $correlation_id = $order['transaction_id'];
+        log_activity("DEBUG: Início trackMetaPurchase para Pedido #{$order_id}. Correlation: $correlation_id", 'meta_activity.log');
 
-        // 2. Busca dados de rastreamento (fbc, fbp, user_agent, etc)
-        // Tentamos buscar da tabela tracking_logs primeiro
+        // 1. Buscar dados de correlação do banco (Salvamento inteligente)
         $stmtTrack = $db->prepare("SELECT * FROM tracking_logs WHERE correlation_id = ?");
         $stmtTrack->execute([$correlation_id]);
         $trackData = $stmtTrack->fetch(PDO::FETCH_ASSOC);
 
-        // Se não houver log específico, tenta pegar do JSON do pedido
+        if ($trackData) {
+            log_activity("DEBUG: Dados encontrados na tracking_logs para $correlation_id", 'meta_activity.log');
+        } else {
+            log_activity("DEBUG: Dados NÃO encontrados na tracking_logs para $correlation_id. Usando fallback do json_data.", 'meta_activity.log');
+        }
+
+        // 2. Extrair parâmetros (Preferência para tracking_logs, fallback para json_data do pedido)
         $fbc = $trackData['fbc'] ?? $orderJsonData['tracking']['fbc'] ?? null;
         $fbp = $trackData['fbp'] ?? $orderJsonData['tracking']['fbp'] ?? null;
         $userAgent = $trackData['user_agent'] ?? $orderJsonData['tracking']['user_agent'] ?? null;
-        $sourceUrl = $trackData['event_url'] ?? $orderJsonData['tracking']['source_url'] ?? null;
+        $sourceUrl = $trackData['event_url'] ?? $orderJsonData['tracking']['event_source_url'] ?? null;
         $pixelId = $trackData['pixel_id'] ?? $orderJsonData['tracking']['pixel_id'] ?? null;
 
-        // 3. Identifica o Pixel/Token do Facebook
+        // 3. Buscar Credenciais (Pixel/Token) do Produto
         $capiToken = null;
         $mainProductSku = $orderJsonData['products'][0]['sku'] ?? null;
+        
+        log_activity("DEBUG: SKU do produto principal: $mainProductSku", 'meta_activity.log');
 
         if ($mainProductSku) {
             $stmtPx = $db->prepare("
@@ -56,13 +64,17 @@ function trackMetaPurchase($order_id, $db = null)
             ");
             $stmtPx->execute([$mainProductSku]);
             $pxData = $stmtPx->fetch(PDO::FETCH_ASSOC);
+
             if ($pxData) {
+                log_activity("DEBUG: Credenciais encontradas na tabela pixels para o slug: $mainProductSku", 'meta_activity.log');
                 if (!$pixelId)
                     $pixelId = $pxData['pixel_id'];
                 $capiToken = $pxData['token'];
                 $reqEmail = (int) ($pxData['request_email'] ?? 1);
                 $reqPhone = (int) ($pxData['request_phone'] ?? 1);
                 $reqName = (int) ($pxData['request_name'] ?? 1);
+            } else {
+                log_activity("WARNING: Nenhuma credencial ativa encontrada na tabela pixels para o slug: $mainProductSku", 'meta_activity.log');
             }
         }
 
@@ -105,6 +117,7 @@ function trackMetaPurchase($order_id, $db = null)
 
         $eventData = [
             'correlation_id' => $correlation_id,
+            'external_id' => $correlation_id, // Usado para Match de Alta Qualidade
             'value' => (int) ($order['total_amount'] * 100),
             'customer' => [
                 'name' => $customerName,
@@ -112,7 +125,8 @@ function trackMetaPurchase($order_id, $db = null)
                 'phone' => $customerPhone,
                 'document' => $order['customer_cpf']
             ],
-            'products' => $orderJsonData['products'] ?? []
+            'products' => $orderJsonData['products'] ?? [],
+            'tracking' => $orderJsonData['tracking'] ?? [] // Inclui UTMs
         ];
 
         // 5. Envia o evento via Meta CAPI
