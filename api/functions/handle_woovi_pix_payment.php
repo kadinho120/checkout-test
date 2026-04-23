@@ -8,6 +8,9 @@ function handle_woovi_pix_payment()
     $json_params = file_get_contents('php://input');
     $params = json_decode($json_params, true);
 
+    require_once __DIR__ . '/get_client_ip.php';
+    $client_ip = get_client_ip();
+
     // Validação básica
     if (json_last_error() !== JSON_ERROR_NONE || !isset($params['value'], $params['correlation_id'], $params['customer'])) {
         http_response_code(400);
@@ -118,7 +121,7 @@ function handle_woovi_pix_payment()
             'external_id' => $externalID,
             'pix_data' => $pix_data,
             'products' => $params['products'] ?? [],
-            'tracking' => $params['tracking'] ?? []
+            'tracking' => array_merge($params['tracking'] ?? [], ['client_ip' => $client_ip])
         ]);
 
         $mainProductId = 0;

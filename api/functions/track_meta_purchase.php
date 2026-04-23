@@ -47,6 +47,7 @@ function trackMetaPurchase($order_id, $db = null)
         $userAgent = $trackData['user_agent'] ?? $orderJsonData['tracking']['user_agent'] ?? null;
         $sourceUrl = $trackData['event_url'] ?? $orderJsonData['tracking']['event_source_url'] ?? null;
         $pixelId = $trackData['pixel_id'] ?? $orderJsonData['tracking']['pixel_id'] ?? null;
+        $clientIp = $trackData['client_ip'] ?? $orderJsonData['tracking']['client_ip'] ?? null;
 
         // 3. Buscar Credenciais (Pixel/Token) do Produto
         $capiToken = null;
@@ -87,7 +88,7 @@ function trackMetaPurchase($order_id, $db = null)
 
         // 4. Prepara o contexto de envio
         $context = [
-            'client_ip' => $orderJsonData['tracking']['client_ip'] ?? $_SERVER['REMOTE_ADDR'] ?? null,
+            'client_ip' => $clientIp ?? $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent' => $userAgent,
             'fbp' => $fbp,
             'fbc' => $fbc,

@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS tracking_logs (
     user_agent TEXT,
     event_url TEXT,
     pixel_id TEXT,
+    client_ip TEXT,
     json_payload TEXT, -- Stores extra data like value, currency, product strings
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

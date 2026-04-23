@@ -6,6 +6,7 @@ require_once __DIR__ . '/../connection.php';
 
 // Função de log unificada
 require_once __DIR__ . '/../functions/log_activity.php';
+require_once __DIR__ . '/../functions/get_client_ip.php';
 
 function log_meta_activity($message)
 {
@@ -37,11 +38,12 @@ try {
         user_agent TEXT,
         event_url TEXT,
         pixel_id TEXT,
+        client_ip TEXT,
         json_payload TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );");
 
-    $stmt = $db->prepare("INSERT OR REPLACE INTO tracking_logs (correlation_id, fbc, fbp, user_agent, event_url, pixel_id, json_payload) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $db->prepare("INSERT OR REPLACE INTO tracking_logs (correlation_id, fbc, fbp, user_agent, event_url, pixel_id, client_ip, json_payload) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
     // Extra payload data
     $payloadData = [
@@ -57,6 +59,7 @@ try {
         $data['client_user_agent'] ?? '',
         $data['event_source_url'] ?? '',
         $data['pixel_id'] ?? '',
+        get_client_ip(),
         json_encode($payloadData)
     ]);
 
