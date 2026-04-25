@@ -100,10 +100,11 @@ function handle_woovi_pix_payment()
         die(json_encode(['success' => false, 'message' => 'Gateway Woovi: ' . $msg_erro]));
     }
 
+    require_once __DIR__ . '/format_price.php';
     $pix_data = [
         'brCode' => $data['charge']['brCode'],
         'qrCodeImage' => $data['charge']['qrCodeImage'],
-        'formattedPrice' => 'R$ ' . number_format(($params['value'] ?? 0) / 100, 2, ',', '.')
+        'formattedPrice' => 'R$ ' . format_price(($params['value'] ?? 0) / 100)
     ];
 
     // --- SALVAMENTO E WEBHOOK ---

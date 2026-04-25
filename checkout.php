@@ -1,5 +1,6 @@
 <?php
 require_once 'api/connection.php';
+require_once 'api/functions/format_price.php';
 $database = new Database();
 $db = $database->getConnection();
 
@@ -213,7 +214,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="text-right">
                         <span class="block text-xs text-slate-500 line-through">De R$ 97,00</span>
                         <span class="text-3xl font-black text-green-400">R$
-                            <?= number_format($product['price'], 2, ',', '.') ?></span>
+                            <?= format_price($product['price']) ?></span>
                     </div>
                 </div>
 
@@ -291,7 +292,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="bg-orange-500/5 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-orange-500/20">
                                 <span class="block text-[10px] sm:text-xs text-slate-500 uppercase font-bold mb-1">Preço Atualizado</span>
                                 <div class="flex items-center justify-center gap-2 sm:gap-3">
-                                    <span class="text-sm sm:text-lg text-slate-500 line-through">R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
+                                    <span class="text-sm sm:text-lg text-slate-500 line-through">R$ <?= format_price($product['price']) ?></span>
                                     <span class="text-3xl sm:text-4xl font-black text-orange-500">R$ <span id="downsell-new-price">0,00</span></span>
                                 </div>
                             </div>
@@ -370,7 +371,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
                                         <div class="text-right shrink-0">
                                             <span class="block text-sm font-black text-yellow-500">+R$
-                                                <?= number_format($bump['price'], 2, ',', '.') ?></span>
+                                                <?= format_price($bump['price']) ?></span>
                                         </div>
                                     </div>
 
@@ -390,7 +391,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="flex justify-between items-end mb-4">
                         <span class="text-gray-600 dark:text-slate-400 text-sm">Total a pagar:</span>
                         <span id="checkout-price-display" class="text-2xl font-black text-gray-900 dark:text-white">R$
-                            <?= number_format($product['price'], 2, ',', '.') ?></span>
+                            <?= format_price($product['price']) ?></span>
                     </div>
 
                     <button type="submit" id="pay-button"
@@ -459,8 +460,14 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }
         };
 
+        const formatPriceJS = (amount) => {
+            return amount % 1 === 0 
+                ? amount.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+                : amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
         const formatCurrency = (value) => {
-            return (value / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            return 'R$ ' + formatPriceJS(value / 100);
         };
 
         const payButton = document.getElementById('pay-button');
@@ -833,7 +840,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 newPrice = baseProductPrice * (1 - (downsellAmount / 100));
             }
 
-            document.getElementById('downsell-new-price').innerText = newPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('downsell-new-price').innerText = formatPriceJS(newPrice);
             
             const modal = document.getElementById('downsell-modal');
             modal.classList.remove('hidden');
@@ -856,7 +863,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             const productPriceEls = document.querySelectorAll('.text-green-400');
             productPriceEls.forEach(el => {
                 if (el.innerText.includes('R$')) {
-                    el.innerText = 'R$ ' + currentProductPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    el.innerText = 'R$ ' + formatPriceJS(currentProductPrice);
                 }
             });
 
