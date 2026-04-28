@@ -249,7 +249,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="<?= $isMinimalist ? 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl overflow-hidden' : 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl' ?>">
             
             <?php if ($isMinimalist): ?>
-            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-slate-800">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-slate-800 <?= ($isModal) ? 'pr-10' : '' ?>">
                 <h1 class="font-display text-lg font-bold text-gray-900 dark:text-white truncate pr-4">
                     <?= htmlspecialchars($product['name']) ?>
                 </h1>
@@ -435,6 +435,29 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 <h2 class="font-display text-3xl font-bold text-white mt-4">PAGAMENTO APROVADO!</h2>
                 <p class="text-slate-300 my-4 text-lg">Seu acesso foi enviado para o seu e-mail.</p>
             </div>
+
+            <?php if ($isMinimalist): ?>
+            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-slate-800 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[10px] text-gray-500 dark:text-slate-500 font-bold uppercase tracking-wider">
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-green-500"></i> Pagamento Seguro
+                </div>
+                <?php 
+                $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
+                $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
+                $accessText = "Acesso Imediato";
+                if ($reqEmail && $reqPhone) {
+                    $accessText .= " via E-mail e Whats";
+                } elseif ($reqEmail) {
+                    $accessText .= " via E-mail";
+                } elseif ($reqPhone) {
+                    $accessText .= " via Whats";
+                }
+                ?>
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-green-500"></i> <?= $accessText ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
 
     </div>
