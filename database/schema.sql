@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS products (
     request_name INTEGER DEFAULT 1,
     track_initiate_checkout INTEGER DEFAULT 1,
     track_add_payment_info INTEGER DEFAULT 1,
+    checkout_style TEXT DEFAULT 'default',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

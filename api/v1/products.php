@@ -92,7 +92,8 @@ switch ($method) {
                     top_bar_text_color = :top_bar_text_color, 
                     downsell_enabled = :downsell_enabled, 
                     downsell_discount_type = :downsell_discount_type, 
-                    downsell_discount_amount = :downsell_discount_amount 
+                    downsell_discount_amount = :downsell_discount_amount,
+                    checkout_style = :checkout_style
                     WHERE id = :id");
 
                 $stmt->execute([
@@ -125,6 +126,7 @@ switch ($method) {
                     ':downsell_enabled' => isset($data->downsell_enabled) ? ($data->downsell_enabled ? 1 : 0) : 0,
                     ':downsell_discount_type' => $data->downsell_discount_type ?? 'fixed',
                     ':downsell_discount_amount' => $data->downsell_discount_amount ?? 0,
+                    ':checkout_style' => $data->checkout_style ?? 'default',
                     ':id' => $data->id
                 ]);
                 $productId = $data->id;
@@ -139,7 +141,8 @@ switch ($method) {
                     deliverable_email_subject, deliverable_email_body, 
                     fake_notifications, notification_text, 
                     top_bar_enabled, top_bar_text, top_bar_bg_color, top_bar_text_color, 
-                    downsell_enabled, downsell_discount_type, downsell_discount_amount
+                    downsell_enabled, downsell_discount_type, downsell_discount_amount,
+                    checkout_style
                 ) VALUES (
                     :name, :slug, :description, :price, :image_url, :active, :theme, 
                     :request_email, :request_phone, :request_name, 
@@ -149,7 +152,8 @@ switch ($method) {
                     :deliverable_email_subject, :deliverable_email_body, 
                     :fake_notifications, :notification_text, 
                     :top_bar_enabled, :top_bar_text, :top_bar_bg_color, :top_bar_text_color, 
-                    :downsell_enabled, :downsell_discount_type, :downsell_discount_amount
+                    :downsell_enabled, :downsell_discount_type, :downsell_discount_amount,
+                    :checkout_style
                 )");
 
                 $stmt->execute([
@@ -181,7 +185,8 @@ switch ($method) {
                     ':top_bar_text_color' => $data->top_bar_text_color ?? '#ffffff',
                     ':downsell_enabled' => isset($data->downsell_enabled) ? ($data->downsell_enabled ? 1 : 0) : 0,
                     ':downsell_discount_type' => $data->downsell_discount_type ?? 'fixed',
-                    ':downsell_discount_amount' => $data->downsell_discount_amount ?? 0
+                    ':downsell_discount_amount' => $data->downsell_discount_amount ?? 0,
+                    ':checkout_style' => $data->checkout_style ?? 'default'
                 ]);
                 $productId = $db->lastInsertId();
             }

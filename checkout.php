@@ -184,9 +184,14 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
     <?php endif; ?>
 
-    <div class="w-full <?= $isModal ? 'max-w-4xl' : 'max-w-5xl' ?> grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+    <?php 
+    $isMinimalist = ($product['checkout_style'] ?? 'default') === 'minimalist';
+    ?>
+
+    <div class="w-full <?= $isMinimalist ? 'max-w-md' : ($isModal ? 'max-w-4xl' : 'max-w-5xl') ?> <?= $isMinimalist ? '' : 'grid grid-cols-1 lg:grid-cols-2 gap-8' ?> items-start">
 
         <!-- COLUMN 1: PRODUCT INFO -->
+        <?php if (!$isMinimalist): ?>
         <div class="lg:sticky lg:top-8 space-y-6">
             <div
                 class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl">
@@ -238,11 +243,24 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
         </div>
+        <?php endif; ?>
 
         <!-- COLUMN 2: CHECKOUT FORM -->
-        <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl">
+        <div class="<?= $isMinimalist ? 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl overflow-hidden' : 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl' ?>">
+            
+            <?php if ($isMinimalist): ?>
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-slate-800">
+                <h1 class="font-display text-lg font-bold text-gray-900 dark:text-white truncate pr-4">
+                    <?= htmlspecialchars($product['name']) ?>
+                </h1>
+                <div class="text-right shrink-0">
+                    <span class="text-xl font-black text-green-500">R$ <?= format_price($product['price']) ?></span>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <h2 id="checkout-step-header"
-                class="font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                class="font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2 <?= $isMinimalist ? 'justify-center' : '' ?>">
                 <span
                     class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm text-white">1</span>
                 Dados Pessoais
@@ -442,6 +460,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 price: <?= $product['price'] * 100 ?>,
                 name: <?= json_encode($product['name']) ?>,
                 sku: <?= json_encode($product['slug']) ?>,
+                style: <?= json_encode($product['checkout_style'] ?? 'default') ?>,
                 notifications: {
                     enabled: <?= ($product['fake_notifications'] ?? 0) ? 'true' : 'false' ?>,
                     text: <?= json_encode($product['notification_text'] ?? '') ?>
@@ -802,6 +821,29 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Aguardando confirmação...
                 </div>
             `;
+
+            if (PLANOS.main.style === 'minimalist') {
+                pixWaitView.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-2">
+                        <div class="bg-white p-2 rounded-xl inline-block mb-4 shadow-lg">
+                            <img src="${pixData.qrCodeImage}" class="w-48 h-48">
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-slate-950 p-3 rounded-2xl border border-gray-200 dark:border-slate-800 flex flex-col gap-3 mb-4">
+                            <div class="flex items-center gap-2 px-1">
+                                <input readonly value="${pixData.brCode}" class="bg-transparent text-[10px] text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate">
+                                <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}')" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 transition uppercase shrink-0">Copiar</button>
+                            </div>
+                            <button onclick="copyToClipboard('${pixData.brCode}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg">
+                                <i data-lucide="copy" class="w-4 h-4"></i> COPIAR PIX
+                            </button>
+                        </div>
+                        <div class="animate-pulse text-green-600 dark:text-green-500 text-[10px] font-bold flex items-center gap-2">
+                            <i data-lucide="loader" class="w-3 h-3 animate-spin"></i> AGUARDANDO PAGAMENTO...
+                        </div>
+                    </div>
+                `;
+            }
+
             pixWaitView.classList.remove('hidden');
             lucide.createIcons();
 
