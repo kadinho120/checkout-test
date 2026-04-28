@@ -268,6 +268,15 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN track_add_payment_info INTEGER DEFAULT 1;");
             }
 
+            // Check for checkout_style column
+            $hasStyle = false;
+            foreach ($prodCols6 as $col) {
+                if ($col['name'] === 'checkout_style') $hasStyle = true;
+            }
+            if (!$hasStyle) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN checkout_style TEXT DEFAULT 'default';");
+            }
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {

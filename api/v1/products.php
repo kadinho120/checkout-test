@@ -102,7 +102,7 @@ switch ($method) {
                     ':description' => $data->description ?? '',
                     ':price' => $data->price,
                     ':image_url' => $data->image_url ?? '',
-                    ':active' => $data->active ?? 1,
+                    ':active' => isset($data->active) ? ($data->active ? 1 : 0) : 1,
                     ':theme' => $data->theme ?? 'dark',
                     ':request_email' => isset($data->request_email) ? ($data->request_email ? 1 : 0) : 1,
                     ':request_phone' => isset($data->request_phone) ? ($data->request_phone ? 1 : 0) : 1,
@@ -162,7 +162,7 @@ switch ($method) {
                     ':description' => $data->description ?? '',
                     ':price' => $data->price,
                     ':image_url' => $data->image_url ?? '',
-                    ':active' => $data->active ?? 1,
+                    ':active' => isset($data->active) ? ($data->active ? 1 : 0) : 1,
                     ':theme' => $data->theme ?? 'dark',
                     ':request_email' => isset($data->request_email) ? ($data->request_email ? 1 : 0) : 1,
                     ':request_phone' => isset($data->request_phone) ? ($data->request_phone ? 1 : 0) : 1,
@@ -234,6 +234,8 @@ switch ($method) {
 
         } catch (Exception $e) {
             $db->rollBack();
+            error_log("Error saving product: " . $e->getMessage());
+            file_put_contents(__DIR__ . '/debug_save.log', $e->getMessage() . "\n" . $e->getTraceAsString());
             http_response_code(503);
             echo json_encode(["message" => "Unable to save product.", "error" => $e->getMessage()]);
         }
