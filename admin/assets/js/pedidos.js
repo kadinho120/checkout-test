@@ -211,11 +211,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('tr');
             row.className = 'hover:bg-slate-800/50 transition-colors group cursor-pointer';
             row.id = `order-row-${order.id}`;
-            row.onclick = (e) => {
-                // Não expande se clicar no botão de excluir (lógica de exclusão)
-                if (e.target.closest('button') && e.target.closest('button').onclick.toString().includes('deleteOrder')) return;
+            row.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                console.log('Toggling details for order:', order.id);
                 toggleOrderDetails(order.id);
-            };
+            });
             row.innerHTML = `
                 <td class="p-4">${dateDisplay}<div class="text-[10px] text-slate-600 mt-1 font-mono">${order.correlationId || '---'}</div></td>
                 <td class="p-4 font-medium text-white">${order.customerName || '---'}<div class="text-xs text-slate-500 font-normal">${order.email || '---'}</div></td>

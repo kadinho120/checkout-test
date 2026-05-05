@@ -137,7 +137,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                             </thead>
                             <tbody id="orders-table-body" class="text-sm divide-y divide-slate-800">
                                 <!-- Preenchido via JS -->
-                                <tr><td colspan="6" class="p-8 text-center text-slate-500">Carregando pedidos...</td></tr>
+                                <tr><td colspan="7" class="p-8 text-center text-slate-500">Carregando pedidos...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -157,7 +157,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     </div>
 
     <!-- JS Específico de Pedidos -->
-    <script src="assets/js/pedidos.js"></script>
+    <script src="assets/js/pedidos.js?v=<?= time() ?>"></script>
     <script>lucide.createIcons();</script>
 </body>
 </html>
