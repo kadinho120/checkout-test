@@ -108,6 +108,7 @@ require_once 'auth.php';
                                 <th class="p-4 uppercase font-medium">Valor</th>
                                 <th class="p-4 uppercase font-medium text-center">Status</th>
                                 <th class="p-4 uppercase font-medium">Data</th>
+                                <th class="p-4 uppercase font-medium text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-800">
@@ -179,6 +180,43 @@ require_once 'auth.php';
                                     </td>
                                     <td class="p-4 text-sm text-slate-400"
                                         x-text="new Date(order.created_at).toLocaleString()"></td>
+                                    <td class="p-4 text-center">
+                                        <button @click="order.expanded = !order.expanded" 
+                                            class="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold px-3 py-1.5 rounded transition uppercase tracking-wider">
+                                            Detalhes
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- Expanded Address Details -->
+                                <tr x-show="order.expanded" x-cloak class="bg-slate-900/80 border-b border-slate-800">
+                                    <td colspan="6" class="p-0">
+                                        <div class="p-6">
+                                            <template x-if="order.cep">
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                    <div class="space-y-1">
+                                                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Endereço de Entrega</p>
+                                                        <p class="text-white text-sm" x-text="order.address + ', ' + order.address_number"></p>
+                                                        <p class="text-slate-400 text-xs" x-text="order.neighborhood + ' - CEP: ' + order.cep"></p>
+                                                        <p class="text-slate-400 text-xs" x-text="order.city + ' / ' + order.state"></p>
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Complemento</p>
+                                                        <p class="text-white text-sm" x-text="order.complement || '---'"></p>
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest">ID Externo</p>
+                                                        <p class="text-white text-xs font-mono break-all" x-text="order.external_id || '---'"></p>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            <template x-if="!order.cep">
+                                                <div class="flex items-center gap-2 text-slate-500 text-sm italic">
+                                                    <i data-lucide="info" class="w-4 h-4"></i>
+                                                    Produto Digital: Nenhuma informação de entrega coletada.
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
                                 </tr>
                             </template>
                             <template x-if="orders.length === 0">
@@ -216,7 +254,7 @@ require_once 'auth.php';
                     fetch('../api/v1/orders.php')
                         .then(res => res.json())
                         .then(data => {
-                            this.orders = data;
+                            this.orders = data.map(o => ({ ...o, expanded: false }));
                             this.isLoading = false;
                             this.$nextTick(() => lucide.createIcons());
                         })
