@@ -10,7 +10,9 @@ require_once 'auth.php';
     <title>Gerenciar Produtos - Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Alpine.js -->
+    <!-- Alpine.js Plugins -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <!-- Alpine.js Core -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -361,7 +363,7 @@ require_once 'auth.php';
                         </button>
                     </div>
                     <p x-show="testResult" class="text-xs mt-2"
-                        :class="testResult.success ? 'text-green-400' : 'text-red-400'" x-text="testResult.message"></p>
+                        :class="testResult?.success ? 'text-green-400' : 'text-red-400'" x-text="testResult?.message"></p>
 
 
                     <hr class="border-slate-800 my-4">
@@ -412,7 +414,7 @@ require_once 'auth.php';
                                 </button>
                             </div>
                             <p x-show="testEmailResult" class="text-xs mt-2"
-                                :class="testEmailResult.success ? 'text-green-400' : 'text-red-400'" x-text="testEmailResult.message"></p>
+                                :class="testEmailResult?.success ? 'text-green-400' : 'text-red-400'" x-text="testEmailResult?.message"></p>
                         </div>
                     </div>
 
