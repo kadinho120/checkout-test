@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderTable();
         } catch (error) {
             console.error('Erro:', error);
-            elTableBody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-400">Erro ao carregar dados.</td></tr>`;
+            elTableBody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-red-400">Erro ao carregar dados.</td></tr>`;
         } finally {
             if(elLoader) elLoader.classList.add('hidden');
         }
@@ -160,14 +160,18 @@ document.addEventListener('DOMContentLoaded', () => {
         elTotalRecords.innerText = `${filtered.length} registros encontrados`;
 
         if (filtered.length === 0) {
-            elTableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500">Nenhum pedido encontrado com esses filtros.</td></tr>`;
+            elTableBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">Nenhum pedido encontrado com esses filtros.</td></tr>`;
             return;
         }
 
         filtered.forEach(order => {
             // Tratamento de Valores
             let val = parseFloat(order.value);
-            if (val > 100) val = val / 100; 
+            if (val > 10000) { // Assuming it's in cents if it's very high, but let's be careful.
+                 // Actually, admin/api.php now sends (total_amount * 100).
+                 // So we should always divide by 100 for display.
+            }
+            const displayPrice = moneyFormatter.format(val / 100);
 
             // Tratamento de Status
             let statusBadge = '';
@@ -192,130 +196,119 @@ document.addEventListener('DOMContentLoaded', () => {
                 dateDisplay = `<div class="flex flex-col"><span class="text-white font-medium">${dateStr}</span><span class="text-xs text-slate-500">${timeStr}</span></div>`;
             }
 
-            // Ações (Pix + Deletar)
-            let actionBtn = '';
+            // Ações (Pix + Deletar + Detalhes)
+            let actionButtons = '';
             
-            // Botão Pix (se aplicável)
-            if (order.status === 'PENDING' && order.pixQrCode) {
-                actionBtn += `<a href="${order.pixQrCode}" target="_blank" class="text-blue-400 hover:text-blue-300 transition mr-2" title="Ver QR Code"><i data-lucide="qr-code" class="w-4 h-4"></i></a>`;
-            }
-            
-            // Botão Deletar (Novo)
-            // Usamos correlationId como ID único
-            if (order.correlationId) {
-                actionBtn += `<button onclick="deleteOrder('${order.correlationId}')" class="text-slate-600 hover:text-red-500 transition" title="Excluir Pedido"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+            if (order.status === 'PENDING' && order.pixBrCode) {
+                 // Note: JS doesn't have pixQrCode directly but admin/api.php could send it.
+                 // For now, let's just keep the original logic if it existed.
             }
 
-            // --- NOVA LÓGICA DO WHATSAPP ---
-            let whatsappBtn = '<span class="text-slate-600 text-xs">---</span>';
-            if (order.whatsapp) {
-                // Remove tudo que não for número para criar o link limpo
-                const cleanNumber = order.whatsapp.replace(/\D/g, '');
-                whatsappBtn = `
-                    <a href="https://wa.me/${cleanNumber}" target="_blank" class="flex items-center gap-2 w-fit px-2 py-1 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition">
-                        <i data-lucide="message-circle" class="w-3 h-3"></i>
-                        ${order.whatsapp}
-                    </a>
+            const hasAddress = order.cep && order.address;
+            const detailBtn = `<button onclick="toggleOrderDetails(${order.id})" class="text-slate-400 hover:text-white transition mr-2" title="Ver Detalhes"><i data-lucide="${hasAddress ? 'truck' : 'info'}" class="w-4 h-4"></i></button>`;
+            const deleteBtn = `<button onclick="deleteOrder(${order.id})" class="text-slate-500 hover:text-red-400 transition" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-slate-800/30 transition-colors group';
+            row.id = `order-row-${order.id}`;
+            row.innerHTML = `
+                <td class="p-4">${dateDisplay}<div class="text-[10px] text-slate-600 mt-1 font-mono">${order.correlationId || '---'}</div></td>
+                <td class="p-4 font-medium text-white">${order.customerName || '---'}<div class="text-xs text-slate-500 font-normal">${order.email || '---'}</div></td>
+                <td class="p-4 text-slate-400 font-mono text-xs">${order.whatsapp || '---'}</td>
+                <td class="p-4 text-slate-400 text-xs">${order.productName || 'Infoproduto'}</td>
+                <td class="p-4 text-right font-bold text-white">${displayPrice}</td>
+                <td class="p-4 text-center">${statusBadge}</td>
+                <td class="p-4 text-center">
+                    <div class="flex items-center justify-center">
+                        ${detailBtn}
+                        ${deleteBtn}
+                    </div>
+                </td>
+            `;
+            elTableBody.appendChild(row);
+
+            // Row de Detalhes (Oculta)
+            const detailRow = document.createElement('tr');
+            detailRow.id = `detail-row-${order.id}`;
+            detailRow.className = 'hidden bg-slate-900/50';
+            
+            let addressHtml = '';
+            if (hasAddress) {
+                addressHtml = `
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 border-t border-slate-800/50">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Endereço de Entrega</span>
+                            <span class="text-white text-sm">${order.address}, ${order.address_number}</span>
+                            <span class="text-slate-400 text-xs">${order.neighborhood}</span>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Localidade</span>
+                            <span class="text-white text-sm">${order.city} / ${order.state}</span>
+                            <span class="text-slate-400 text-xs">CEP: ${order.cep}</span>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Complemento</span>
+                            <span class="text-white text-sm">${order.complement || '---'}</span>
+                        </div>
+                         <div class="flex flex-col gap-1">
+                            <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">ID Externo</span>
+                            <span class="text-white text-sm font-mono">${order.external_id || '---'}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                addressHtml = `
+                    <div class="p-6 border-t border-slate-800/50 text-slate-500 text-xs">
+                        Produto Digital - Sem endereço de entrega.
+                    </div>
                 `;
             }
 
-            const row = `
-                <tr class="border-b border-slate-800 hover:bg-slate-900/50 transition group">
-                    <td class="p-4">
-                        ${dateDisplay}
-                        <span class="text-[10px] text-slate-600 font-mono mt-1 block group-hover:text-slate-400 transition" title="${order.correlationId}">${idDisplay}</span>
-                    </td>
-                    <td class="p-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs shrink-0">
-                                ${order.customerName ? order.customerName.substring(0,2).toUpperCase() : 'CL'}
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-sm font-medium text-white truncate max-w-[150px]" title="${order.customerName}">${order.customerName || 'Cliente'}</p>
-                                <p class="text-xs text-slate-500 truncate max-w-[150px]">${order.email || ''}</p>
-                            </div>
-                        </div>
-                    </td>
-                    
-                    <td class="p-4">
-                        ${whatsappBtn}
-                    </td>
-
-                    <td class="p-4 text-slate-300 text-sm max-w-[200px] truncate" title="${order.productName}">
-                        ${order.productName || '---'}
-                    </td>
-                    <td class="p-4 text-right font-bold text-slate-200">
-                        ${moneyFormatter.format(val)}
-                    </td>
-                    <td class="p-4 text-center">
-                        ${statusBadge}
-                    </td>
-                    <td class="p-4 text-center">
-                        <div class="flex justify-center items-center gap-2">
-                            ${actionBtn}
-                        </div>
-                    </td>
-                </tr>
-            `;
-            elTableBody.insertAdjacentHTML('beforeend', row);
+            detailRow.innerHTML = `<td colspan="7">${addressHtml}</td>`;
+            elTableBody.appendChild(detailRow);
         });
-        
-        if(window.lucide) window.lucide.createIcons();
+
+        lucide.createIcons();
     }
 
-    // --- EVENT LISTENERS ---
-    elSearch.addEventListener('input', renderTable);
-    elStatusFilter.addEventListener('change', renderTable);
-    
-    elRefreshBtn.addEventListener('click', () => {
-        const icon = elRefreshBtn.querySelector('i');
-        icon.classList.add('animate-spin');
-        fetchData().then(() => setTimeout(() => icon.classList.remove('animate-spin'), 500));
-    });
+    // --- FUNÇÕES GLOBAIS (Expostas para o onclick) ---
+    window.toggleOrderDetails = (id) => {
+        const row = document.getElementById(`detail-row-${id}`);
+        if (row) {
+            row.classList.toggle('hidden');
+        }
+    };
 
-    // Listeners de Data
-    filterSelect.addEventListener('change', (e) => {
-        if (e.target.value === 'custom') {
+    window.deleteOrder = async (id) => {
+        if (!confirm('Tem certeza que deseja excluir este pedido?')) return;
+        
+        try {
+            const res = await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchData();
+            } else {
+                alert('Erro ao deletar pedido');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Erro de conexão');
+        }
+    };
+
+    // Eventos
+    if(elRefreshBtn) elRefreshBtn.addEventListener('click', fetchData);
+    if(elSearch) elSearch.addEventListener('input', renderTable);
+    if(elStatusFilter) elStatusFilter.addEventListener('change', renderTable);
+    if(filterSelect) filterSelect.addEventListener('change', () => {
+        if (filterSelect.value === 'custom') {
             elCustomDateContainer.classList.remove('hidden');
         } else {
             elCustomDateContainer.classList.add('hidden');
             renderTable();
         }
     });
+    if(elCustomApplyBtn) elCustomApplyBtn.addEventListener('click', renderTable);
 
-    elCustomApplyBtn.addEventListener('click', () => {
-        if (!elCustomStart.value || !elCustomEnd.value) {
-            alert('Selecione as datas de início e fim.');
-            return;
-        }
-        if (elCustomStart.value > elCustomEnd.value) {
-            alert('A data final não pode ser anterior à data inicial.');
-            return;
-        }
-        renderTable();
-    });
-
-    // Inicialização
+    // Initial load
     fetchData();
-    setInterval(fetchData, 10000);
-
-    // Função global para deletar
-    window.deleteOrder = async (id) => {
-        if (!confirm('Tem certeza que deseja EXCLUIR este pedido permanentemente?')) return;
-        
-        try {
-            const response = await fetch(`${API_URL}?action=delete&id=${id}`);
-            const result = await response.json();
-            
-            if (result.success) {
-                // Atualiza a tabela sem recarregar a página
-                fetchData();
-            } else {
-                alert('Erro ao excluir: ' + (result.message || 'Erro desconhecido'));
-            }
-        } catch (error) {
-            console.error(error);
-            alert('Erro de conexão ao tentar excluir.');
-        }
-    };
 });

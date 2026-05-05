@@ -115,7 +115,7 @@ function handle_woovi_pix_payment()
 
         $externalID = $params['customer']['external_id'] ?? '';
 
-        $stmt = $db->prepare("INSERT INTO orders (product_id, customer_name, customer_email, customer_phone, customer_cpf, total_amount, status, payment_method, transaction_id, external_id, json_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-03:00'))");
+        $stmt = $db->prepare("INSERT INTO orders (product_id, customer_name, customer_email, customer_phone, customer_cpf, total_amount, status, payment_method, transaction_id, external_id, cep, address, address_number, complement, neighborhood, city, state, json_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-03:00'))");
 
         $json_data_store = json_encode([
             'correlation_id' => $correlationID,
@@ -138,6 +138,13 @@ function handle_woovi_pix_payment()
             'pix',
             $correlationID,
             $externalID,
+            $params['customer']['cep'] ?? '',
+            $params['customer']['address'] ?? '',
+            $params['customer']['address_number'] ?? '',
+            $params['customer']['complement'] ?? '',
+            $params['customer']['neighborhood'] ?? '',
+            $params['customer']['city'] ?? '',
+            $params['customer']['state'] ?? '',
             $json_data_store
         ]);
 

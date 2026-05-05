@@ -1,45 +1,57 @@
 <?php
+// admin/api.php
 session_start();
-
-// Segurança: Apenas usuários logados
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+if (!isset($_SESSION['admin_logged_in'])) {
     http_response_code(401);
-    echo json_encode(['error' => 'Acesso negado']);
-    exit;
+    die(json_encode(['error' => 'Unauthorized']));
 }
 
-header('Content-Type: application/json');
+require_once __DIR__ . '/../api/connection.php';
+$database = new Database();
+$db = $database->getConnection();
 
-$jsonPath = __DIR__ . '/../api/database/detailed_orders.json';
+$method = $_SERVER['REQUEST_METHOD'];
 
-if (!file_exists($jsonPath)) {
-    file_put_contents($jsonPath, '[]');
-}
+if ($method === 'GET') {
+    try {
+        $stmt = $db->query("SELECT o.*, p.name as product_name FROM orders o LEFT JOIN products p ON o.product_id = p.id ORDER BY o.created_at DESC");
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Map SQLite column names to what the JS expects
+        $formattedOrders = array_map(function($order) {
+            return [
+                'id' => $order['id'],
+                'correlationId' => $order['transaction_id'],
+                'createdAt' => $order['created_at'],
+                'customerName' => $order['customer_name'],
+                'whatsapp' => $order['customer_phone'],
+                'email' => $order['customer_email'],
+                'productName' => $order['product_name'] ?: 'Produto #' . $order['product_id'],
+                'value' => $order['total_amount'] * 100, // JS expects cents
+                'status' => strtoupper($order['status']),
+                'cep' => $order['cep'],
+                'address' => $order['address'],
+                'address_number' => $order['address_number'],
+                'complement' => $order['complement'],
+                'neighborhood' => $order['neighborhood'],
+                'city' => $order['city'],
+                'state' => $order['state']
+            ];
+        }, $orders);
 
-// LÓGICA DE EXCLUSÃO (DELETE)
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    $idToDelete = $_GET['id'];
-    $data = json_decode(file_get_contents($jsonPath), true) ?? [];
-    
-    // Filtra removendo o item com o correlationId correspondente
-    $newData = array_filter($data, function($item) use ($idToDelete) {
-        // Verifica se correlationId existe, senão usa lógica de índice (fallback)
-        return isset($item['correlationId']) ? $item['correlationId'] !== $idToDelete : true;
-    });
-    
-    // Reorganiza os índices do array
-    $newData = array_values($newData);
-    
-    if (file_put_contents($jsonPath, json_encode($newData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
+        echo json_encode($formattedOrders);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+} elseif ($method === 'DELETE') {
+    $id = $_GET['id'] ?? null;
+    if ($id) {
+        $stmt = $db->prepare("DELETE FROM orders WHERE id = ?");
+        $stmt->execute([$id]);
         echo json_encode(['success' => true]);
     } else {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Erro ao salvar arquivo']);
+        http_response_code(400);
+        echo json_encode(['error' => 'ID required']);
     }
-    exit;
 }
-
-// LÓGICA PADRÃO (LISTAR)
-$content = file_get_contents($jsonPath);
-echo empty($content) ? '[]' : $content;
-?>

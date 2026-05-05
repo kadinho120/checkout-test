@@ -257,6 +257,14 @@ require_once 'auth.php';
                                     <option value="minimalist">Minimalista (Compacto)</option>
                                 </select>
                             </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Tipo de Produto</label>
+                                <select x-model="form.product_type"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                                    <option value="digital">Digital (Acesso Imediato)</option>
+                                    <option value="physical">Físico (Entrega no Endereço)</option>
+                                </select>
+                            </div>
                             <div class="space-y-2 pt-2">
                                 <label class="block text-sm font-medium text-slate-400">Campos do Checkout</label>
                                 <div class="flex items-center gap-2">
@@ -881,7 +889,8 @@ require_once 'auth.php';
                     downsell_discount_amount: 0,
                     track_initiate_checkout: true,
                     track_add_payment_info: true,
-                    checkout_style: 'default'
+                    checkout_style: 'default',
+                    product_type: 'digital'
                 },
 
                 init() {
@@ -942,7 +951,8 @@ require_once 'auth.php';
                                     downsell_discount_amount: data.downsell_discount_amount || 0,
                                     track_initiate_checkout: data.track_initiate_checkout != 0,
                                     track_add_payment_info: data.track_add_payment_info != 0,
-                                    checkout_style: data.checkout_style || 'default'
+                                    checkout_style: data.checkout_style || 'default',
+                                    product_type: data.product_type || 'digital'
                                 };
                                 // Fallback for legacy records (null/undefined => true)
                                 if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
@@ -977,7 +987,8 @@ require_once 'auth.php';
                             pixels: [],
                             track_initiate_checkout: true,
                             track_add_payment_info: true,
-                            checkout_style: 'default'
+                            checkout_style: 'default',
+                            product_type: 'digital'
                         };
                         this.isModalOpen = true;
                     }

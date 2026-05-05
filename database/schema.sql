@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS products (
     track_initiate_checkout INTEGER DEFAULT 1,
     track_add_payment_info INTEGER DEFAULT 1,
     checkout_style TEXT DEFAULT 'default',
+    product_type TEXT DEFAULT 'digital', -- 'digital' or 'physical'
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -60,6 +61,14 @@ CREATE TABLE IF NOT EXISTS orders (
     status TEXT DEFAULT 'pending', -- pending, paid, failed
     payment_method TEXT,
     transaction_id TEXT,
+    external_id TEXT,
+    cep TEXT,
+    address TEXT,
+    address_number TEXT,
+    complement TEXT,
+    neighborhood TEXT,
+    city TEXT,
+    state TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME,
     json_data TEXT -- Store full payload for safety

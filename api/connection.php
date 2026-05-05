@@ -277,6 +277,31 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN checkout_style TEXT DEFAULT 'default';");
             }
 
+            // Check for product_type column
+            $hasProductType = false;
+            foreach ($prodCols6 as $col) {
+                if ($col['name'] === 'product_type') $hasProductType = true;
+            }
+            if (!$hasProductType) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN product_type TEXT DEFAULT 'digital';");
+            }
+
+            // Check for delivery columns in orders
+            $orderCols2 = $this->conn->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasCep = false;
+            foreach ($orderCols2 as $col) {
+                if ($col['name'] === 'cep') $hasCep = true;
+            }
+            if (!$hasCep) {
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN cep TEXT;");
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN address TEXT;");
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN address_number TEXT;");
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN complement TEXT;");
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN neighborhood TEXT;");
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN city TEXT;");
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN state TEXT;");
+            }
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {

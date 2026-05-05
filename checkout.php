@@ -333,6 +333,62 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                                 required>
                         </div>
                     <?php endif; ?>
+
+                    <?php if (($product['product_type'] ?? 'digital') === 'physical'): ?>
+                        <div class="grid grid-cols-6 gap-4 pt-4 border-t border-gray-100 dark:border-slate-800">
+                            <div class="col-span-6">
+                                <h3 class="text-xs font-black text-blue-500 uppercase tracking-widest mb-4">Dados de Entrega</h3>
+                            </div>
+                            
+                            <div class="col-span-3">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">CEP</label>
+                                <input type="text" id="cep" placeholder="00000-000"
+                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
+                                    required>
+                            </div>
+
+                            <div class="col-span-6">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">ENDEREÇO</label>
+                                <input type="text" id="address" placeholder="Rua, Avenida..."
+                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
+                                    required>
+                            </div>
+
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">NÚMERO</label>
+                                <input type="text" id="address_number" placeholder="123"
+                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
+                                    required>
+                            </div>
+
+                            <div class="col-span-4">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">COMPLEMENTO</label>
+                                <input type="text" id="complement" placeholder="Apto, Bloco..."
+                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500">
+                            </div>
+
+                            <div class="col-span-6">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">BAIRRO</label>
+                                <input type="text" id="neighborhood" placeholder="Seu bairro..."
+                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
+                                    required>
+                            </div>
+
+                            <div class="col-span-4">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">CIDADE</label>
+                                <input type="text" id="city" placeholder="Sua cidade..."
+                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
+                                    required>
+                            </div>
+
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">ESTADO</label>
+                                <input type="text" id="state" placeholder="UF"
+                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
+                                    required maxlength="2">
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <h2 class="font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
@@ -497,7 +553,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 tracking: {
                     initiateCheckout: <?= (int)($product['track_initiate_checkout'] ?? 1) !== 0 ? 'true' : 'false' ?>,
                     addPaymentInfo: <?= (int)($product['track_add_payment_info'] ?? 1) !== 0 ? 'true' : 'false' ?>
-                }
+                },
+                product_type: <?= json_encode($product['product_type'] ?? 'digital') ?>
             }
         };
 
@@ -590,6 +647,19 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 errorMessage = 'Por favor, insira um e-mail válido.';
             }
 
+            // 3. Address Validation (If physical)
+            if (PLANOS['main'].product_type === 'physical') {
+                ['cep', 'address', 'address_number', 'neighborhood', 'city', 'state'].forEach(id => {
+                    const input = document.getElementById(id);
+                    if (!input) return;
+                    input.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+                    if (!input.value.trim()) {
+                        input.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                        isValid = false;
+                    }
+                });
+            }
+
             if (!isValid) {
                 paymentErrorDiv.textContent = errorMessage;
                 paymentErrorDiv.classList.remove('hidden');
@@ -610,6 +680,31 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             });
         }
 
+        // CEP Mask & Lookup
+        const cepInput = document.getElementById('cep');
+        if (cepInput) {
+            cepInput.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                v = v.substring(0, 8);
+                if (v.length > 5) v = v.substring(0, 5) + '-' + v.substring(5);
+                e.target.value = v;
+
+                if (v.replace('-', '').length === 8) {
+                    fetch(`https://viacep.com.br/ws/${v.replace('-', '')}/json/`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (!data.erro) {
+                                if (document.getElementById('address')) document.getElementById('address').value = data.logradouro;
+                                if (document.getElementById('neighborhood')) document.getElementById('neighborhood').value = data.bairro;
+                                if (document.getElementById('city')) document.getElementById('city').value = data.localidade;
+                                if (document.getElementById('state')) document.getElementById('state').value = data.uf;
+                                if (document.getElementById('address_number')) document.getElementById('address_number').focus();
+                            }
+                        });
+                }
+            });
+        }
+
         // Submit Handler
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -624,7 +719,14 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 email: document.getElementById('email') ? document.getElementById('email').value : '',
                 phone: document.getElementById('whatsapp') ? document.getElementById('whatsapp').value : '',
                 document: '',
-                external_id: new URLSearchParams(window.location.search).get('external_id') || ''
+                external_id: new URLSearchParams(window.location.search).get('external_id') || '',
+                cep: document.getElementById('cep') ? document.getElementById('cep').value : '',
+                address: document.getElementById('address') ? document.getElementById('address').value : '',
+                address_number: document.getElementById('address_number') ? document.getElementById('address_number').value : '',
+                complement: document.getElementById('complement') ? document.getElementById('complement').value : '',
+                neighborhood: document.getElementById('neighborhood') ? document.getElementById('neighborhood').value : '',
+                city: document.getElementById('city') ? document.getElementById('city').value : '',
+                state: document.getElementById('state') ? document.getElementById('state').value : ''
             };
 
             await handlePixPayment(customerData);
