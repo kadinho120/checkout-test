@@ -111,8 +111,8 @@ require_once 'auth.php';
                                 <th class="p-4 uppercase font-medium text-center">Ações</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-800">
-                            <template x-for="order in orders" :key="order.id">
+                        <template x-for="order in orders" :key="order.id">
+                            <tbody class="divide-y divide-slate-800 border-b border-slate-800">
                                 <tr class="hover:bg-slate-800/50 transition">
                                     <td class="p-4 font-mono text-sm text-slate-500" x-text="'#' + order.id"></td>
                                     <td class="p-4">
@@ -188,11 +188,11 @@ require_once 'auth.php';
                                     </td>
                                 </tr>
                                 <!-- Expanded Address Details -->
-                                <tr x-show="order.expanded" x-cloak class="bg-slate-900/80 border-b border-slate-800">
+                                <tr x-show="order.expanded" x-cloak class="bg-slate-900/80">
                                     <td colspan="6" class="p-0">
                                         <div class="p-6">
                                             <template x-if="order.cep">
-                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
                                                     <div class="space-y-1">
                                                         <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Endereço de Entrega</p>
                                                         <p class="text-white text-sm" x-text="order.address + ', ' + order.address_number"></p>
@@ -218,15 +218,17 @@ require_once 'auth.php';
                                         </div>
                                     </td>
                                 </tr>
-                            </template>
-                            <template x-if="orders.length === 0">
+                            </tbody>
+                        </template>
+                        <template x-if="orders.length === 0">
+                            <tbody class="divide-y divide-slate-800">
                                 <tr>
-                                    <td colspan="5" class="p-8 text-center text-slate-500">
+                                    <td colspan="7" class="p-8 text-center text-slate-500">
                                         Nenhum pedido encontrado.
                                     </td>
                                 </tr>
-                            </template>
-                        </tbody>
+                            </tbody>
+                        </template>
                     </table>
                 </div>
 
