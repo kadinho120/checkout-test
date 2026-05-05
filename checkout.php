@@ -227,15 +227,21 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="flex items-center gap-2"><i data-lucide="check-circle"
                             class="w-4 h-4 text-green-500"></i> Garantia de 7 Dias</div>
                     <?php
-                    $reqEmail = (int) $product['request_email'] !== 0;
-                    $reqPhone = (int) $product['request_phone'] !== 0;
-                    $accessText = "Acesso Imediato";
-                    if ($reqEmail && $reqPhone) {
-                        $accessText .= " por E-mail e WhatsApp";
-                    } elseif ($reqEmail) {
-                        $accessText .= " por E-mail";
-                    } elseif ($reqPhone) {
-                        $accessText .= " por WhatsApp";
+                    $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
+                    $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
+                    $isPhysical = ($product['product_type'] ?? 'digital') === 'physical';
+                    
+                    if ($isPhysical) {
+                        $accessText = "Receba em até 7 dias";
+                    } else {
+                        $accessText = "Acesso Imediato";
+                        if ($reqEmail && $reqPhone) {
+                            $accessText .= " por E-mail e WhatsApp";
+                        } elseif ($reqEmail) {
+                            $accessText .= " por E-mail";
+                        } elseif ($reqPhone) {
+                            $accessText .= " por WhatsApp";
+                        }
                     }
                     ?>
                     <div class="flex items-center gap-2"><i data-lucide="check-circle"
@@ -503,13 +509,18 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
                 $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
                 $isPhysical = ($product['product_type'] ?? 'digital') === 'physical';
-                $accessText = $isPhysical ? "Receba em até 7 dias" : "Acesso Imediato";
-                if ($reqEmail && $reqPhone) {
-                    $accessText .= " via E-mail e Whats";
-                } elseif ($reqEmail) {
-                    $accessText .= " via E-mail";
-                } elseif ($reqPhone) {
-                    $accessText .= " via Whats";
+                
+                if ($isPhysical) {
+                    $accessText = "Receba em até 7 dias";
+                } else {
+                    $accessText = "Acesso Imediato";
+                    if ($reqEmail && $reqPhone) {
+                        $accessText .= " via E-mail e Whats";
+                    } elseif ($reqEmail) {
+                        $accessText .= " via E-mail";
+                    } elseif ($reqPhone) {
+                        $accessText .= " via Whats";
+                    }
                 }
                 ?>
                 <div class="flex items-center gap-1.5">
