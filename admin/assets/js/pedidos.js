@@ -209,8 +209,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const deleteBtn = `<button onclick="deleteOrder(${order.id})" class="text-slate-500 hover:text-red-400 transition" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
 
             const row = document.createElement('tr');
-            row.className = 'hover:bg-slate-800/30 transition-colors group';
+            row.className = 'hover:bg-slate-800/50 transition-colors group cursor-pointer';
             row.id = `order-row-${order.id}`;
+            row.onclick = (e) => {
+                // Não expande se clicar no botão de excluir (lógica de exclusão)
+                if (e.target.closest('button') && e.target.closest('button').onclick.toString().includes('deleteOrder')) return;
+                toggleOrderDetails(order.id);
+            };
             row.innerHTML = `
                 <td class="p-4">${dateDisplay}<div class="text-[10px] text-slate-600 mt-1 font-mono">${order.correlationId || '---'}</div></td>
                 <td class="p-4 font-medium text-white">${order.customerName || '---'}<div class="text-xs text-slate-500 font-normal">${order.email || '---'}</div></td>
