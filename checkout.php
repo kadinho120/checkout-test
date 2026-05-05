@@ -489,7 +489,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="flex justify-center mb-4"><i data-lucide="check-circle"
                         class="w-20 h-20 text-green-500"></i></div>
                 <h2 class="font-display text-3xl font-bold text-white mt-4">PAGAMENTO APROVADO!</h2>
-                <p class="text-slate-300 my-4 text-lg">Seu acesso foi enviado para o seu e-mail.</p>
+                <p class="text-slate-300 my-4 text-lg">
+                    <?= ($product['product_type'] ?? 'digital') === 'physical' ? 'Seu pedido foi confirmado e você receberá em até 7 dias.' : 'Seu acesso foi enviado para o seu e-mail.' ?>
+                </p>
             </div>
 
             <?php if ($isMinimalist): ?>
@@ -500,7 +502,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php 
                 $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
                 $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
-                $accessText = "Acesso Imediato";
+                $isPhysical = ($product['product_type'] ?? 'digital') === 'physical';
+                $accessText = $isPhysical ? "Receba em até 7 dias" : "Acesso Imediato";
                 if ($reqEmail && $reqPhone) {
                     $accessText .= " via E-mail e Whats";
                 } elseif ($reqEmail) {
