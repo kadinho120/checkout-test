@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS products (
     track_add_payment_info INTEGER DEFAULT 1,
     checkout_style TEXT DEFAULT 'default',
     product_type TEXT DEFAULT 'digital', -- 'digital' or 'physical'
+    compare_at_price DECIMAL(10, 2), -- Stripped price (preço âncora)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

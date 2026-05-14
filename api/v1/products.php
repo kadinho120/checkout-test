@@ -94,7 +94,8 @@ switch ($method) {
                     downsell_discount_type = :downsell_discount_type, 
                     downsell_discount_amount = :downsell_discount_amount,
                     checkout_style = :checkout_style,
-                    product_type = :product_type
+                    product_type = :product_type,
+                    compare_at_price = :compare_at_price
                     WHERE id = :id");
 
                 $stmt->execute([
@@ -129,6 +130,7 @@ switch ($method) {
                     ':downsell_discount_amount' => $data->downsell_discount_amount ?? 0,
                     ':checkout_style' => $data->checkout_style ?? 'default',
                     ':product_type' => $data->product_type ?? 'digital',
+                    ':compare_at_price' => $data->compare_at_price ?? null,
                     ':id' => $data->id
                 ]);
                 $productId = $data->id;
@@ -144,7 +146,7 @@ switch ($method) {
                     fake_notifications, notification_text, 
                     top_bar_enabled, top_bar_text, top_bar_bg_color, top_bar_text_color, 
                     downsell_enabled, downsell_discount_type, downsell_discount_amount,
-                    checkout_style, product_type
+                    checkout_style, product_type, compare_at_price
                 ) VALUES (
                     :name, :slug, :description, :price, :image_url, :active, :theme, 
                     :request_email, :request_phone, :request_name, 
@@ -155,7 +157,7 @@ switch ($method) {
                     :fake_notifications, :notification_text, 
                     :top_bar_enabled, :top_bar_text, :top_bar_bg_color, :top_bar_text_color, 
                     :downsell_enabled, :downsell_discount_type, :downsell_discount_amount,
-                    :checkout_style, :product_type
+                    :checkout_style, :product_type, :compare_at_price
                 )");
 
                 $stmt->execute([
@@ -189,7 +191,8 @@ switch ($method) {
                     ':downsell_discount_type' => $data->downsell_discount_type ?? 'fixed',
                     ':downsell_discount_amount' => $data->downsell_discount_amount ?? 0,
                     ':checkout_style' => $data->checkout_style ?? 'default',
-                    ':product_type' => $data->product_type ?? 'digital'
+                    ':product_type' => $data->product_type ?? 'digital',
+                    ':compare_at_price' => $data->compare_at_price ?? null
                 ]);
                 $productId = $db->lastInsertId();
             }

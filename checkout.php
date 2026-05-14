@@ -217,7 +217,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="flex items-center justify-between border-t border-slate-800 pt-4 mt-4">
                     <span class="text-slate-500 text-sm">Valor Total:</span>
                     <div class="text-right">
-                        <span class="block text-xs text-slate-500 line-through">De R$ 97,00</span>
+                        <?php if (!empty($product['compare_at_price']) && (float)$product['compare_at_price'] > 0): ?>
+                            <span class="block text-xs text-slate-500 line-through">De R$ <?= format_price($product['compare_at_price']) ?></span>
+                        <?php endif; ?>
                         <span class="text-3xl font-black text-green-400">R$
                             <?= format_price($product['price']) ?></span>
                     </div>

@@ -207,6 +207,12 @@ require_once 'auth.php';
                                 <input x-model="form.price" type="number" step="0.01"
                                     class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
                             </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Preço Âncora (R$ - Riscado)</label>
+                                <input x-model="form.compare_at_price" type="number" step="0.01"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                                    placeholder="Ex: 197.00">
+                            </div>
                         </div>
                         <div class="space-y-4">
                             <div>
@@ -866,6 +872,7 @@ require_once 'auth.php';
                     name: '',
                     slug: '',
                     price: '',
+                    compare_at_price: '',
                     image_url: '',
                     active: true,
                     theme: 'dark',
@@ -889,6 +896,7 @@ require_once 'auth.php';
                     downsell_enabled: false,
                     downsell_discount_type: 'fixed',
                     downsell_discount_amount: 0,
+                    compare_at_price: '',
                     track_initiate_checkout: true,
                     track_add_payment_info: true,
                     checkout_style: 'default',
@@ -926,6 +934,7 @@ require_once 'auth.php';
                                     slug: data.slug,
                                     description: data.description,
                                     price: data.price,
+                                    compare_at_price: data.compare_at_price || '',
                                     image_url: data.image_url,
                                     active: data.active == 1,
                                     theme: data.theme || 'dark',
@@ -974,6 +983,7 @@ require_once 'auth.php';
                             slug: '',
                             description: '',
                             price: '',
+                            compare_at_price: '',
                             image_url: '',
                             top_bar_enabled: false,
                             top_bar_text: '',
