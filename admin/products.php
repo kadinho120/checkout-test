@@ -872,7 +872,6 @@ require_once 'auth.php';
                     name: '',
                     slug: '',
                     price: '',
-                    compare_at_price: '',
                     image_url: '',
                     active: true,
                     theme: 'dark',

@@ -130,7 +130,7 @@ switch ($method) {
                     ':downsell_discount_amount' => $data->downsell_discount_amount ?? 0,
                     ':checkout_style' => $data->checkout_style ?? 'default',
                     ':product_type' => $data->product_type ?? 'digital',
-                    ':compare_at_price' => $data->compare_at_price ?? null,
+                    ':compare_at_price' => (!isset($data->compare_at_price) || $data->compare_at_price === '') ? null : $data->compare_at_price,
                     ':id' => $data->id
                 ]);
                 $productId = $data->id;
@@ -192,7 +192,7 @@ switch ($method) {
                     ':downsell_discount_amount' => $data->downsell_discount_amount ?? 0,
                     ':checkout_style' => $data->checkout_style ?? 'default',
                     ':product_type' => $data->product_type ?? 'digital',
-                    ':compare_at_price' => $data->compare_at_price ?? null
+                    ':compare_at_price' => (!isset($data->compare_at_price) || $data->compare_at_price === '') ? null : $data->compare_at_price
                 ]);
                 $productId = $db->lastInsertId();
             }
@@ -238,7 +238,7 @@ switch ($method) {
             $db->commit();
             echo json_encode(["message" => "Product saved.", "id" => $productId]);
 
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $db->rollBack();
             error_log("Error saving product: " . $e->getMessage());
             file_put_contents(__DIR__ . '/debug_save.log', $e->getMessage() . "\n" . $e->getTraceAsString());

@@ -286,6 +286,15 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN product_type TEXT DEFAULT 'digital';");
             }
 
+            // Check for compare_at_price column
+            $hasCompareAt = false;
+            foreach ($prodCols6 as $col) {
+                if ($col['name'] === 'compare_at_price') $hasCompareAt = true;
+            }
+            if (!$hasCompareAt) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN compare_at_price DECIMAL(10, 2);");
+            }
+
             // Check for delivery columns in orders
             $orderCols2 = $this->conn->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_ASSOC);
             $hasCep = false;
