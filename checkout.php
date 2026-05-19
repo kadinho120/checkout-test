@@ -259,7 +259,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             
             <?php if ($isMinimalist): ?>
             <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-slate-800 <?= ($isModal) ? 'pr-10' : '' ?>">
-                <h1 class="font-display text-lg font-bold text-gray-900 dark:text-white truncate pr-4">
+                <h1 class="font-display text-lg font-bold text-gray-900 dark:text-white pr-4">
                     <?= htmlspecialchars($product['name']) ?>
                 </h1>
                 <div class="text-right shrink-0">
