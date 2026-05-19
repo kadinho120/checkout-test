@@ -810,35 +810,80 @@ require_once 'auth.php';
         <div x-show="isEmbedModalOpen" x-transition.scale.95 class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col">
             <header class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900">
                 <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                    <i data-lucide="code" class="text-purple-500"></i> Código de Integração (Modal)
+                    <i data-lucide="code" class="text-purple-500"></i> Código de Integração
                 </h3>
                 <button @click="closeEmbedModal()" class="text-slate-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
             </header>
+
+            <!-- Tabs -->
+            <div class="px-6 pt-4 border-b border-slate-800 flex gap-4 bg-slate-900">
+                <button @click="embedTab = 'modal'" 
+                        :class="embedTab === 'modal' ? 'border-purple-500 text-purple-400 font-bold' : 'border-transparent text-slate-400 hover:text-white'"
+                        class="pb-3 border-b-2 text-sm transition focus:outline-none flex items-center gap-2">
+                    <i data-lucide="maximize-2" class="w-4 h-4"></i> Checkout em Modal (Pop-up)
+                </button>
+                <button @click="embedTab = 'inline'" 
+                        :class="embedTab === 'inline' ? 'border-purple-500 text-purple-400 font-bold' : 'border-transparent text-slate-400 hover:text-white'"
+                        class="pb-3 border-b-2 text-sm transition focus:outline-none flex items-center gap-2">
+                    <i data-lucide="layout" class="w-4 h-4"></i> Checkout Incorporado (Inline)
+                </button>
+            </div>
             
             <div class="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
-                <p class="text-sm text-slate-400">Siga os passos abaixo para integrar o checkout como um modal na sua Landing Page.</p>
-                
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">1. Adicione o Script no Cabeçalho (Head)</label>
-                    <div class="relative group">
-                        <pre class="bg-slate-950 p-4 rounded-lg text-xs text-blue-400 overflow-x-auto border border-slate-800"
-                             x-text="getEmbedScript()"></pre>
-                        <button @click="copyToClipboard(getEmbedScript())" class="absolute top-2 right-2 p-2 bg-slate-800 text-slate-400 rounded hover:text-white transition opacity-0 group-hover:opacity-100">
-                            <i data-lucide="copy" class="w-4 h-4"></i>
-                        </button>
+                <!-- Tab: Modal -->
+                <div x-show="embedTab === 'modal'" class="space-y-6">
+                    <p class="text-sm text-slate-400">Siga os passos abaixo para integrar o checkout como um modal na sua Landing Page.</p>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">1. Adicione o Script no Cabeçalho (Head)</label>
+                        <div class="relative group">
+                            <pre class="bg-slate-950 p-4 rounded-lg text-xs text-blue-400 overflow-x-auto border border-slate-800"
+                                 x-text="getEmbedScript()"></pre>
+                            <button @click="copyToClipboard(getEmbedScript())" class="absolute top-2 right-2 p-2 bg-slate-800 text-slate-400 rounded hover:text-white transition opacity-0 group-hover:opacity-100">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">2. Adicione o Atributo no seu Botão</label>
+                        <div class="relative group">
+                            <pre class="bg-slate-950 p-4 rounded-lg text-xs text-purple-400 overflow-x-auto border border-slate-800"
+                                 x-text="getEmbedButton()"></pre>
+                            <button @click="copyToClipboard(getEmbedButton())" class="absolute top-2 right-2 p-2 bg-slate-800 text-slate-400 rounded hover:text-white transition opacity-0 group-hover:opacity-100">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-2">Dica: Você pode adicionar o atributo <code class="text-white">data-checkout-modal</code> em qualquer link ou botão que já exista na sua página.</p>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">2. Adicione o Atributo no seu Botão</label>
-                    <div class="relative group">
-                        <pre class="bg-slate-950 p-4 rounded-lg text-xs text-purple-400 overflow-x-auto border border-slate-800"
-                             x-text="getEmbedButton()"></pre>
-                        <button @click="copyToClipboard(getEmbedButton())" class="absolute top-2 right-2 p-2 bg-slate-800 text-slate-400 rounded hover:text-white transition opacity-0 group-hover:opacity-100">
-                            <i data-lucide="copy" class="w-4 h-4"></i>
-                        </button>
+                <!-- Tab: Inline -->
+                <div x-show="embedTab === 'inline'" class="space-y-6" x-cloak>
+                    <p class="text-sm text-slate-400">Siga os passos abaixo para renderizar o checkout de forma nativa e integrada diretamente na sua página.</p>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">1. Adicione a div onde o checkout deve aparecer</label>
+                        <div class="relative group">
+                            <pre class="bg-slate-950 p-4 rounded-lg text-xs text-purple-400 overflow-x-auto border border-slate-800"
+                                 x-text="getInlineEmbedContainer()"></pre>
+                            <button @click="copyToClipboard(getInlineEmbedContainer())" class="absolute top-2 right-2 p-2 bg-slate-800 text-slate-400 rounded hover:text-white transition opacity-0 group-hover:opacity-100">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-2">Dica: Você pode personalizar o tema adicionando o atributo <code class="text-white">data-theme="light"</code> ou <code class="text-white">data-theme="dark"</code> na div.</p>
                     </div>
-                    <p class="text-[10px] text-slate-500 mt-2">Dica: Você pode adicionar o atributo <code class="text-white">data-checkout-modal</code> em qualquer link ou botão que já exista na sua página.</p>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">2. Adicione o Script no final do corpo da página (ou no Head)</label>
+                        <div class="relative group">
+                            <pre class="bg-slate-950 p-4 rounded-lg text-xs text-blue-400 overflow-x-auto border border-slate-800"
+                                 x-text="getInlineEmbedScript()"></pre>
+                            <button @click="copyToClipboard(getInlineEmbedScript())" class="absolute top-2 right-2 p-2 bg-slate-800 text-slate-400 rounded hover:text-white transition opacity-0 group-hover:opacity-100">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -858,6 +903,7 @@ require_once 'auth.php';
                 isLoading: true,
                 isModalOpen: false,
                 isEmbedModalOpen: false,
+                embedTab: 'modal',
                 embedProduct: null,
                 isSaving: false,
                 isUploading: false,
@@ -1011,6 +1057,7 @@ require_once 'auth.php';
 
                 openEmbedModal(product) {
                     this.embedProduct = product;
+                    this.embedTab = 'modal';
                     this.isEmbedModalOpen = true;
                     this.$nextTick(() => lucide.createIcons());
                 },
@@ -1026,6 +1073,14 @@ require_once 'auth.php';
                     if (!this.embedProduct) return '';
                     const url = window.location.origin + '/checkout.php?slug=' + this.embedProduct.slug;
                     return `<a href="${url}" data-checkout-modal>Comprar Agora</a>`;
+                },
+                getInlineEmbedScript() {
+                    const url = window.location.origin + '/js/checkout-embed.js';
+                    return `<script src="${url}"><\/script>`;
+                },
+                getInlineEmbedContainer() {
+                    if (!this.embedProduct) return '';
+                    return `<div class="checkout-embed" data-slug="${this.embedProduct.slug}"></div>`;
                 },
 
                 copyToClipboard(text) {

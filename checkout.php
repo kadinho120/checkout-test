@@ -8,6 +8,7 @@ $db = $database->getConnection();
 
 $slug = $_GET['slug'] ?? '';
 $isModal = ($_GET['modal'] ?? '') === 'true';
+$isEmbed = ($_GET['embed'] ?? '') === 'true';
 
 // Cabeçalhos para permitir iFrame (opcionalmente pode ser restrito por domínio se o usuário preferir)
 header('X-Frame-Options: ALLOWALL'); 
@@ -174,9 +175,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 
 <body
-    class="min-h-screen flex flex-col items-center transition-colors duration-300 <?= $isModal ? 'py-2 px-2 overflow-x-hidden bg-gray-50 dark:bg-slate-950' : 'py-6 sm:py-12 px-4 bg-gray-50 dark:bg-slate-950' ?>">
+    class="min-h-screen flex flex-col items-center transition-colors duration-300 <?= $isEmbed ? 'p-0 bg-transparent overflow-x-hidden' : ($isModal ? 'py-2 px-2 overflow-x-hidden bg-gray-50 dark:bg-slate-950' : 'py-6 sm:py-12 px-4 bg-gray-50 dark:bg-slate-950') ?>">
 
-    <?php if (!$isModal): ?>
+    <?php if (!$isModal && !$isEmbed): ?>
     <!-- Header / Security -->
     <div
         class="mb-8 text-center opacity-70 flex items-center justify-center gap-2 text-sm text-slate-600 dark:text-slate-400">
@@ -188,7 +189,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
     $isMinimalist = ($product['checkout_style'] ?? 'default') === 'minimalist';
     ?>
 
-    <div class="w-full <?= $isMinimalist ? 'max-w-md' : ($isModal ? 'max-w-4xl' : 'max-w-5xl') ?> <?= $isMinimalist ? '' : 'grid grid-cols-1 lg:grid-cols-2 gap-8' ?> items-start">
+    <div class="w-full <?= $isMinimalist ? 'max-w-md mx-auto' : ($isEmbed ? 'max-w-5xl mx-auto' : ($isModal ? 'max-w-4xl' : 'max-w-5xl')) ?> <?= $isMinimalist ? '' : 'grid grid-cols-1 lg:grid-cols-2 gap-8' ?> items-start">
 
         <!-- COLUMN 1: PRODUCT INFO -->
         <?php if (!$isMinimalist): ?>
@@ -1090,6 +1091,31 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 }
             }
         });
+
+        // Auto-resize observer for iFrame embeds
+        if (window.self !== window.top) {
+            const sendHeight = () => {
+                window.parent.postMessage({
+                    type: 'checkout-resize',
+                    height: document.documentElement.scrollHeight || document.body.scrollHeight
+                }, '*');
+            };
+            
+            // Watch for changes to the body size
+            const resizeObserver = new ResizeObserver(() => sendHeight());
+            resizeObserver.observe(document.body);
+            
+            // Fallback updates
+            window.addEventListener('load', sendHeight);
+            window.addEventListener('resize', sendHeight);
+            
+            // Trigger height updates when inputs change
+            const formElement = document.getElementById('checkout-form');
+            if (formElement) {
+                formElement.addEventListener('input', sendHeight);
+                formElement.addEventListener('change', sendHeight);
+            }
+        }
 
     </script>
 
