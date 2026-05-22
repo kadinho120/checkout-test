@@ -250,6 +250,19 @@ require_once 'auth.php';
                                 <label for="active" class="text-white font-medium">Produto Ativo no Checkout</label>
                             </div>
                             <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Tipo de Produto</label>
+                                <select x-model="form.product_type"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                                    <option value="digital">Digital (Acesso Imediato)</option>
+                                    <option value="physical">Físico (Entrega no Endereço)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Texto do Botão de CTA (Checkout)</label>
+                                <input x-model="form.checkout_cta_text" type="text" placeholder="Ex: PAGAR AGORA"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div>
                                 <label class="block text-sm font-medium text-slate-400 mb-1">Tema do Checkout</label>
                                 <select x-model="form.theme"
                                     class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
@@ -263,14 +276,6 @@ require_once 'auth.php';
                                     class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
                                     <option value="default">Padrão (Completo)</option>
                                     <option value="minimalist">Minimalista (Compacto)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-400 mb-1">Tipo de Produto</label>
-                                <select x-model="form.product_type"
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
-                                    <option value="digital">Digital (Acesso Imediato)</option>
-                                    <option value="physical">Físico (Entrega no Endereço)</option>
                                 </select>
                             </div>
                             <div class="space-y-2 pt-2">
@@ -945,7 +950,8 @@ require_once 'auth.php';
                     track_initiate_checkout: true,
                     track_add_payment_info: true,
                     checkout_style: 'default',
-                    product_type: 'digital'
+                    product_type: 'digital',
+                    checkout_cta_text: ''
                 },
 
                 init() {
@@ -1008,7 +1014,8 @@ require_once 'auth.php';
                                     track_initiate_checkout: data.track_initiate_checkout != 0,
                                     track_add_payment_info: data.track_add_payment_info != 0,
                                     checkout_style: data.checkout_style || 'default',
-                                    product_type: data.product_type || 'digital'
+                                    product_type: data.product_type || 'digital',
+                                    checkout_cta_text: data.checkout_cta_text || ''
                                 };
                                 // Fallback for legacy records (null/undefined => true)
                                 if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
@@ -1045,7 +1052,8 @@ require_once 'auth.php';
                             track_initiate_checkout: true,
                             track_add_payment_info: true,
                             checkout_style: 'default',
-                            product_type: 'digital'
+                            product_type: 'digital',
+                            checkout_cta_text: ''
                         };
                         this.isModalOpen = true;
                     }

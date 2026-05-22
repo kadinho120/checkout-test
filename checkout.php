@@ -478,7 +478,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <button type="submit" id="pay-button"
                         class="w-full cta-button font-bold text-lg py-4 px-6 rounded-xl uppercase tracking-wider text-white flex items-center justify-center gap-2 hover:scale-[1.02] transform transition">
-                        <i data-lucide="lock" class="w-5 h-5"></i> PAGAR AGORA
+                        <i data-lucide="lock" class="w-5 h-5"></i> <?= htmlspecialchars(!empty($product['checkout_cta_text']) ? $product['checkout_cta_text'] : 'PAGAR AGORA') ?>
                     </button>
 
                     <p class="text-[10px] text-slate-500 text-center mt-3">

@@ -295,6 +295,15 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN compare_at_price DECIMAL(10, 2);");
             }
 
+            // Check for checkout_cta_text column
+            $hasCtaText = false;
+            foreach ($prodCols6 as $col) {
+                if ($col['name'] === 'checkout_cta_text') $hasCtaText = true;
+            }
+            if (!$hasCtaText) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN checkout_cta_text TEXT;");
+            }
+
             // Check for delivery columns in orders
             $orderCols2 = $this->conn->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_ASSOC);
             $hasCep = false;
