@@ -719,7 +719,7 @@ require_once 'auth.php';
                                 <!-- Date Shortcodes -->
                                 <div class="flex gap-2 flex-wrap items-center">
                                     <span class="text-xs text-slate-500 mr-1">Datas:</span>
-                                    <template x-for="tag in ['{datahoje}', '{datahojemaiusculo}', '{datahojeminusculo}', '{datahojecapitalizado}', '{2horas}']">
+                                    <template x-for="tag in ['{datahoje}', '{datahojemaiusculo}', '{datahojeminusculo}', '{datahojecapitalizado}', '{2horas}', '{timer}']">
                                         <span @click="copyToClipboard(tag)"
                                             class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none border border-slate-700"
                                             x-text="tag" title="Clique para copiar"></span>
@@ -740,8 +740,14 @@ require_once 'auth.php';
                             </div>
                         </div>
 
-                        <!-- Colors -->
-                        <div class="grid grid-cols-2 gap-4">
+                        <!-- Colors and Timer -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Tempo do Cronômetro (mm:ss)</label>
+                                <input type="text" x-model="form.top_bar_timer" placeholder="15:00"
+                                    pattern="^[0-9]{2,3}:[0-5][0-9]$" title="Formato mm:ss (ex: 15:00)"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-white outline-none focus:border-yellow-500">
+                            </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-400 mb-1">Cor de Fundo</label>
                                 <div class="flex items-center gap-2">
@@ -943,6 +949,7 @@ require_once 'auth.php';
                     top_bar_text: '',
                     top_bar_bg_color: '#000000',
                     top_bar_text_color: '#ffffff',
+                    top_bar_timer: '',
                     downsell_enabled: false,
                     downsell_discount_type: 'fixed',
                     downsell_discount_amount: 0,
@@ -1008,6 +1015,7 @@ require_once 'auth.php';
                                     top_bar_text: data.top_bar_text || '',
                                     top_bar_bg_color: data.top_bar_bg_color || '#000000',
                                     top_bar_text_color: data.top_bar_text_color || '#ffffff',
+                                    top_bar_timer: data.top_bar_timer || '',
                                     downsell_enabled: data.downsell_enabled == 1,
                                     downsell_discount_type: data.downsell_discount_type || 'fixed',
                                     downsell_discount_amount: data.downsell_discount_amount || 0,
@@ -1041,6 +1049,7 @@ require_once 'auth.php';
                             top_bar_text: '',
                             top_bar_bg_color: '#000000',
                             top_bar_text_color: '#ffffff',
+                            top_bar_timer: '',
                             downsell_enabled: false,
                             downsell_discount_type: 'fixed',
                             downsell_discount_amount: 0,

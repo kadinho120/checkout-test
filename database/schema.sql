@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS products (
     product_type TEXT DEFAULT 'digital', -- 'digital' or 'physical'
     compare_at_price DECIMAL(10, 2), -- Stripped price (preço âncora)
     checkout_cta_text TEXT, -- Custom CTA Button Text
+    top_bar_timer TEXT, -- Top bar timer setting (format mm:ss)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

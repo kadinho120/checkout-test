@@ -90,6 +90,7 @@ switch ($method) {
                     top_bar_text = :top_bar_text, 
                     top_bar_bg_color = :top_bar_bg_color, 
                     top_bar_text_color = :top_bar_text_color, 
+                    top_bar_timer = :top_bar_timer, 
                     downsell_enabled = :downsell_enabled, 
                     downsell_discount_type = :downsell_discount_type, 
                     downsell_discount_amount = :downsell_discount_amount,
@@ -126,6 +127,7 @@ switch ($method) {
                     ':top_bar_text' => $data->top_bar_text ?? '',
                     ':top_bar_bg_color' => $data->top_bar_bg_color ?? '#000000',
                     ':top_bar_text_color' => $data->top_bar_text_color ?? '#ffffff',
+                    ':top_bar_timer' => $data->top_bar_timer ?? '',
                     ':downsell_enabled' => isset($data->downsell_enabled) ? ($data->downsell_enabled ? 1 : 0) : 0,
                     ':downsell_discount_type' => $data->downsell_discount_type ?? 'fixed',
                     ':downsell_discount_amount' => $data->downsell_discount_amount ?? 0,
@@ -146,7 +148,7 @@ switch ($method) {
                     deliverable_type, deliverable_text, deliverable_file, 
                     deliverable_email_subject, deliverable_email_body, 
                     fake_notifications, notification_text, 
-                    top_bar_enabled, top_bar_text, top_bar_bg_color, top_bar_text_color, 
+                    top_bar_enabled, top_bar_text, top_bar_bg_color, top_bar_text_color, top_bar_timer, 
                     downsell_enabled, downsell_discount_type, downsell_discount_amount,
                     checkout_style, product_type, compare_at_price, checkout_cta_text
                 ) VALUES (
@@ -157,7 +159,7 @@ switch ($method) {
                     :deliverable_type, :deliverable_text, :deliverable_file, 
                     :deliverable_email_subject, :deliverable_email_body, 
                     :fake_notifications, :notification_text, 
-                    :top_bar_enabled, :top_bar_text, :top_bar_bg_color, :top_bar_text_color, 
+                    :top_bar_enabled, :top_bar_text, :top_bar_bg_color, :top_bar_text_color, :top_bar_timer, 
                     :downsell_enabled, :downsell_discount_type, :downsell_discount_amount,
                     :checkout_style, :product_type, :compare_at_price, :checkout_cta_text
                 )");
@@ -189,6 +191,7 @@ switch ($method) {
                     ':top_bar_text' => $data->top_bar_text ?? '',
                     ':top_bar_bg_color' => $data->top_bar_bg_color ?? '#000000',
                     ':top_bar_text_color' => $data->top_bar_text_color ?? '#ffffff',
+                    ':top_bar_timer' => $data->top_bar_timer ?? '',
                     ':downsell_enabled' => isset($data->downsell_enabled) ? ($data->downsell_enabled ? 1 : 0) : 0,
                     ':downsell_discount_type' => $data->downsell_discount_type ?? 'fixed',
                     ':downsell_discount_amount' => $data->downsell_discount_amount ?? 0,

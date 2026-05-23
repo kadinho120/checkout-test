@@ -565,7 +565,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     enabled: <?= ($product['top_bar_enabled'] ?? 0) ? 'true' : 'false' ?>,
                     text: <?= json_encode($product['top_bar_text'] ?? '') ?>,
                     bgColor: <?= json_encode($product['top_bar_bg_color'] ?? '#000000') ?>,
-                    textColor: <?= json_encode($product['top_bar_text_color'] ?? '#ffffff') ?>
+                    textColor: <?= json_encode($product['top_bar_text_color'] ?? '#ffffff') ?>,
+                    timer: <?= json_encode($product['top_bar_timer'] ?? '') ?>
                 },
                 tracking: {
                     initiateCheckout: <?= (int)($product['track_initiate_checkout'] ?? 1) !== 0 ? 'true' : 'false' ?>,
@@ -1269,6 +1270,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 }).format(future);
                 processed = processed.replace(/{2horas}/gi, hours2 + 'H');
 
+                // {timer} -> placeholder span for the timer
+                processed = processed.replace(/{timer}/gi, '<span id="top-bar-timer-countdown"></span>');
+
                 return processed;
             }
 
@@ -1279,6 +1283,63 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             bar.innerHTML = parseDateShortcodes(config.text);
 
             document.body.prepend(bar);
+
+            // TIMER INITIALIZATION
+            const timerStr = config.timer ? config.timer.trim() : '';
+            const timerEl = document.getElementById('top-bar-timer-countdown');
+
+            if (timerEl && /^[0-9]+:[0-5][0-9]$/.test(timerStr)) {
+                const parts = timerStr.split(':');
+                const minutes = parseInt(parts[0], 10);
+                const seconds = parseInt(parts[1], 10);
+                const durationInSeconds = minutes * 60 + seconds;
+
+                if (durationInSeconds > 0) {
+                    const storageKey = 'checkout_timer_' + PLANOS.main.sku;
+                    let endTime;
+
+                    try {
+                        const storedData = localStorage.getItem(storageKey);
+                        if (storedData) {
+                            const parsed = JSON.parse(storedData);
+                            // If the timer setting (duration) changed in the DB, restart it
+                            if (parsed && parsed.duration === timerStr && typeof parsed.endTime === 'number') {
+                                endTime = parsed.endTime;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error reading checkout timer from localStorage', e);
+                    }
+
+                    if (!endTime) {
+                        endTime = Date.now() + durationInSeconds * 1000;
+                        try {
+                            localStorage.setItem(storageKey, JSON.stringify({ endTime: endTime, duration: timerStr }));
+                        } catch (e) {
+                            console.error('Error saving checkout timer to localStorage', e);
+                        }
+                    }
+
+                    const updateTimer = () => {
+                        const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+                        const m = Math.floor(remaining / 60);
+                        const s = remaining % 60;
+                        const formatted = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+
+                        timerEl.textContent = formatted;
+
+                        if (remaining <= 0) {
+                            clearInterval(timerInterval);
+                        }
+                    };
+
+                    updateTimer(); // Initial call
+                    const timerInterval = setInterval(updateTimer, 1000);
+                }
+            } else if (timerEl) {
+                // If {timer} was added but no valid timer is configured, hide or empty it
+                timerEl.textContent = '';
+            }
 
             // Spacer Strategy: Push content down without overwriting body padding
             const spacer = document.createElement('div');

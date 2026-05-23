@@ -222,6 +222,7 @@ class Database
             $hasTopBarText = false;
             $hasTopBarBg = false;
             $hasTopBarColor = false;
+            $hasTopBarTimer = false;
             foreach ($prodCols4 as $col) {
                 if ($col['name'] === 'top_bar_enabled')
                     $hasTopBarEnabled = true;
@@ -231,6 +232,8 @@ class Database
                     $hasTopBarBg = true;
                 if ($col['name'] === 'top_bar_text_color')
                     $hasTopBarColor = true;
+                if ($col['name'] === 'top_bar_timer')
+                    $hasTopBarTimer = true;
             }
             if (!$hasTopBarEnabled)
                 $this->conn->exec("ALTER TABLE products ADD COLUMN top_bar_enabled INTEGER DEFAULT 0;");
@@ -240,6 +243,8 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN top_bar_bg_color TEXT DEFAULT '#000000';");
             if (!$hasTopBarColor)
                 $this->conn->exec("ALTER TABLE products ADD COLUMN top_bar_text_color TEXT DEFAULT '#ffffff';");
+            if (!$hasTopBarTimer)
+                $this->conn->exec("ALTER TABLE products ADD COLUMN top_bar_timer TEXT;");
 
             // Check for Downsell columns
             $prodCols5 = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
