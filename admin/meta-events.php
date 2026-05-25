@@ -160,8 +160,35 @@ require_once 'auth.php';
                             <template x-if="logs.length === 0">
                                 <tr><td colspan="5" class="p-8 text-center text-slate-500">Nenhum evento processado até o momento.</td></tr>
                             </template>
-                        </tbody>
                     </table>
+
+                    <!-- Pagination Controls -->
+                    <div x-show="totalPages > 1" class="px-6 py-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between">
+                        <div class="text-xs text-slate-400">
+                            Mostrando <span class="font-semibold text-white" x-text="((page - 1) * limit) + 1"></span> a 
+                            <span class="font-semibold text-white" x-text="Math.min(page * limit, totalCount)"></span> de 
+                            <span class="font-semibold text-white" x-text="totalCount"></span> eventos
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button @click="prevPage()" :disabled="page === 1" 
+                                class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-50 disabled:hover:bg-slate-800 transition text-xs font-bold flex items-center gap-1">
+                                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> Anterior
+                            </button>
+                            <div class="flex items-center gap-1">
+                                <template x-for="p in totalPages" :key="p">
+                                    <button @click="goToPage(p)" 
+                                        :class="page === p ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-400'"
+                                        class="w-8 h-8 rounded-lg text-xs transition flex items-center justify-center"
+                                        x-text="p">
+                                    </button>
+                                </template>
+                            </div>
+                            <button @click="nextPage()" :disabled="page === totalPages" 
+                                class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-50 disabled:hover:bg-slate-800 transition text-xs font-bold flex items-center gap-1">
+                                Próximo <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
@@ -190,6 +217,10 @@ require_once 'auth.php';
         function metaMonitorApp() {
             return {
                 logs: [],
+                page: 1,
+                totalPages: 1,
+                totalCount: 0,
+                limit: 10,
                 stats: { success: 0, error: 0, pending: 0 },
                 isLoading: false,
                 isRetrying: null,
@@ -201,11 +232,13 @@ require_once 'auth.php';
 
                 fetchLogs() {
                     this.isLoading = true;
-                    fetch('../api/v1/meta-tracking-status.php')
+                    fetch(`../api/v1/meta-tracking-status.php?page=${this.page}&limit=${this.limit}`)
                         .then(res => res.json())
                         .then(data => {
-                            this.logs = data;
-                            this.calculateStats();
+                            this.logs = data.data;
+                            this.stats = data.stats;
+                            this.totalPages = data.total_pages;
+                            this.totalCount = data.total_count;
                             this.isLoading = false;
                             this.$nextTick(() => lucide.createIcons());
                         })
@@ -215,12 +248,23 @@ require_once 'auth.php';
                         });
                 },
 
-                calculateStats() {
-                    this.stats = {
-                        success: this.logs.filter(l => l.meta_purchase_status == 1).length,
-                        error: this.logs.filter(l => l.meta_purchase_status == 2).length,
-                        pending: this.logs.filter(l => l.meta_purchase_status == 0).length,
-                    };
+                nextPage() {
+                    if (this.page < this.totalPages) {
+                        this.page++;
+                        this.fetchLogs();
+                    }
+                },
+
+                prevPage() {
+                    if (this.page > 1) {
+                        this.page--;
+                        this.fetchLogs();
+                    }
+                },
+
+                goToPage(p) {
+                    this.page = p;
+                    this.fetchLogs();
                 },
 
                 showLog(item) {

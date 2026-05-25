@@ -41,10 +41,27 @@ switch ($method) {
                 echo json_encode(["message" => "Product not found."]);
             }
         } else {
-            // Get All Products
-            $stmt = $db->query("SELECT * FROM products ORDER BY id DESC");
+            // Get All Products (Paginated)
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+            $offset = ($page - 1) * $limit;
+
+            // Total count
+            $totalCount = $db->query("SELECT COUNT(*) FROM products")->fetchColumn();
+            $totalPages = ceil($totalCount / $limit);
+
+            $stmt = $db->prepare("SELECT * FROM products ORDER BY id DESC LIMIT :limit OFFSET :offset");
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
             $products = $stmt->fetchAll();
-            echo json_encode($products);
+
+            echo json_encode([
+                'data' => $products,
+                'total_pages' => $totalPages,
+                'current_page' => $page,
+                'total_count' => (int)$totalCount
+            ]);
         }
         break;
 

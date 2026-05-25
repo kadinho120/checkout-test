@@ -7,9 +7,14 @@ try {
     $database = new Database();
     $db = $database->getConnection();
 
-    // Fetch tracking logs joined with orders to check if converted
-    // Left Join because we want all tracking attempts, even if no order created yet
-    // Note: 'orders.transaction_id' is assumed to store the correlation_id
+    // Fetch tracking logs joined with orders to check if converted (Paginated)
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+    $offset = ($page - 1) * $limit;
+
+    // Get total count
+    $totalCount = $db->query("SELECT COUNT(*) FROM tracking_logs")->fetchColumn();
+    $totalPages = ceil($totalCount / $limit);
 
     $query = "
         SELECT 
@@ -27,10 +32,13 @@ try {
         FROM tracking_logs t
         LEFT JOIN orders o ON t.correlation_id = o.transaction_id
         ORDER BY t.created_at DESC
-        LIMIT 100
+        LIMIT :limit OFFSET :offset
     ";
 
-    $stmt = $db->query($query);
+    $stmt = $db->prepare($query);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Process data for frontend
@@ -65,7 +73,12 @@ try {
         ];
     }, $data);
 
-    echo json_encode($processed);
+    echo json_encode([
+        'data' => $processed,
+        'total_pages' => $totalPages,
+        'current_page' => $page,
+        'total_count' => (int)$totalCount
+    ]);
 
 } catch (Exception $e) {
     http_response_code(500);

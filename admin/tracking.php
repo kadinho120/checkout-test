@@ -183,6 +183,34 @@ if (!($_SESSION['logged_in'] ?? false)) {
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Pagination Controls -->
+                    <div x-show="totalPages > 1" class="px-6 py-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between">
+                        <div class="text-xs text-slate-400">
+                            Mostrando <span class="font-semibold text-white" x-text="((page - 1) * limit) + 1"></span> a 
+                            <span class="font-semibold text-white" x-text="Math.min(page * limit, totalCount)"></span> de 
+                            <span class="font-semibold text-white" x-text="totalCount"></span> logs
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button @click="prevPage()" :disabled="page === 1" 
+                                class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-50 disabled:hover:bg-slate-800 transition text-xs font-bold flex items-center gap-1">
+                                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> Anterior
+                            </button>
+                            <div class="flex items-center gap-1">
+                                <template x-for="p in totalPages" :key="p">
+                                    <button @click="goToPage(p)" 
+                                        :class="page === p ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-400'"
+                                        class="w-8 h-8 rounded-lg text-xs transition flex items-center justify-center"
+                                        x-text="p">
+                                    </button>
+                                </template>
+                            </div>
+                            <button @click="nextPage()" :disabled="page === totalPages" 
+                                class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-50 disabled:hover:bg-slate-800 transition text-xs font-bold flex items-center gap-1">
+                                Próximo <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -194,6 +222,10 @@ if (!($_SESSION['logged_in'] ?? false)) {
         function trackingPage() {
             return {
                 items: [],
+                page: 1,
+                totalPages: 1,
+                totalCount: 0,
+                limit: 10,
                 isLoading: false,
                 init() {
                     this.fetchData();
@@ -201,10 +233,12 @@ if (!($_SESSION['logged_in'] ?? false)) {
                 },
                 fetchData() {
                     this.isLoading = true;
-                    fetch('../api/v1/tracking.php')
+                    fetch(`../api/v1/tracking.php?page=${this.page}&limit=${this.limit}`)
                         .then(res => res.json())
                         .then(data => {
-                            this.items = data;
+                            this.items = data.data;
+                            this.totalPages = data.total_pages;
+                            this.totalCount = data.total_count;
                             this.isLoading = false;
                             this.$nextTick(() => lucide.createIcons());
                         })
@@ -212,6 +246,25 @@ if (!($_SESSION['logged_in'] ?? false)) {
                             console.error(err);
                             this.isLoading = false;
                         });
+                },
+
+                nextPage() {
+                    if (this.page < this.totalPages) {
+                        this.page++;
+                        this.fetchData();
+                    }
+                },
+
+                prevPage() {
+                    if (this.page > 1) {
+                        this.page--;
+                        this.fetchData();
+                    }
+                },
+
+                goToPage(p) {
+                    this.page = p;
+                    this.fetchData();
                 },
                 formatDate(dateStr) {
                     if (!dateStr) return '-';
