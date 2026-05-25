@@ -147,6 +147,18 @@ try {
         ];
     }
 
+    // Real-time tracking stats
+    // 1. Purge expired sessions (inactive for more than 15 seconds)
+    $db->exec("DELETE FROM checkout_sessions WHERE last_ping < datetime('now', '-15 seconds')");
+
+    // 2. Count active sessions
+    $stmt = $db->query("SELECT COUNT(*) as count FROM checkout_sessions");
+    $onlineUsers = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+
+    // 3. Count typing/filling inputs sessions
+    $stmt = $db->query("SELECT COUNT(*) as count FROM checkout_sessions WHERE status = 'typing'");
+    $typingUsers = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+
     echo json_encode([
         'revenue' => (float) $revenue,
         'total_orders' => (int) $totalOrders,
@@ -155,7 +167,9 @@ try {
         'pending_revenue' => (float) $pendingRevenue,
         'conversion_rate' => round($conversionRate, 2),
         'sales_by_product' => $salesByProduct,
-        'recent_orders' => $recentOrders
+        'recent_orders' => $recentOrders,
+        'online_users' => (int) $onlineUsers,
+        'typing_users' => (int) $typingUsers
     ]);
 
 } catch (Exception $e) {

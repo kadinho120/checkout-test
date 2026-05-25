@@ -113,7 +113,7 @@ require_once 'auth.php';
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 p-6">
 
                 <!-- KPI CARDS -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-6 mb-8">
 
                     <!-- Faturamento -->
                     <div
@@ -204,6 +204,53 @@ require_once 'auth.php';
                                     R$ 0,00</p>
                             </div>
                             <div class="p-2 bg-slate-800 rounded-lg text-orange-500"><i data-lucide="clock"
+                                    class="w-5 h-5"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Pessoas no Checkout -->
+                    <div
+                        class="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-lg relative overflow-hidden group">
+                        <div
+                            class="absolute -right-6 -top-6 bg-indigo-500/10 w-24 h-24 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition">
+                        </div>
+                        <div class="flex justify-between items-start mb-4 relative z-10">
+                            <div>
+                                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                    <span class="relative flex h-2 w-2">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                                    </span>
+                                    No Checkout
+                                </p>
+                                <h3 class="text-2xl font-bold text-white mt-1" x-text="stats.online_users">0</h3>
+                                <p class="text-xs text-indigo-400 mt-1 font-medium">Ativos agora</p>
+                            </div>
+                            <div class="p-2 bg-slate-800 rounded-lg text-indigo-500"><i data-lucide="users"
+                                    class="w-5 h-5"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Preenchendo Inputs -->
+                    <div
+                        class="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-lg relative overflow-hidden group">
+                        <div
+                            class="absolute -right-6 -top-6 bg-cyan-500/10 w-24 h-24 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition">
+                        </div>
+                        <div class="flex justify-between items-start mb-4 relative z-10">
+                            <div>
+                                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                    <span class="flex gap-1 items-center">
+                                        <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce [animation-duration:1s]"></span>
+                                        <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce [animation-duration:1s] [animation-delay:0.2s]"></span>
+                                        <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce [animation-duration:1s] [animation-delay:0.4s]"></span>
+                                    </span>
+                                    Preenchendo
+                                </p>
+                                <h3 class="text-2xl font-bold text-white mt-1" x-text="stats.typing_users">0</h3>
+                                <p class="text-xs text-cyan-400 mt-1 font-medium">Preenchendo dados</p>
+                            </div>
+                            <div class="p-2 bg-slate-800 rounded-lg text-cyan-500"><i data-lucide="edit-3"
                                     class="w-5 h-5"></i></div>
                         </div>
                     </div>
@@ -305,7 +352,9 @@ require_once 'auth.php';
                     pending_orders: 0,
                     pending_revenue: 0,
                     conversion_rate: 0,
-                    recent_orders: []
+                    recent_orders: [],
+                    online_users: 0,
+                    typing_users: 0
                 },
                 filter: 'today',
                 startDate: '',
@@ -318,10 +367,10 @@ require_once 'auth.php';
                     this.endDate = today;
                     this.fetchStats();
 
-                    // Auto-refresh every 30s
+                    // Auto-refresh every 5s
                     setInterval(() => {
                         this.fetchStats();
-                    }, 30000);
+                    }, 5000);
                 },
 
                 fetchStats() {

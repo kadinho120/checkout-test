@@ -325,6 +325,14 @@ class Database
                 $this->conn->exec("ALTER TABLE orders ADD COLUMN state TEXT;");
             }
 
+            // Create checkout_sessions table for real-time tracking
+            $this->conn->exec("CREATE TABLE IF NOT EXISTS checkout_sessions (
+                session_id TEXT PRIMARY KEY,
+                status TEXT NOT NULL,
+                product_slug TEXT,
+                last_ping DATETIME DEFAULT CURRENT_TIMESTAMP
+            )");
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {

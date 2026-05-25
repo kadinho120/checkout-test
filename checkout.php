@@ -1118,6 +1118,67 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }
         }
 
+        // REAL-TIME VISITOR HEARTBEAT
+        (function() {
+            let sessionId = sessionStorage.getItem('checkout_session_id');
+            if (!sessionId) {
+                sessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now().toString(36);
+                sessionStorage.setItem('checkout_session_id', sessionId);
+            }
+
+            let lastInputTime = 0;
+            const productSlug = PLANOS['main'] ? PLANOS['main'].sku : '';
+
+            const updateActivity = () => {
+                lastInputTime = Date.now();
+            };
+
+            // Monitor input activity
+            const formInputs = document.querySelectorAll('#checkout-form input, #checkout-form select, #checkout-form textarea');
+            formInputs.forEach(input => {
+                input.addEventListener('input', updateActivity);
+                input.addEventListener('change', updateActivity);
+                input.addEventListener('focus', updateActivity);
+            });
+
+            const sendPing = () => {
+                const status = (Date.now() - lastInputTime < 8000) ? 'typing' : 'viewing';
+                
+                fetch(BACKEND_BASE_PATH + '/v1/heartbeat.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        status: status,
+                        product_slug: productSlug
+                    }),
+                    keepalive: true
+                }).catch(err => {
+                    // Fail silently to not impact user experience
+                });
+            };
+
+            // Send initial ping and then every 5 seconds
+            sendPing();
+            setInterval(sendPing, 5000);
+
+            // Clean up or send viewing status when tab gets hidden
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    const payload = JSON.stringify({
+                        session_id: sessionId,
+                        status: 'viewing',
+                        product_slug: productSlug
+                    });
+                    if (navigator.sendBeacon) {
+                        navigator.sendBeacon(BACKEND_BASE_PATH + '/v1/heartbeat.php', payload);
+                    }
+                } else {
+                    sendPing();
+                }
+            });
+        })();
+
     </script>
 
 
