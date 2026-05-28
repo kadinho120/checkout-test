@@ -263,6 +263,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <?= htmlspecialchars($product['name']) ?>
                 </h1>
                 <div class="text-right shrink-0">
+                    <?php if (!empty($product['compare_at_price']) && (float)$product['compare_at_price'] > 0): ?>
+                        <span class="block text-xs text-slate-500 line-through">De R$ <?= format_price($product['compare_at_price']) ?></span>
+                    <?php endif; ?>
                     <span class="text-xl font-black text-green-500">R$ <?= format_price($product['price']) ?></span>
                 </div>
             </div>
