@@ -309,6 +309,15 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN checkout_cta_text TEXT;");
             }
 
+            // Check for show_close_button column
+            $hasShowCloseButton = false;
+            foreach ($prodCols6 as $col) {
+                if ($col['name'] === 'show_close_button') $hasShowCloseButton = true;
+            }
+            if (!$hasShowCloseButton) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN show_close_button INTEGER DEFAULT 1;");
+            }
+
             // Check for delivery columns in orders
             $orderCols2 = $this->conn->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_ASSOC);
             $hasCep = false;

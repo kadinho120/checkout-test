@@ -323,6 +323,14 @@ require_once 'auth.php';
                                     <label for="req_name" class="text-slate-300 text-sm">Solicitar Nome</label>
                                 </div>
                             </div>
+                            <div class="space-y-2 pt-2">
+                                <label class="block text-sm font-medium text-slate-400">Modal do Checkout</label>
+                                <div class="flex items-center gap-2">
+                                    <input x-model="form.show_close_button" type="checkbox" id="show_close_btn"
+                                        class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500">
+                                    <label for="show_close_btn" class="text-slate-300 text-sm">Exibir Botão de Fechar no Modal</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1075,7 +1083,8 @@ require_once 'auth.php';
                                     track_add_payment_info: data.track_add_payment_info != 0,
                                     checkout_style: data.checkout_style || 'default',
                                     product_type: data.product_type || 'digital',
-                                    checkout_cta_text: data.checkout_cta_text || ''
+                                    checkout_cta_text: data.checkout_cta_text || '',
+                                    show_close_button: data.show_close_button !== 0
                                 };
                                 // Fallback for legacy records (null/undefined => true)
                                 if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
@@ -1083,6 +1092,7 @@ require_once 'auth.php';
                                 if (data.request_name === undefined || data.request_name === null) this.form.request_name = true;
                                 if (data.track_initiate_checkout === undefined || data.track_initiate_checkout === null) this.form.track_initiate_checkout = true;
                                 if (data.track_add_payment_info === undefined || data.track_add_payment_info === null) this.form.track_add_payment_info = true;
+                                if (data.show_close_button === undefined || data.show_close_button === null) this.form.show_close_button = true;
 
                                 this.isModalOpen = true;
                                 this.$nextTick(() => lucide.createIcons());
@@ -1114,7 +1124,8 @@ require_once 'auth.php';
                             track_add_payment_info: true,
                             checkout_style: 'default',
                             product_type: 'digital',
-                            checkout_cta_text: ''
+                            checkout_cta_text: '',
+                            show_close_button: true
                         };
                         this.isModalOpen = true;
                     }

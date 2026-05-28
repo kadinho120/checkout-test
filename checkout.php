@@ -540,6 +540,14 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         lucide.createIcons();
         const BACKEND_BASE_PATH = '/api';
 
+        // Tell the parent window (host page modal) about the close button setting
+        if (window.self !== window.top) {
+            window.parent.postMessage({
+                type: 'checkout-config',
+                showCloseButton: <?= isset($product['show_close_button']) ? ((int)$product['show_close_button'] !== 0 ? 'true' : 'false') : 'true' ?>
+            }, '*');
+        }
+
         // Preço base do produto vindo do PHP
         let baseProductPrice = <?= (float) $product['price'] ?>;
         let currentProductPrice = baseProductPrice;
@@ -557,6 +565,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 name: <?= json_encode($product['name']) ?>,
                 sku: <?= json_encode($product['slug']) ?>,
                 style: <?= json_encode($product['checkout_style'] ?? 'default') ?>,
+                showCloseButton: <?= isset($product['show_close_button']) ? ((int)$product['show_close_button'] !== 0 ? 'true' : 'false') : 'true' ?>,
                 notifications: {
                     enabled: <?= ($product['fake_notifications'] ?? 0) ? 'true' : 'false' ?>,
                     text: <?= json_encode($product['notification_text'] ?? '') ?>

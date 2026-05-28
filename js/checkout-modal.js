@@ -124,8 +124,12 @@
         const iframe = overlay.querySelector('.checkout-modal-iframe');
         const loader = overlay.querySelector('.checkout-modal-loader');
         const closeBtn = overlay.querySelector('.checkout-modal-close');
+        let canClose = true;
 
         function openModal(url) {
+            canClose = true;
+            closeBtn.style.display = 'flex';
+            
             // Add modal=true parameter
             const separator = url.indexOf('?') > -1 ? '&' : '?';
             const modalUrl = url + separator + 'modal=true';
@@ -136,7 +140,8 @@
             loader.style.display = 'flex';
         }
 
-        function closeModal() {
+        function closeModal(force = false) {
+            if (!canClose && !force) return;
             overlay.classList.remove('active');
             document.body.style.overflow = '';
             setTimeout(() => {
@@ -147,7 +152,15 @@
         // Listen for messages from the iframe (e.g., close request after downsell)
         window.addEventListener('message', function (event) {
             if (event.data === 'close-checkout-modal') {
-                closeModal();
+                closeModal(true);
+            } else if (event.data && event.data.type === 'checkout-config') {
+                if (event.data.showCloseButton === false) {
+                    closeBtn.style.display = 'none';
+                    canClose = false;
+                } else {
+                    closeBtn.style.display = 'flex';
+                    canClose = true;
+                }
             }
         });
 
@@ -162,12 +175,12 @@
             }
         };
         overlay.onclick = function (e) {
-            if (e.target === overlay) closeModal();
+            if (e.target === overlay) closeModal(false);
         };
 
         // Esc key to close
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && overlay.classList.contains('active')) closeModal();
+            if (e.key === 'Escape' && overlay.classList.contains('active')) closeModal(false);
         });
 
         // Intercept clicks
