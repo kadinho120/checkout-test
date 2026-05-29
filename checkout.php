@@ -258,11 +258,11 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="<?= $isMinimalist ? 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl overflow-hidden' : 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl' ?>">
             
             <?php if ($isMinimalist): ?>
-            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-slate-800 <?= ($isModal) ? 'pr-10' : '' ?>">
-                <h1 class="font-display text-lg font-bold text-gray-900 dark:text-white pr-4">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-slate-800 <?= ($isModal) ? 'pr-8' : '' ?>">
+                <h1 class="font-display text-lg font-bold text-gray-900 dark:text-white pr-4 flex-grow text-left">
                     <?= htmlspecialchars($product['name']) ?>
                 </h1>
-                <div class="text-right shrink-0">
+                <div class="text-right shrink-0 ml-auto flex flex-col items-end justify-center">
                     <?php if (!empty($product['compare_at_price']) && (float)$product['compare_at_price'] > 0): ?>
                         <span class="block text-xs text-slate-500 line-through">De R$ <?= format_price($product['compare_at_price']) ?></span>
                     <?php endif; ?>
