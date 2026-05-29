@@ -27,12 +27,18 @@ try {
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($order) {
+        // Decode json_data early so it is available
+        $storedData = json_decode($order['json_data'] ?? '{}', true) ?? [];
 
         // 2. Atualiza o status se não estiver pago
         if ($order['status'] !== 'paid' && $order['status'] !== 'completed') {
             $updateStmt = $db->prepare("UPDATE orders SET status = 'paid', updated_at = datetime('now') WHERE id = ?");
             $updateStmt->execute([$order['id']]);
             $order['status'] = 'paid'; // Atualiza array local para envio
+
+            // Disparo de Webhooks Customizados (Integrações externas secundárias)
+            require_once __DIR__ . '/functions/trigger_custom_webhooks.php';
+            trigger_custom_webhooks('order.paid', $order['id']);
         }
 
         $pixData = $storedData['pix_data'] ?? [];
@@ -81,18 +87,11 @@ try {
         }
         // --------------------------------------
 
-        // ------------------------
-
-        if ($http_code >= 200 && $http_code < 300) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'Pedido atualizado e enviado ao n8n.',
-                'data_sent' => $payloadForN8N
-            ]);
-        } else {
-            http_response_code(502);
-            echo json_encode(['success' => false, 'message' => 'Atualizado DB, mas erro no N8N.', 'n8n_code' => $http_code]);
-        }
+        echo json_encode([
+            'success' => true,
+            'message' => 'Pedido atualizado e processado com sucesso.',
+            'order_id' => $order['id']
+        ]);
 
     } else {
         http_response_code(404);
