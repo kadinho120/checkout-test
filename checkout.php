@@ -907,13 +907,23 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         };
 
         // Copy to clipboard helper
-        window.copyToClipboard = (text) => {
-            const btn = document.getElementById('btn-copy-pix');
+        window.copyToClipboard = (text, element) => {
+            const btn = element || document.getElementById('btn-copy-pix');
+            if (!btn) return;
             const original = btn.innerHTML;
 
             const updateButton = () => {
-                btn.innerHTML = 'COPIADO!';
-                setTimeout(() => btn.innerHTML = original, 2000);
+                const hasIcon = btn.querySelector('[data-lucide="copy"]') || btn.querySelector('svg');
+                if (hasIcon) {
+                    btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> PIX COPIADO!';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                } else {
+                    btn.innerHTML = 'COPIADO!';
+                }
+                setTimeout(() => {
+                    btn.innerHTML = original;
+                    if (hasIcon && typeof lucide !== 'undefined') lucide.createIcons();
+                }, 2000);
             };
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -970,8 +980,11 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <div class="bg-gray-100 dark:bg-slate-950 p-3 rounded border border-gray-200 dark:border-slate-800 flex items-center gap-2 mb-4">
                     <input readonly value="${pixData.brCode}" class="bg-transparent text-xs text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate">
-                    <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}')" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 dark:hover:text-white transition">COPIAR</button>
+                    <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 dark:hover:text-white transition">COPIAR</button>
                 </div>
+                <button onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg mb-4">
+                    <i data-lucide="copy" class="w-4 h-4"></i> COPIAR PIX
+                </button>
                 <div class="animate-pulse text-green-600 dark:text-green-500 text-sm font-bold flex items-center justify-center gap-2">
                     <i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Aguardando confirmação...
                 </div>
@@ -986,9 +999,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="w-full bg-gray-100 dark:bg-slate-950 p-3 rounded-2xl border border-gray-200 dark:border-slate-800 flex flex-col gap-3 mb-4">
                             <div class="flex items-center gap-2 px-1">
                                 <input readonly value="${pixData.brCode}" class="bg-transparent text-[10px] text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate">
-                                <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}')" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 transition uppercase shrink-0">Copiar</button>
+                                <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 transition uppercase shrink-0">Copiar</button>
                             </div>
-                            <button onclick="copyToClipboard('${pixData.brCode}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg">
+                            <button onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg">
                                 <i data-lucide="copy" class="w-4 h-4"></i> COPIAR PIX
                             </button>
                         </div>
