@@ -1452,15 +1452,22 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
                     const updateTimer = () => {
                         const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+
+                        if (remaining <= 0) {
+                            // Reset the timer to the original duration instead of freezing at 00:00
+                            endTime = Date.now() + durationInSeconds * 1000;
+                            try {
+                                localStorage.setItem(storageKey, JSON.stringify({ endTime: endTime, duration: timerStr }));
+                            } catch (e) {
+                                console.error('Error saving checkout timer to localStorage', e);
+                            }
+                        }
+
                         const m = Math.floor(remaining / 60);
                         const s = remaining % 60;
                         const formatted = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 
                         timerEl.textContent = formatted;
-
-                        if (remaining <= 0) {
-                            clearInterval(timerInterval);
-                        }
                     };
 
                     updateTimer(); // Initial call
