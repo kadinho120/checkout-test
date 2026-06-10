@@ -156,6 +156,50 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         #downsell-modal.active .downsell-content {
             transform: scale(1);
         }
+
+        /* TOP BAR SCARCITY TIMER & BADGE STYLES */
+        .top-bar-container svg, 
+        .top-bar-container i {
+            display: inline-block !important;
+            vertical-align: middle !important;
+            margin-top: -2px !important;
+            margin-right: 4px;
+            margin-left: 4px;
+        }
+
+        #top-bar-timer-countdown {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-variant-numeric: tabular-nums;
+            font-weight: 900;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            padding: 0.15rem 0.5rem;
+            margin: 0 0.35rem;
+            border-radius: 0.375rem;
+            line-height: 1.25;
+            vertical-align: middle;
+            background-color: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            animation: pulse-timer 1.8s infinite ease-in-out;
+        }
+
+        @supports (background-color: color-mix(in srgb, red, blue)) {
+            #top-bar-timer-countdown {
+                background-color: color-mix(in srgb, currentColor 18%, transparent);
+                border-color: color-mix(in srgb, currentColor 30%, transparent);
+            }
+        }
+
+        @keyframes pulse-timer {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -1363,7 +1407,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
             const bar = document.createElement('div');
-            bar.className = 'w-full py-2 px-4 text-center text-sm font-bold uppercase tracking-wide z-[9999] fixed top-0 left-0 shadow-lg flex items-center justify-center gap-2';
+            bar.className = 'w-full py-2.5 px-4 text-center text-sm font-bold uppercase tracking-wide z-[9999] fixed top-0 left-0 shadow-lg top-bar-container';
             bar.style.backgroundColor = config.bgColor;
             bar.style.color = config.textColor;
             bar.innerHTML = parseDateShortcodes(config.text);
