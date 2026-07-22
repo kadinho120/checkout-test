@@ -74,8 +74,12 @@ function rotate_pix_keys()
 
         // Extrair chave criada do response (Suporta diferentes estruturas de resposta da Woovi API)
         $new_key = null;
-        if (isset($create_res['data']['pixKey']['key'])) {
+        if (isset($create_res['data']['pixKey']['pixKey'])) {
+            $new_key = $create_res['data']['pixKey']['pixKey'];
+        } elseif (isset($create_res['data']['pixKey']['key'])) {
             $new_key = $create_res['data']['pixKey']['key'];
+        } elseif (isset($create_res['data']['pixKey']) && is_string($create_res['data']['pixKey'])) {
+            $new_key = $create_res['data']['pixKey'];
         } elseif (isset($create_res['data']['key'])) {
             $new_key = $create_res['data']['key'];
         } elseif (is_string($create_res['data'] ?? null)) {
