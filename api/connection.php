@@ -342,6 +342,17 @@ class Database
                 last_ping DATETIME DEFAULT CURRENT_TIMESTAMP
             )");
 
+            // Create pix_key_rotations table for Woovi Pix Key Rotation history
+            $this->conn->exec("CREATE TABLE IF NOT EXISTS pix_key_rotations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                pix_key TEXT NOT NULL,
+                type TEXT DEFAULT 'EVP',
+                is_default INTEGER DEFAULT 1,
+                status TEXT DEFAULT 'ACTIVE',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                deleted_at DATETIME
+            )");
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {
