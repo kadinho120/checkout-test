@@ -48,6 +48,10 @@ require_once 'auth.php';
                     class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
                     <i data-lucide="shopping-cart" class="w-5 h-5"></i> Pedidos
                 </a>
+                <a href="pix-rotations.php"
+                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                    <i data-lucide="key-round" class="w-5 h-5"></i> Chaves Pix
+                </a>
                 <a href="meta-events.php"
                     class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
                     <i data-lucide="activity" class="w-5 h-5"></i> Monitor Meta
