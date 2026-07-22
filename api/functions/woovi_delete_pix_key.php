@@ -31,7 +31,8 @@ function woovi_delete_pix_key($pixKey)
         CURLOPT_URL => $url,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CUSTOMREQUEST => 'DELETE',
-        CURLOPT_TIMEOUT => 30,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 8,
         CURLOPT_HTTPHEADER => [
             'Authorization: ' . $api_key,
             'Content-Type: application/json',

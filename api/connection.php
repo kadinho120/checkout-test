@@ -19,8 +19,10 @@ class Database
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-            // Enable foreign keys
+            // Enable foreign keys, WAL mode and busy timeout for high concurrency
             $this->conn->exec("PRAGMA foreign_keys = ON;");
+            $this->conn->exec("PRAGMA journal_mode = WAL;");
+            $this->conn->exec("PRAGMA busy_timeout = 5000;");
 
             // Temporary: Initialize schema if table users missing
             // In a real migration system, this would be separate

@@ -28,7 +28,8 @@ function woovi_create_pix_key($type = 'EVP')
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => $payload,
-        CURLOPT_TIMEOUT => 30,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 8,
         CURLOPT_HTTPHEADER => [
             'Authorization: ' . $api_key,
             'Content-Type: application/json',
