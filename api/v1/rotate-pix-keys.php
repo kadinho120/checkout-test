@@ -34,7 +34,7 @@ try {
 
         if ($last_rotation) {
             $seconds_since = (int) ($last_rotation['seconds_since_last'] ?? 0);
-            $min_seconds = 5 * 60; // Trava de segurança: mínimo de 5 minutos entre rotações
+            $min_seconds = 9 * 60; // Trava para garantir intervalo mínimo de ~10 minutos entre rotações
 
             if ($seconds_since < $min_seconds) {
                 $remaining_seconds = $min_seconds - $seconds_since;
