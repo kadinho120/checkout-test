@@ -10,7 +10,7 @@ require_once __DIR__ . '/woovi_delete_pix_key.php';
  * 1. Gera uma nova chave Pix aleatória (EVP) na API da Woovi.
  * 2. Define a nova chave como a chave padrão da conta.
  * 3. Registra a nova chave na tabela pix_key_rotations no SQLite.
- * 4. Exclui da Woovi e marca como DELETED as chaves antigas com mais de 60 minutos.
+ * 4. Exclui da Woovi e marca como DELETED as chaves antigas com mais de 30 minutos.
  *
  * @return array Resultado da operação de rotação
  */
@@ -75,7 +75,7 @@ function rotate_pix_keys()
         ");
         $ins->execute([':pix_key' => $new_key]);
 
-        // 4. Buscar e excluir chaves antigas (com 60 minutos ou mais de criação)
+        // 4. Buscar e excluir chaves antigas (com 30 minutos ou mais de criação)
         $deleted_keys = [];
         $failed_deletions = [];
 
@@ -84,7 +84,7 @@ function rotate_pix_keys()
             FROM pix_key_rotations 
             WHERE status = 'ACTIVE' 
               AND pix_key != :new_key
-              AND created_at <= datetime('now', '-03:00', '-60 minutes')
+              AND created_at <= datetime('now', '-03:00', '-30 minutes')
             ORDER BY created_at ASC
         ");
         $stmt_old->execute([':new_key' => $new_key]);
