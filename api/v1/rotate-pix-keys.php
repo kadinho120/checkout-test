@@ -24,7 +24,7 @@ try {
 
         $stmt = $db->query("
             SELECT pix_key, created_at,
-                   (strftime('%s', 'now') - strftime('%s', created_at)) as seconds_since_last
+                   (strftime('%s', 'now', '-03:00') - strftime('%s', created_at)) as seconds_since_last
             FROM pix_key_rotations 
             WHERE status = 'ACTIVE' AND is_default = 1
             ORDER BY created_at DESC 

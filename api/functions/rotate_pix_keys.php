@@ -70,8 +70,8 @@ function rotate_pix_keys()
         $db->exec("UPDATE pix_key_rotations SET is_default = 0 WHERE is_default = 1");
 
         $ins = $db->prepare("
-            INSERT INTO pix_key_rotations (pix_key, type, is_default, status) 
-            VALUES (:pix_key, 'EVP', 1, 'ACTIVE')
+            INSERT INTO pix_key_rotations (pix_key, type, is_default, status, created_at) 
+            VALUES (:pix_key, 'EVP', 1, 'ACTIVE', datetime('now', '-03:00'))
         ");
         $ins->execute([':pix_key' => $new_key]);
 
@@ -84,7 +84,7 @@ function rotate_pix_keys()
             FROM pix_key_rotations 
             WHERE status = 'ACTIVE' 
               AND pix_key != :new_key
-              AND created_at <= datetime('now', '-30 minutes')
+              AND created_at <= datetime('now', '-03:00', '-30 minutes')
             ORDER BY created_at ASC
         ");
         $stmt_old->execute([':new_key' => $new_key]);
@@ -100,7 +100,7 @@ function rotate_pix_keys()
             if ($del_res['success'] || ($del_res['http_code'] ?? 0) === 404) {
                 $upd = $db->prepare("
                     UPDATE pix_key_rotations 
-                    SET status = 'DELETED', is_default = 0, deleted_at = CURRENT_TIMESTAMP 
+                    SET status = 'DELETED', is_default = 0, deleted_at = datetime('now', '-03:00') 
                     WHERE id = :id
                 ");
                 $upd->execute([':id' => $old['id']]);

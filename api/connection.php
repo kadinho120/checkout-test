@@ -1,4 +1,6 @@
 <?php
+date_default_timezone_set('America/Sao_Paulo');
+
 class Database
 {
     private $db_file = __DIR__ . '/../database/database.sqlite';
@@ -351,7 +353,7 @@ class Database
                 type TEXT DEFAULT 'EVP',
                 is_default INTEGER DEFAULT 1,
                 status TEXT DEFAULT 'ACTIVE',
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                created_at DATETIME DEFAULT (datetime('now', '-03:00')),
                 deleted_at DATETIME
             )");
 

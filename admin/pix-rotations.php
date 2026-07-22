@@ -375,8 +375,12 @@ if (!($_SESSION['logged_in'] ?? false)) {
 
                 formatDate(dateStr) {
                     if (!dateStr) return '-';
-                    const date = new Date(dateStr.replace(' ', 'T'));
-                    return date.toLocaleString('pt-BR');
+                    const parts = dateStr.split(' ');
+                    if (parts.length === 2) {
+                        const [y, m, d] = parts[0].split('-');
+                        return `${d}/${m}/${y} ${parts[1]}`;
+                    }
+                    return dateStr;
                 },
 
                 timeSince(dateStr) {
