@@ -628,6 +628,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     initiateCheckout: <?= (int)($product['track_initiate_checkout'] ?? 1) !== 0 ? 'true' : 'false' ?>,
                     addPaymentInfo: <?= (int)($product['track_add_payment_info'] ?? 1) !== 0 ? 'true' : 'false' ?>
                 },
+                gateway: <?= json_encode($product['payment_gateway'] ?? 'woovi') ?>,
                 product_type: <?= json_encode($product['product_type'] ?? 'digital') ?>
             }
         };
@@ -858,6 +859,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 products: allProducts,
                 customer: customerData,
                 correlation_id: correlationId,
+                gateway: PLANOS['main'].gateway || 'woovi',
                 tracking: trackingParams
             };
 
@@ -909,10 +911,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             // -------------------------------------
 
             try {
-                // Mock fetch for now as 'process-pix-woovi.php' might not exist or be fully set up in this context, 
-                // but we keep the logic structure.
-                // Assuming existing backend structure:
-                const response = await fetch(`${BACKEND_BASE_PATH}/process-pix-woovi.php`, {
+                // Fetch payment request dynamically routed via process-pix.php (Woovi or Appmax)
+                const response = await fetch(`${BACKEND_BASE_PATH}/process-pix.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(pixPayload)

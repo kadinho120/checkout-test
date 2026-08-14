@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 // A função getenv() busca o valor configurado no Easypanel.
 // O operador '?:' define uma string vazia '' caso a variável não exista, evitando erros.
 
-define('APPMAX_API_TOKEN', getenv('APPMAX_API_TOKEN') ?: '');
+define('APPMAX_API_TOKEN', getenv('APPMAX_API_TOKEN') ?: 'CC4136CD-AE5AEDD0-FB9612A1-3D66212A');
 
 define('WOOVI_APP_ID', getenv('WOOVI_APP_ID') ?: '');
 

@@ -112,6 +112,7 @@ require_once 'auth.php';
                                 <th class="p-4 uppercase font-medium">Produto</th>
                                 <th class="p-4 uppercase font-medium">Slug</th>
                                 <th class="p-4 uppercase font-medium">Preço</th>
+                                <th class="p-4 uppercase font-medium text-center">Gateway</th>
                                 <th class="p-4 uppercase font-medium text-center">Status</th>
                                 <th class="p-4 uppercase font-medium text-right">Ações</th>
                             </tr>
@@ -136,6 +137,13 @@ require_once 'auth.php';
                                     <td class="p-4 text-slate-400 text-sm" x-text="product.slug"></td>
                                     <td class="p-4 text-white font-mono text-sm"
                                         x-text="'R$ ' + parseFloat(product.price).toFixed(2)"></td>
+                                    <td class="p-4 text-center">
+                                        <span
+                                            :class="product.payment_gateway === 'appmax' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'"
+                                            class="px-2 py-1 rounded text-xs font-bold border uppercase">
+                                            <span x-text="product.payment_gateway === 'appmax' ? 'Appmax' : 'Woovi'"></span>
+                                        </span>
+                                    </td>
                                     <td class="p-4 text-center">
                                         <span
                                             :class="product.active == 1 ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'"
@@ -286,6 +294,14 @@ require_once 'auth.php';
                                     class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
                                     <option value="digital">Digital (Acesso Imediato)</option>
                                     <option value="physical">Físico (Entrega no Endereço)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Gateway de Pagamento Pix</label>
+                                <select x-model="form.payment_gateway"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                                    <option value="woovi">Woovi (OpenPix)</option>
+                                    <option value="appmax">Appmax (Pix)</option>
                                 </select>
                             </div>
                             <div>
@@ -1087,6 +1103,7 @@ require_once 'auth.php';
                                     track_add_payment_info: data.track_add_payment_info != 0,
                                     checkout_style: data.checkout_style || 'default',
                                     product_type: data.product_type || 'digital',
+                                    payment_gateway: data.payment_gateway || 'woovi',
                                     checkout_cta_text: data.checkout_cta_text || '',
                                     show_close_button: data.show_close_button !== 0
                                 };
@@ -1128,6 +1145,7 @@ require_once 'auth.php';
                             track_add_payment_info: true,
                             checkout_style: 'default',
                             product_type: 'digital',
+                            payment_gateway: 'woovi',
                             checkout_cta_text: '',
                             show_close_button: true
                         };

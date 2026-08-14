@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS products (
     checkout_cta_text TEXT, -- Custom CTA Button Text
     top_bar_timer TEXT, -- Top bar timer setting (format mm:ss)
     show_close_button INTEGER DEFAULT 1,
+    payment_gateway TEXT DEFAULT 'woovi', -- 'woovi' or 'appmax'
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -64,6 +65,7 @@ CREATE TABLE IF NOT EXISTS orders (
     total_amount DECIMAL(10, 2) NOT NULL,
     status TEXT DEFAULT 'pending', -- pending, paid, failed
     payment_method TEXT,
+    gateway TEXT DEFAULT 'woovi', -- 'woovi' or 'appmax'
     transaction_id TEXT,
     external_id TEXT,
     cep TEXT,

@@ -115,7 +115,8 @@ switch ($method) {
                     product_type = :product_type,
                     compare_at_price = :compare_at_price,
                     checkout_cta_text = :checkout_cta_text,
-                    show_close_button = :show_close_button
+                    show_close_button = :show_close_button,
+                    payment_gateway = :payment_gateway
                     WHERE id = :id");
 
                 $stmt->execute([
@@ -154,6 +155,7 @@ switch ($method) {
                     ':compare_at_price' => (!isset($data->compare_at_price) || $data->compare_at_price === '') ? null : $data->compare_at_price,
                     ':checkout_cta_text' => $data->checkout_cta_text ?? '',
                     ':show_close_button' => isset($data->show_close_button) ? ($data->show_close_button ? 1 : 0) : 1,
+                    ':payment_gateway' => $data->payment_gateway ?? 'woovi',
                     ':id' => $data->id
                 ]);
                 $productId = $data->id;
@@ -169,7 +171,7 @@ switch ($method) {
                     fake_notifications, notification_text, 
                     top_bar_enabled, top_bar_text, top_bar_bg_color, top_bar_text_color, top_bar_timer, 
                     downsell_enabled, downsell_discount_type, downsell_discount_amount,
-                    checkout_style, product_type, compare_at_price, checkout_cta_text, show_close_button
+                    checkout_style, product_type, compare_at_price, checkout_cta_text, show_close_button, payment_gateway
                 ) VALUES (
                     :name, :slug, :description, :price, :image_url, :active, :theme, 
                     :request_email, :request_phone, :request_name, 
@@ -180,7 +182,7 @@ switch ($method) {
                     :fake_notifications, :notification_text, 
                     :top_bar_enabled, :top_bar_text, :top_bar_bg_color, :top_bar_text_color, :top_bar_timer, 
                     :downsell_enabled, :downsell_discount_type, :downsell_discount_amount,
-                    :checkout_style, :product_type, :compare_at_price, :checkout_cta_text, :show_close_button
+                    :checkout_style, :product_type, :compare_at_price, :checkout_cta_text, :show_close_button, :payment_gateway
                 )");
 
                 $stmt->execute([
@@ -218,7 +220,8 @@ switch ($method) {
                     ':product_type' => $data->product_type ?? 'digital',
                     ':compare_at_price' => (!isset($data->compare_at_price) || $data->compare_at_price === '') ? null : $data->compare_at_price,
                     ':checkout_cta_text' => $data->checkout_cta_text ?? '',
-                    ':show_close_button' => isset($data->show_close_button) ? ($data->show_close_button ? 1 : 0) : 1
+                    ':show_close_button' => isset($data->show_close_button) ? ($data->show_close_button ? 1 : 0) : 1,
+                    ':payment_gateway' => $data->payment_gateway ?? 'woovi'
                 ]);
                 $productId = $db->lastInsertId();
             }

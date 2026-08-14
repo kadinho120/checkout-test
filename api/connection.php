@@ -315,18 +315,25 @@ class Database
 
             // Check for show_close_button column
             $hasShowCloseButton = false;
+            $hasPaymentGateway = false;
             foreach ($prodCols6 as $col) {
                 if ($col['name'] === 'show_close_button') $hasShowCloseButton = true;
+                if ($col['name'] === 'payment_gateway') $hasPaymentGateway = true;
             }
             if (!$hasShowCloseButton) {
                 $this->conn->exec("ALTER TABLE products ADD COLUMN show_close_button INTEGER DEFAULT 1;");
             }
+            if (!$hasPaymentGateway) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN payment_gateway TEXT DEFAULT 'woovi';");
+            }
 
-            // Check for delivery columns in orders
+            // Check for delivery and gateway columns in orders
             $orderCols2 = $this->conn->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_ASSOC);
             $hasCep = false;
+            $hasOrderGateway = false;
             foreach ($orderCols2 as $col) {
                 if ($col['name'] === 'cep') $hasCep = true;
+                if ($col['name'] === 'gateway') $hasOrderGateway = true;
             }
             if (!$hasCep) {
                 $this->conn->exec("ALTER TABLE orders ADD COLUMN cep TEXT;");
@@ -336,6 +343,9 @@ class Database
                 $this->conn->exec("ALTER TABLE orders ADD COLUMN neighborhood TEXT;");
                 $this->conn->exec("ALTER TABLE orders ADD COLUMN city TEXT;");
                 $this->conn->exec("ALTER TABLE orders ADD COLUMN state TEXT;");
+            }
+            if (!$hasOrderGateway) {
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN gateway TEXT DEFAULT 'woovi';");
             }
 
             // Create checkout_sessions table for real-time tracking

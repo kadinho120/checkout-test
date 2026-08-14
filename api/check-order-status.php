@@ -1,50 +1,65 @@
 <?php
 /**
- * Endpoint para verificar o status de um pedido (PENDING ou PAID).
- * Recebe um correlationId via POST JSON e retorna o status.
- * @version 1.0
+ * api/check-order-status.php
+ * Endpoint para verificar o status de um pedido (pending ou paid).
+ * Recebe um correlationId via POST JSON ou GET e retorna o status.
  */
 
 header('Content-Type: application/json');
 
-// NOTA DE SEGURANÇA: Este endpoint não possui autenticação, conforme solicitado.
+require_once __DIR__ . '/connection.php';
 
-$input = file_get_contents('php://input');
-$data = json_decode($input, true);
+$correlationId = null;
 
-if (json_last_error() !== JSON_ERROR_NONE || !isset($data['correlationId'])) {
-    http_response_code(400); // Bad Request
-    die(json_encode(['success' => false, 'message' => 'correlationId ausente ou JSON inválido.']));
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+    $correlationId = $data['correlationId'] ?? ($data['correlation_id'] ?? null);
+} else {
+    $correlationId = $_GET['correlationId'] ?? ($_GET['correlation_id'] ?? null);
 }
 
-$correlationId = $data['correlationId'];
-$orders_file_path = __DIR__ . '/database/detailed_orders.json';
-
-if (!file_exists($orders_file_path)) {
-    http_response_code(404); // Not Found
-    die(json_encode(['success' => false, 'message' => 'Arquivo de pedidos não encontrado.']));
+if (empty($correlationId)) {
+    http_response_code(400);
+    die(json_encode(['success' => false, 'message' => 'correlationId ausente.']));
 }
 
-$orders = json_decode(file_get_contents($orders_file_path), true);
-$order_status = null;
+try {
+    $database = new Database();
+    $db = $database->getConnection();
 
-if (is_array($orders)) {
-    // Procura o pedido pelo correlationId
-    foreach ($orders as $order) {
-        if (isset($order['correlationId']) && $order['correlationId'] === $correlationId) {
-            $order_status = $order['status'];
-            break;
+    $stmt = $db->prepare("SELECT id, status, total_amount, payment_method, gateway FROM orders WHERE transaction_id = ? OR external_id = ? ORDER BY id DESC LIMIT 1");
+    $stmt->execute([$correlationId, $correlationId]);
+    $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($order) {
+        echo json_encode([
+            'success' => true,
+            'status' => $order['status'],
+            'order_id' => $order['id'],
+            'gateway' => $order['gateway'] ?? 'woovi'
+        ]);
+        exit;
+    }
+
+    // Fallback para arquivo legada se existir
+    $orders_file_path = __DIR__ . '/database/detailed_orders.json';
+    if (file_exists($orders_file_path)) {
+        $orders = json_decode(file_get_contents($orders_file_path), true);
+        if (is_array($orders)) {
+            foreach ($orders as $o) {
+                if (isset($o['correlationId']) && $o['correlationId'] === $correlationId) {
+                    echo json_encode(['success' => true, 'status' => $o['status']]);
+                    exit;
+                }
+            }
         }
     }
-}
 
-if ($order_status) {
-    // Se encontrou o pedido, retorna o status
-    echo json_encode(['success' => true, 'status' => $order_status]);
-} else {
-    // Se não encontrou, retorna erro
-    http_response_code(404); // Not Found
+    http_response_code(404);
     echo json_encode(['success' => false, 'message' => 'Pedido com o correlationId fornecido não foi encontrado.']);
-}
 
-?>
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Erro interno ao consultar status: ' . $e->getMessage()]);
+}
