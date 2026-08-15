@@ -416,7 +416,7 @@ require_once 'auth.php';
                     <!-- Test Section -->
                     <div class="mt-4 pt-4 border-t border-slate-800 flex items-end gap-3">
                         <div class="flex-1">
-                            <label class="block text-xs font-bold text-slate-400 mb-1">Telefone para Teste</label>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">Telefone para Teste (Evolution)</label>
                             <input type="text" x-model="testPhone" placeholder="5511999999999"
                                 class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm focus:border-blue-500 outline-none">
                         </div>
@@ -431,6 +431,91 @@ require_once 'auth.php';
                     <p x-show="testResult" class="text-xs mt-2"
                         :class="testResult?.success ? 'text-green-400' : 'text-red-400'" x-text="testResult?.message"></p>
 
+                    <hr class="border-slate-800 my-4">
+
+                    <!-- Twilio WhatsApp API Deliverable -->
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i data-lucide="message-square" class="text-red-500 w-5 h-5"></i>
+                                Entrega Automática (WhatsApp - Twilio API)
+                            </h4>
+                            <span class="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded font-mono">Twilio Cloud API</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Account SID</label>
+                                <input type="text" x-model="form.twilio_account_sid" placeholder="AC... (ou deixe vazio para usar ENV)"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-red-500 outline-none font-mono text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Auth Token</label>
+                                <input type="password" x-model="form.twilio_auth_token" placeholder="Auth Token (ou deixe vazio para usar ENV)"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-red-500 outline-none font-mono text-sm">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Número Twilio (From)</label>
+                                <input type="text" x-model="form.twilio_from" placeholder="+17372508034 ou whatsapp:+1..."
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-red-500 outline-none font-mono text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Content SID (Template Twilio)</label>
+                                <input type="text" x-model="form.twilio_content_sid" placeholder="HXac51c61af94371da7904a767b414c2fc (Opcional)"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-red-500 outline-none font-mono text-sm">
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-950/50 p-4 rounded-lg border border-slate-800 space-y-4">
+                            <div x-show="form.twilio_content_sid">
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Variáveis do Template (JSON ContentVariables)</label>
+                                <input type="text" x-model="form.twilio_content_variables" placeholder='{"1": "{primeiro_nome}", "2": "{pix_copia_cola}"}'
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-red-500 outline-none font-mono text-sm">
+                                <p class="text-xs text-slate-500 mt-1">Insira um JSON com os parâmetros do template configurado no Twilio Content API.</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Mensagem (Body de Texto)</label>
+                                <textarea x-model="form.twilio_message" rows="2"
+                                    placeholder="Mensagem enviada se não estiver usando ContentSid ou como texto complementar..."
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white resize-none focus:border-red-500 outline-none"></textarea>
+                                <div class="flex gap-2 mt-2 flex-wrap">
+                                    <template
+                                        x-for="tag in ['{primeiro_nome}', '{nome_completo}', '{email}', '{telefone}', '{pix_copia_cola}', '{nome_do_produto}']">
+                                        <span @click="copyToClipboard(tag)"
+                                            class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none"
+                                            x-text="tag" title="Clique para copiar"></span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">URL de Mídia / Arquivo (Opcional)</label>
+                                <input type="text" x-model="form.twilio_media_url" placeholder="https://..."
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-red-500 outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Test Twilio Section -->
+                        <div class="mt-4 pt-4 border-t border-slate-800 flex items-end gap-3">
+                            <div class="flex-1">
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Telefone para Teste (Twilio)</label>
+                                <input type="text" x-model="testTwilioPhone" placeholder="5527981577407"
+                                    class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm focus:border-red-500 outline-none">
+                            </div>
+                            <button @click="testTwilio()" :disabled="isTestingTwilio"
+                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-bold text-sm transition flex items-center gap-2 h-[38px]">
+                                <span x-show="isTestingTwilio" class="animate-spin"><i data-lucide="loader-2"
+                                        class="w-4 h-4"></i></span>
+                                <span x-show="!isTestingTwilio"><i data-lucide="send" class="w-4 h-4 inline mr-1"></i> Testar Twilio</span>
+                            </button>
+                        </div>
+                        <p x-show="testTwilioResult" class="text-xs mt-2"
+                            :class="testTwilioResult?.success ? 'text-green-400' : 'text-red-400'" x-text="testTwilioResult?.message"></p>
+                    </div>
 
                     <hr class="border-slate-800 my-4">
 
@@ -610,6 +695,30 @@ require_once 'auth.php';
                                                     <i data-lucide="send" class="w-3 h-3"></i> Testar E-mail do Bump
                                                 </button>
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bump Twilio WhatsApp -->
+                                    <div class="mt-3 border-t border-slate-800 pt-3">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i data-lucide="message-square" class="w-3 h-3 text-red-500"></i>
+                                            <span class="text-xs font-bold text-slate-400">Entrega WhatsApp (Twilio)</span>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                <input x-model="bump.twilio_content_sid" type="text"
+                                                    placeholder="Content SID (Ex: HX...)"
+                                                    class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-red-500 outline-none font-mono">
+                                                <input x-model="bump.twilio_content_variables" type="text"
+                                                    placeholder='Variáveis JSON: {"1": "{primeiro_nome}"}'
+                                                    class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-red-500 outline-none font-mono">
+                                            </div>
+                                            <textarea x-model="bump.twilio_message" rows="1"
+                                                placeholder="Mensagem Twilio do Bump (se sem ContentSid)..."
+                                                class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs resize-none focus:border-red-500 outline-none"></textarea>
+                                            <input x-model="bump.twilio_media_url" type="text"
+                                                placeholder="URL de Mídia / Arquivo do Bump (Opcional)"
+                                                class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-red-500 outline-none">
                                         </div>
                                     </div>
                                 </div>
@@ -979,10 +1088,13 @@ require_once 'auth.php';
                 isUploading: false,
                 isTesting: false,
                 isTestingEmail: false,
+                isTestingTwilio: false,
                 testPhone: '',
                 testEmailAddress: '',
+                testTwilioPhone: '',
                 testResult: null,
                 testEmailResult: null,
+                testTwilioResult: null,
                 form: {
                     id: null,
                     name: '',
@@ -1000,6 +1112,15 @@ require_once 'auth.php';
                     deliverable_type: 'text',
                     deliverable_text: '',
                     deliverable_file: '',
+                    deliverable_email_subject: '',
+                    deliverable_email_body: '',
+                    twilio_account_sid: '',
+                    twilio_auth_token: '',
+                    twilio_from: '',
+                    twilio_content_sid: '',
+                    twilio_content_variables: '',
+                    twilio_message: '',
+                    twilio_media_url: '',
                     bumps: [],
                     pixels: [],
                     fake_notifications: false,
@@ -1087,6 +1208,13 @@ require_once 'auth.php';
                                     deliverable_file: data.deliverable_file || '',
                                     deliverable_email_subject: data.deliverable_email_subject || '',
                                     deliverable_email_body: data.deliverable_email_body || '',
+                                    twilio_account_sid: data.twilio_account_sid || '',
+                                    twilio_auth_token: data.twilio_auth_token || '',
+                                    twilio_from: data.twilio_from || '',
+                                    twilio_content_sid: data.twilio_content_sid || '',
+                                    twilio_content_variables: data.twilio_content_variables || '',
+                                    twilio_message: data.twilio_message || '',
+                                    twilio_media_url: data.twilio_media_url || '',
                                     bumps: data.bumps || [],
                                     pixels: data.pixels || [],
                                     fake_notifications: data.fake_notifications == 1,
@@ -1139,6 +1267,13 @@ require_once 'auth.php';
                             request_name: true,
                             request_email: true,
                             request_phone: true,
+                            twilio_account_sid: '',
+                            twilio_auth_token: '',
+                            twilio_from: '',
+                            twilio_content_sid: '',
+                            twilio_content_variables: '',
+                            twilio_message: '',
+                            twilio_media_url: '',
                             bumps: [],
                             pixels: [],
                             track_initiate_checkout: true,
@@ -1207,7 +1342,11 @@ require_once 'auth.php';
                         deliverable_text: '',
                         deliverable_file: '',
                         deliverable_email_subject: '',
-                        deliverable_email_body: ''
+                        deliverable_email_body: '',
+                        twilio_content_sid: '',
+                        twilio_content_variables: '',
+                        twilio_message: '',
+                        twilio_media_url: ''
                     });
                     this.$nextTick(() => lucide.createIcons());
                 },
@@ -1310,6 +1449,39 @@ require_once 'auth.php';
                         .catch(err => {
                             this.isTesting = false;
                             this.testResult = { success: false, message: 'Erro na requisição.' };
+                            console.error(err);
+                        });
+                },
+
+                testTwilio() {
+                    if (!this.testTwilioPhone) {
+                        alert('Digite um telefone para teste do Twilio.');
+                        return;
+                    }
+                    this.isTestingTwilio = true;
+                    this.testTwilioResult = null;
+
+                    const payload = {
+                        ...this.form,
+                        test_phone: this.testTwilioPhone
+                    };
+
+                    fetch('../api/v1/test-twilio.php', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isTestingTwilio = false;
+                            if (data.success) {
+                                this.testTwilioResult = { success: true, message: 'Sucesso! Mensagem enviada via Twilio (SID: ' + (data.sid || 'ok') + ').' };
+                            } else {
+                                this.testTwilioResult = { success: false, message: 'Erro Twilio: ' + (data.error || JSON.stringify(data.response)) };
+                            }
+                        })
+                        .catch(err => {
+                            this.isTestingTwilio = false;
+                            this.testTwilioResult = { success: false, message: 'Erro na requisição ao testar Twilio.' };
                             console.error(err);
                         });
                 },

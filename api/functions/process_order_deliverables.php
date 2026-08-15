@@ -31,7 +31,10 @@ function processOrderDeliverables($productsList, $customerData, $db, $types = ['
             $stmt = $db->prepare("
                 SELECT ob.deliverable_type, ob.deliverable_text, ob.deliverable_file,
                        ob.deliverable_email_subject, ob.deliverable_email_body,
-                       p.evolution_instance, p.evolution_token, p.evolution_url, p.name as product_name
+                       ob.twilio_content_sid, ob.twilio_content_variables, ob.twilio_message, ob.twilio_media_url,
+                       p.evolution_instance, p.evolution_token, p.evolution_url,
+                       p.twilio_account_sid, p.twilio_auth_token, p.twilio_from,
+                       p.name as product_name
                 FROM order_bumps ob
                 JOIN products p ON ob.product_id = p.id
                 WHERE ob.id = ?
@@ -40,12 +43,12 @@ function processOrderDeliverables($productsList, $customerData, $db, $types = ['
             $deliverableConfig = $stmt->fetch(PDO::FETCH_ASSOC);
         } else {
             // Main Product (lookup by slug)
-            $stmt = $db->prepare("SELECT evolution_instance, evolution_token, evolution_url, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, name as product_name FROM products WHERE slug = ?");
+            $stmt = $db->prepare("SELECT evolution_instance, evolution_token, evolution_url, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, twilio_account_sid, twilio_auth_token, twilio_from, twilio_content_sid, twilio_content_variables, twilio_message, twilio_media_url, name as product_name FROM products WHERE slug = ?");
             $stmt->execute([$sku]);
             $deliverableConfig = $stmt->fetch(PDO::FETCH_ASSOC);
         }
 
-        // 1. WhatsApp Sending
+        // 1. WhatsApp Sending (Evolution API)
         if (in_array('wpp', $types)) {
             if ($deliverableConfig && !empty($deliverableConfig['evolution_url']) && !empty($deliverableConfig['evolution_instance'])) {
 
@@ -66,6 +69,45 @@ function processOrderDeliverables($productsList, $customerData, $db, $types = ['
                     $sentCount++;
             } else {
                 $results[] = ['sku' => $sku, 'wpp_status' => 'skipped_no_config'];
+            }
+
+            // 1.1 WhatsApp Sending (Twilio API)
+            require_once __DIR__ . '/send_twilio_message.php';
+
+            $twSid = !empty($deliverableConfig['twilio_account_sid']) ? $deliverableConfig['twilio_account_sid'] : (getenv('TWILIO_ACCOUNT_SID') ?: ($_ENV['TWILIO_ACCOUNT_SID'] ?? ''));
+            $twToken = !empty($deliverableConfig['twilio_auth_token']) ? $deliverableConfig['twilio_auth_token'] : (getenv('TWILIO_AUTH_TOKEN') ?: ($_ENV['TWILIO_AUTH_TOKEN'] ?? ''));
+            $twFrom = !empty($deliverableConfig['twilio_from']) ? $deliverableConfig['twilio_from'] : (getenv('TWILIO_FROM') ?: (getenv('TWILIO_WHATSAPP_FROM') ?: ($_ENV['TWILIO_FROM'] ?? '')));
+            $twContentSid = $deliverableConfig['twilio_content_sid'] ?? '';
+            $twContentVars = $deliverableConfig['twilio_content_variables'] ?? '';
+            $twMessage = $deliverableConfig['twilio_message'] ?? '';
+            $twMediaUrl = $deliverableConfig['twilio_media_url'] ?? '';
+
+            if (!empty($twSid) && !empty($twToken) && !empty($twFrom) && (!empty($twContentSid) || !empty($twMessage))) {
+                $finalTwMessage = !empty($twMessage) ? replaceShortcodes($twMessage, $customerData, '') : '';
+                $finalTwVars = $twContentVars;
+                if (!empty($finalTwVars) && is_string($finalTwVars)) {
+                    $finalTwVars = replaceShortcodes($finalTwVars, $customerData, '');
+                    $decodedVars = json_decode($finalTwVars, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $finalTwVars = $decodedVars;
+                    }
+                }
+
+                $resTwilio = sendTwilioMessage(
+                    $twSid,
+                    $twToken,
+                    $twFrom,
+                    $customerPhone,
+                    $twContentSid,
+                    $finalTwVars,
+                    $finalTwMessage,
+                    $twMediaUrl
+                );
+
+                $results[] = ['sku' => $sku, 'twilio_status' => $resTwilio['success'] ? 'sent' : 'failed'];
+                if ($resTwilio['success']) {
+                    $sentCount++;
+                }
             }
         }
 

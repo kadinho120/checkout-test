@@ -28,6 +28,21 @@ CREATE TABLE IF NOT EXISTS products (
     top_bar_timer TEXT, -- Top bar timer setting (format mm:ss)
     show_close_button INTEGER DEFAULT 1,
     payment_gateway TEXT DEFAULT 'woovi', -- 'woovi' or 'appmax'
+    evolution_instance TEXT,
+    evolution_token TEXT,
+    evolution_url TEXT,
+    deliverable_type TEXT,
+    deliverable_text TEXT,
+    deliverable_file TEXT,
+    deliverable_email_subject TEXT,
+    deliverable_email_body TEXT,
+    twilio_account_sid TEXT,
+    twilio_auth_token TEXT,
+    twilio_from TEXT,
+    twilio_content_sid TEXT,
+    twilio_content_variables TEXT,
+    twilio_message TEXT,
+    twilio_media_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -40,6 +55,15 @@ CREATE TABLE IF NOT EXISTS order_bumps (
     price DECIMAL(10, 2) NOT NULL,
     image_url TEXT, -- Icon or product image
     active BOOLEAN DEFAULT 1,
+    deliverable_type TEXT,
+    deliverable_text TEXT,
+    deliverable_file TEXT,
+    deliverable_email_subject TEXT,
+    deliverable_email_body TEXT,
+    twilio_content_sid TEXT,
+    twilio_content_variables TEXT,
+    twilio_message TEXT,
+    twilio_media_url TEXT,
     FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 

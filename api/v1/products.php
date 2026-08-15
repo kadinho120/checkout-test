@@ -101,6 +101,13 @@ switch ($method) {
                     deliverable_file = :deliverable_file, 
                     deliverable_email_subject = :deliverable_email_subject, 
                     deliverable_email_body = :deliverable_email_body, 
+                    twilio_account_sid = :twilio_account_sid,
+                    twilio_auth_token = :twilio_auth_token,
+                    twilio_from = :twilio_from,
+                    twilio_content_sid = :twilio_content_sid,
+                    twilio_content_variables = :twilio_content_variables,
+                    twilio_message = :twilio_message,
+                    twilio_media_url = :twilio_media_url,
                     fake_notifications = :fake_notifications, 
                     notification_text = :notification_text, 
                     top_bar_enabled = :top_bar_enabled, 
@@ -140,6 +147,13 @@ switch ($method) {
                     ':deliverable_file' => $data->deliverable_file ?? '',
                     ':deliverable_email_subject' => $data->deliverable_email_subject ?? '',
                     ':deliverable_email_body' => $data->deliverable_email_body ?? '',
+                    ':twilio_account_sid' => $data->twilio_account_sid ?? '',
+                    ':twilio_auth_token' => $data->twilio_auth_token ?? '',
+                    ':twilio_from' => $data->twilio_from ?? '',
+                    ':twilio_content_sid' => $data->twilio_content_sid ?? '',
+                    ':twilio_content_variables' => $data->twilio_content_variables ?? '',
+                    ':twilio_message' => $data->twilio_message ?? '',
+                    ':twilio_media_url' => $data->twilio_media_url ?? '',
                     ':fake_notifications' => isset($data->fake_notifications) ? ($data->fake_notifications ? 1 : 0) : 0,
                     ':notification_text' => $data->notification_text ?? '',
                     ':top_bar_enabled' => isset($data->top_bar_enabled) ? ($data->top_bar_enabled ? 1 : 0) : 0,
@@ -168,6 +182,8 @@ switch ($method) {
                     evolution_instance, evolution_token, evolution_url, 
                     deliverable_type, deliverable_text, deliverable_file, 
                     deliverable_email_subject, deliverable_email_body, 
+                    twilio_account_sid, twilio_auth_token, twilio_from,
+                    twilio_content_sid, twilio_content_variables, twilio_message, twilio_media_url,
                     fake_notifications, notification_text, 
                     top_bar_enabled, top_bar_text, top_bar_bg_color, top_bar_text_color, top_bar_timer, 
                     downsell_enabled, downsell_discount_type, downsell_discount_amount,
@@ -179,6 +195,8 @@ switch ($method) {
                     :evolution_instance, :evolution_token, :evolution_url, 
                     :deliverable_type, :deliverable_text, :deliverable_file, 
                     :deliverable_email_subject, :deliverable_email_body, 
+                    :twilio_account_sid, :twilio_auth_token, :twilio_from,
+                    :twilio_content_sid, :twilio_content_variables, :twilio_message, :twilio_media_url,
                     :fake_notifications, :notification_text, 
                     :top_bar_enabled, :top_bar_text, :top_bar_bg_color, :top_bar_text_color, :top_bar_timer, 
                     :downsell_enabled, :downsell_discount_type, :downsell_discount_amount,
@@ -206,6 +224,13 @@ switch ($method) {
                     ':deliverable_file' => $data->deliverable_file ?? '',
                     ':deliverable_email_subject' => $data->deliverable_email_subject ?? '',
                     ':deliverable_email_body' => $data->deliverable_email_body ?? '',
+                    ':twilio_account_sid' => $data->twilio_account_sid ?? '',
+                    ':twilio_auth_token' => $data->twilio_auth_token ?? '',
+                    ':twilio_from' => $data->twilio_from ?? '',
+                    ':twilio_content_sid' => $data->twilio_content_sid ?? '',
+                    ':twilio_content_variables' => $data->twilio_content_variables ?? '',
+                    ':twilio_message' => $data->twilio_message ?? '',
+                    ':twilio_media_url' => $data->twilio_media_url ?? '',
                     ':fake_notifications' => isset($data->fake_notifications) ? ($data->fake_notifications ? 1 : 0) : 0,
                     ':notification_text' => $data->notification_text ?? '',
                     ':top_bar_enabled' => isset($data->top_bar_enabled) ? ($data->top_bar_enabled ? 1 : 0) : 0,
@@ -230,7 +255,7 @@ switch ($method) {
             $bumpsProcessed = 0;
             if (isset($data->bumps) && is_array($data->bumps)) {
                 $db->prepare("DELETE FROM order_bumps WHERE product_id = ?")->execute([$productId]);
-                $bumpStmt = $db->prepare("INSERT INTO order_bumps (product_id, title, description, price, image_url, active, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $bumpStmt = $db->prepare("INSERT INTO order_bumps (product_id, title, description, price, image_url, active, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, twilio_content_sid, twilio_content_variables, twilio_message, twilio_media_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 foreach ($data->bumps as $bump) {
                     $bumpStmt->execute([
                         $productId,
@@ -243,7 +268,11 @@ switch ($method) {
                         $bump->deliverable_text ?? '',
                         $bump->deliverable_file ?? '',
                         $bump->deliverable_email_subject ?? '',
-                        $bump->deliverable_email_body ?? ''
+                        $bump->deliverable_email_body ?? '',
+                        $bump->twilio_content_sid ?? '',
+                        $bump->twilio_content_variables ?? '',
+                        $bump->twilio_message ?? '',
+                        $bump->twilio_media_url ?? ''
                     ]);
                     $bumpsProcessed++;
                 }

@@ -367,6 +367,37 @@ class Database
                 deleted_at DATETIME
             )");
 
+            // Check for Twilio columns in products
+            $prodColsTwilio = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasTwilio = false;
+            foreach ($prodColsTwilio as $col) {
+                if ($col['name'] === 'twilio_account_sid')
+                    $hasTwilio = true;
+            }
+            if (!$hasTwilio) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN twilio_account_sid TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN twilio_auth_token TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN twilio_from TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN twilio_content_sid TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN twilio_content_variables TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN twilio_message TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN twilio_media_url TEXT;");
+            }
+
+            // Check for Twilio columns in order_bumps
+            $bumpColsTwilio = $this->conn->query("PRAGMA table_info(order_bumps)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasBumpTwilio = false;
+            foreach ($bumpColsTwilio as $col) {
+                if ($col['name'] === 'twilio_content_sid')
+                    $hasBumpTwilio = true;
+            }
+            if (!$hasBumpTwilio) {
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN twilio_content_sid TEXT;");
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN twilio_content_variables TEXT;");
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN twilio_message TEXT;");
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN twilio_media_url TEXT;");
+            }
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {
