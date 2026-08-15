@@ -398,6 +398,29 @@ class Database
                 $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN twilio_media_url TEXT;");
             }
 
+            // Check for SMS (DisparoPro) columns in products
+            $prodColsSms = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasSms = false;
+            foreach ($prodColsSms as $col) {
+                if ($col['name'] === 'sms_message')
+                    $hasSms = true;
+            }
+            if (!$hasSms) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN sms_token TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN sms_message TEXT;");
+            }
+
+            // Check for SMS columns in order_bumps
+            $bumpColsSms = $this->conn->query("PRAGMA table_info(order_bumps)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasBumpSms = false;
+            foreach ($bumpColsSms as $col) {
+                if ($col['name'] === 'sms_message')
+                    $hasBumpSms = true;
+            }
+            if (!$hasBumpSms) {
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN sms_message TEXT;");
+            }
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {

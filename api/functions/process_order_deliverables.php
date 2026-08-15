@@ -5,9 +5,9 @@
  * @param array $productsList List of products (must contain 'sku')
  * @param array $customerData Must contain ['phone', 'name', 'email']
  * @param PDO $db Database connection
- * @param array $types Types to send: ['wpp', 'email'] (default: both)
+ * @param array $types Types to send: ['wpp', 'email', 'sms'] (default: all)
  */
-function processOrderDeliverables($productsList, $customerData, $db, $types = ['wpp', 'email'])
+function processOrderDeliverables($productsList, $customerData, $db, $types = ['wpp', 'email', 'sms'])
 {
     $results = [];
     $sentCount = 0;
@@ -32,8 +32,10 @@ function processOrderDeliverables($productsList, $customerData, $db, $types = ['
                 SELECT ob.deliverable_type, ob.deliverable_text, ob.deliverable_file,
                        ob.deliverable_email_subject, ob.deliverable_email_body,
                        ob.twilio_content_sid, ob.twilio_content_variables, ob.twilio_message, ob.twilio_media_url,
+                       ob.sms_message,
                        p.evolution_instance, p.evolution_token, p.evolution_url,
                        p.twilio_account_sid, p.twilio_auth_token, p.twilio_from,
+                       p.sms_token,
                        p.name as product_name
                 FROM order_bumps ob
                 JOIN products p ON ob.product_id = p.id
@@ -43,7 +45,7 @@ function processOrderDeliverables($productsList, $customerData, $db, $types = ['
             $deliverableConfig = $stmt->fetch(PDO::FETCH_ASSOC);
         } else {
             // Main Product (lookup by slug)
-            $stmt = $db->prepare("SELECT evolution_instance, evolution_token, evolution_url, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, twilio_account_sid, twilio_auth_token, twilio_from, twilio_content_sid, twilio_content_variables, twilio_message, twilio_media_url, name as product_name FROM products WHERE slug = ?");
+            $stmt = $db->prepare("SELECT evolution_instance, evolution_token, evolution_url, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, twilio_account_sid, twilio_auth_token, twilio_from, twilio_content_sid, twilio_content_variables, twilio_message, twilio_media_url, sms_token, sms_message, name as product_name FROM products WHERE slug = ?");
             $stmt->execute([$sku]);
             $deliverableConfig = $stmt->fetch(PDO::FETCH_ASSOC);
         }
@@ -111,7 +113,41 @@ function processOrderDeliverables($productsList, $customerData, $db, $types = ['
             }
         }
 
-        // 2. Email Sending
+        // 2. SMS Sending (DisparoPro API)
+        if (in_array('sms', $types)) {
+            require_once __DIR__ . '/send_sms_disparopro.php';
+
+            $smsApiKey = !empty($deliverableConfig['sms_token']) ? $deliverableConfig['sms_token'] : (getenv('DISPAROPRO_API_KEY') ?: ($_ENV['DISPAROPRO_API_KEY'] ?? ''));
+            $smsMsg = $deliverableConfig['sms_message'] ?? '';
+
+            if (!empty($smsApiKey) && !empty($smsMsg) && !empty($customerPhone)) {
+                // Ensure product name is present for shortcode
+                if (empty($customerData['product_name']) && !empty($deliverableConfig['product_name'])) {
+                    $customerData['product_name'] = $deliverableConfig['product_name'];
+                }
+
+                $finalSmsMsg = replaceShortcodes($smsMsg, $customerData, '');
+                $resSms = sendSmsDisparoPro($smsApiKey, $customerPhone, $finalSmsMsg, $sku);
+
+                $statusKey = 'sms_status';
+                $found = false;
+                foreach ($results as &$r) {
+                    if ($r['sku'] === $sku) {
+                        $r[$statusKey] = $resSms['success'] ? 'sent' : 'failed';
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $results[] = ['sku' => $sku, $statusKey => $resSms['success'] ? 'sent' : 'failed'];
+                }
+                if ($resSms['success']) {
+                    $sentCount++;
+                }
+            }
+        }
+
+        // 3. Email Sending
         if (in_array('email', $types)) {
             if ($deliverableConfig && !empty($deliverableConfig['deliverable_email_subject']) && !empty($deliverableConfig['deliverable_email_body'])) {
                 // Ensure product name is present for shortcode
@@ -126,7 +162,7 @@ function processOrderDeliverables($productsList, $customerData, $db, $types = ['
 
                 // Track result
                 $statusKey = 'email_status';
-                // Find existing item in results if WPP ran, or create new
+                // Find existing item in results if WPP or SMS ran, or create new
                 $found = false;
                 foreach ($results as &$r) {
                     if ($r['sku'] === $sku) {
@@ -137,6 +173,9 @@ function processOrderDeliverables($productsList, $customerData, $db, $types = ['
                 }
                 if (!$found) {
                     $results[] = ['sku' => $sku, $statusKey => $resEmail['success'] ? 'sent' : 'failed'];
+                }
+                if ($resEmail['success']) {
+                    $sentCount++;
                 }
             }
         }

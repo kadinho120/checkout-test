@@ -519,6 +519,58 @@ require_once 'auth.php';
 
                     <hr class="border-slate-800 my-4">
 
+                    <!-- SMS Deliverable (DisparoPro) -->
+                    <div>
+                        <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i data-lucide="smartphone" class="text-emerald-500 w-5 h-5"></i>
+                            Entrega Automática (SMS - DisparoPro)
+                        </h4>
+
+                        <div class="bg-slate-950/50 p-4 rounded-lg border border-slate-800 space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Token da API DisparoPro</label>
+                                <input type="password" x-model="form.sms_token"
+                                    placeholder="Deixe vazio para usar a variável DISPAROPRO_API_KEY do Easypanel"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-emerald-500 outline-none font-mono text-sm">
+                                <p class="text-[11px] text-slate-500 mt-1">Se configurado nas variáveis do Easypanel (<code>DISPAROPRO_API_KEY</code>), você não precisa preencher aqui.</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Mensagem de SMS</label>
+                                <textarea x-model="form.sms_message" rows="3"
+                                    placeholder="Olá {primeiro_nome}! Seu pedido de {nome_do_produto} foi confirmado. Acesse: https://..."
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white resize-none focus:border-emerald-500 outline-none"></textarea>
+                                <div class="flex gap-2 mt-2 flex-wrap">
+                                    <template
+                                        x-for="tag in ['{primeiro_nome}', '{nome_completo}', '{email}', '{telefone}', '{pix_copia_cola}', '{nome_do_produto}']">
+                                        <span @click="copyToClipboard(tag)"
+                                            class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none"
+                                            x-text="tag" title="Clique para copiar"></span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Test SMS Section -->
+                            <div class="mt-4 pt-4 border-t border-slate-800 flex items-end gap-3">
+                                <div class="flex-1">
+                                    <label class="block text-xs font-bold text-slate-400 mb-1">Telefone para Teste (SMS)</label>
+                                    <input type="text" x-model="testSmsPhone" placeholder="11999887744 ou 5511999887744"
+                                        class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm focus:border-emerald-500 outline-none">
+                                </div>
+                                <button @click="testSms()" :disabled="isTestingSms"
+                                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded font-bold text-sm transition flex items-center gap-2 h-[38px]">
+                                    <span x-show="isTestingSms" class="animate-spin"><i data-lucide="loader-2"
+                                            class="w-4 h-4"></i></span>
+                                    <span x-show="!isTestingSms"><i data-lucide="send" class="w-4 h-4 inline mr-1"></i> Testar SMS</span>
+                                </button>
+                            </div>
+                            <p x-show="testSmsResult" class="text-xs mt-2"
+                                :class="testSmsResult?.success ? 'text-green-400' : 'text-red-400'" x-text="testSmsResult?.message"></p>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-800 my-4">
+
                     <!-- Email Deliverable -->
                     <div>
                         <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -719,6 +771,33 @@ require_once 'auth.php';
                                             <input x-model="bump.twilio_media_url" type="text"
                                                 placeholder="URL de Mídia / Arquivo do Bump (Opcional)"
                                                 class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs focus:border-red-500 outline-none">
+                                        </div>
+                                    </div>
+
+                                    <!-- Bump SMS (DisparoPro) -->
+                                    <div class="mt-3 border-t border-slate-800 pt-3">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i data-lucide="smartphone" class="w-3 h-3 text-emerald-500"></i>
+                                            <span class="text-xs font-bold text-slate-400">Entrega por SMS (DisparoPro)</span>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <textarea x-model="bump.sms_message" rows="2"
+                                                placeholder="Mensagem de SMS do Bump..."
+                                                class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-xs resize-none focus:border-emerald-500 outline-none"></textarea>
+                                            <div class="flex gap-2 mt-1 flex-wrap">
+                                                <template
+                                                    x-for="tag in ['{primeiro_nome}', '{nome_completo}', '{email}', '{telefone}', '{pix_copia_cola}']">
+                                                    <span @click="copyToClipboard(tag)"
+                                                        class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded cursor-pointer hover:bg-slate-700 hover:text-white transition select-none"
+                                                        x-text="tag" title="Clique para copiar"></span>
+                                                </template>
+                                            </div>
+                                            <div class="flex justify-end">
+                                                <button @click="testBumpSms(bump)" type="button"
+                                                    class="text-[10px] bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 px-3 py-1 rounded border border-emerald-600/20 flex items-center gap-1 transition font-bold">
+                                                    <i data-lucide="send" class="w-3 h-3"></i> Testar SMS do Bump
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1089,12 +1168,15 @@ require_once 'auth.php';
                 isTesting: false,
                 isTestingEmail: false,
                 isTestingTwilio: false,
+                isTestingSms: false,
                 testPhone: '',
                 testEmailAddress: '',
                 testTwilioPhone: '',
+                testSmsPhone: '',
                 testResult: null,
                 testEmailResult: null,
                 testTwilioResult: null,
+                testSmsResult: null,
                 form: {
                     id: null,
                     name: '',
@@ -1121,6 +1203,8 @@ require_once 'auth.php';
                     twilio_content_variables: '',
                     twilio_message: '',
                     twilio_media_url: '',
+                    sms_token: '',
+                    sms_message: '',
                     bumps: [],
                     pixels: [],
                     fake_notifications: false,
@@ -1215,6 +1299,8 @@ require_once 'auth.php';
                                     twilio_content_variables: data.twilio_content_variables || '',
                                     twilio_message: data.twilio_message || '',
                                     twilio_media_url: data.twilio_media_url || '',
+                                    sms_token: data.sms_token || '',
+                                    sms_message: data.sms_message || '',
                                     bumps: data.bumps || [],
                                     pixels: data.pixels || [],
                                     fake_notifications: data.fake_notifications == 1,
@@ -1274,6 +1360,8 @@ require_once 'auth.php';
                             twilio_content_variables: '',
                             twilio_message: '',
                             twilio_media_url: '',
+                            sms_token: '',
+                            sms_message: '',
                             bumps: [],
                             pixels: [],
                             track_initiate_checkout: true,
@@ -1346,7 +1434,8 @@ require_once 'auth.php';
                         twilio_content_sid: '',
                         twilio_content_variables: '',
                         twilio_message: '',
-                        twilio_media_url: ''
+                        twilio_media_url: '',
+                        sms_message: ''
                     });
                     this.$nextTick(() => lucide.createIcons());
                 },
@@ -1557,6 +1646,88 @@ require_once 'auth.php';
                                 alert('Sucesso! E-mail de teste do bump enviado.');
                             } else {
                                 alert('Erro: ' + (data.error || 'Falha no envio.'));
+                            }
+                        })
+                        .catch(err => {
+                            btn.disabled = false;
+                            btn.innerHTML = originalText;
+                            this.$nextTick(() => lucide.createIcons());
+                            alert('Erro na requisição.');
+                            console.error(err);
+                        });
+                },
+
+                testSms() {
+                    if (!this.testSmsPhone) {
+                        alert('Digite um telefone para teste do SMS.');
+                        return;
+                    }
+                    this.isTestingSms = true;
+                    this.testSmsResult = null;
+
+                    const payload = {
+                        ...this.form,
+                        test_phone: this.testSmsPhone
+                    };
+
+                    fetch('../api/v1/test-sms.php', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isTestingSms = false;
+                            if (data.success) {
+                                this.testSmsResult = { success: true, message: 'Sucesso! SMS enviado via DisparoPro.' };
+                            } else {
+                                this.testSmsResult = { success: false, message: 'Erro SMS: ' + (data.error || JSON.stringify(data.response)) };
+                            }
+                        })
+                        .catch(err => {
+                            this.isTestingSms = false;
+                            this.testSmsResult = { success: false, message: 'Erro na requisição ao testar SMS.' };
+                            console.error(err);
+                        });
+                },
+
+                testBumpSms(bump) {
+                    const phone = this.testSmsPhone || this.testPhone || this.testTwilioPhone;
+                    if (!phone) {
+                        alert('Digite um telefone de teste no campo do produto principal acima antes de testar.');
+                        return;
+                    }
+                    if (!bump.sms_message) {
+                        alert('Configure o texto da mensagem de SMS do bump antes de testar.');
+                        return;
+                    }
+
+                    const btn = event.currentTarget;
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> Testando...';
+                    this.$nextTick(() => lucide.createIcons());
+
+                    const payload = {
+                        sms_token: this.form.sms_token,
+                        sms_message: bump.sms_message,
+                        name: bump.title,
+                        test_phone: phone
+                    };
+
+                    fetch('../api/v1/test-sms.php', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            btn.disabled = false;
+                            btn.innerHTML = originalText;
+                            this.$nextTick(() => lucide.createIcons());
+
+                            if (data.success) {
+                                alert('Sucesso! SMS do bump enviado para ' + phone);
+                            } else {
+                                alert('Erro DisparoPro: ' + (data.error || JSON.stringify(data.response)));
                             }
                         })
                         .catch(err => {

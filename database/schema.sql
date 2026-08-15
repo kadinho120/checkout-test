@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS products (
     twilio_content_variables TEXT,
     twilio_message TEXT,
     twilio_media_url TEXT,
+    sms_token TEXT,
+    sms_message TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -64,6 +66,7 @@ CREATE TABLE IF NOT EXISTS order_bumps (
     twilio_content_variables TEXT,
     twilio_message TEXT,
     twilio_media_url TEXT,
+    sms_message TEXT,
     FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
