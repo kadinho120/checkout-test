@@ -6,9 +6,10 @@
  * @param string $phone Recipient phone number (e.g., 5511999887744 or with masks)
  * @param string $message Text content of the SMS
  * @param string|null $partnerId Optional partner identifier (max 20 chars)
+ * @param string|null $url Optional separate URL to be shortened by DisparoPro
  * @return array ['success' => bool, 'http_code' => int, 'response' => array|null, 'error' => string|null, 'detail' => array|null]
  */
-function sendSmsDisparoPro($apiKey = null, $phone = '', $message = '', $partnerId = null)
+function sendSmsDisparoPro($apiKey = null, $phone = '', $message = '', $partnerId = null, $url = null)
 {
     // 1. Resolve API Key (Parameter > getenv > $_ENV)
     $apiKey = !empty($apiKey) ? trim($apiKey) : (getenv('DISPAROPRO_API_KEY') ?: ($_ENV['DISPAROPRO_API_KEY'] ?? ''));
@@ -33,7 +34,7 @@ function sendSmsDisparoPro($apiKey = null, $phone = '', $message = '', $partnerI
         ];
     }
 
-    if (empty(trim($message))) {
+    if (empty(trim($message)) && empty($url)) {
         return [
             'success' => false,
             'http_code' => 0,
@@ -59,23 +60,41 @@ function sendSmsDisparoPro($apiKey = null, $phone = '', $message = '', $partnerI
         ];
     }
 
-    // 3. Generate or sanitize partner ID
+    // 3. Extract URL if embedded in message or passed as separate argument
+    $targetUrl = !empty($url) ? trim($url) : null;
+    $cleanMessage = trim($message);
+
+    if (empty($targetUrl)) {
+        // Automatically extract any http/https URL present in the message text
+        if (preg_match('/(https?:\/\/[^\s]+)/i', $cleanMessage, $matches)) {
+            $targetUrl = $matches[1];
+            // Remove the raw URL from the message body so DisparoPro attaches its shortened version
+            $cleanMessage = trim(str_replace($targetUrl, '', $cleanMessage));
+            $cleanMessage = preg_replace('/\s+/', ' ', $cleanMessage);
+        }
+    }
+
+    // 4. Generate or sanitize partner ID
     if (empty($partnerId)) {
         $partnerId = substr(md5(uniqid(mt_rand(), true)), 0, 10);
     } else {
         $partnerId = substr(preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$partnerId), 0, 20);
     }
 
-    // 4. Build payload
-    $payload = [
-        [
-            'numero' => $cleanPhone,
-            'servico' => 'short',
-            'mensagem' => $message,
-            'parceiro_id' => $partnerId,
-            'codificacao' => '0'
-        ]
+    // 5. Build payload with separate 'url' field for DisparoPro smart shortening
+    $itemPayload = [
+        'numero' => $cleanPhone,
+        'servico' => 'short',
+        'mensagem' => $cleanMessage,
+        'parceiro_id' => $partnerId,
+        'codificacao' => '0'
     ];
+
+    if (!empty($targetUrl)) {
+        $itemPayload['url'] = $targetUrl;
+    }
+
+    $payload = [$itemPayload];
 
     $endpoint = 'https://apihttp.disparopro.com.br/mt';
 
