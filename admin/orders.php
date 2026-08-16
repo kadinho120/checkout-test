@@ -299,6 +299,7 @@ require_once 'auth.php';
                 isLoading: true,
                 isResending: null,
                 isRecovering: null,
+                isMarkingPaid: null,
 
                 init() {
                     this.fetchOrders();
