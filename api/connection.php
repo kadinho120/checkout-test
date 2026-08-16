@@ -421,6 +421,21 @@ class Database
                 $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN sms_message TEXT;");
             }
 
+            // Check for Manual Pix & WhatsApp support columns in products
+            $prodColsManualPix = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
+            $hasManualPixKey = false;
+            foreach ($prodColsManualPix as $col) {
+                if ($col['name'] === 'pix_key')
+                    $hasManualPixKey = true;
+            }
+            if (!$hasManualPixKey) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN pix_key TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN pix_receiver_name TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN pix_receiver_city TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN pix_whatsapp_number TEXT;");
+                $this->conn->exec("ALTER TABLE products ADD COLUMN pix_whatsapp_message TEXT;");
+            }
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {

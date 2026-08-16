@@ -1012,6 +1012,26 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     Aguardando Pagamento
                 `;
             }
+
+            const isManualPix = !!(pixData.is_manual || pixData.whatsapp_url);
+
+            const whatsappSectionHtml = (isManualPix && pixData.whatsapp_url) ? `
+                <div class="mt-4 p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/50 rounded-xl text-left">
+                    <div class="flex items-center gap-2 mb-1.5 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                        <span>Instruções para Liberação do Acesso:</span>
+                    </div>
+                    <ol class="text-[11px] text-emerald-900 dark:text-slate-300 space-y-1 list-decimal list-inside pl-0.5">
+                        <li>Copie o código Pix acima ou escaneie o QR Code no seu banco.</li>
+                        <li>Efetue o pagamento de <strong>${pixData.formattedPrice}</strong>.</li>
+                        <li>Clique no botão abaixo para <strong>enviar o comprovante no WhatsApp</strong> e liberar seu produto!</li>
+                    </ol>
+                </div>
+                <a href="${pixData.whatsapp_url}" target="_blank" rel="noopener" class="mt-3 w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold py-3.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-500/20 active:scale-[0.99]">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i> ENVIAR COMPROVANTE NO WHATSAPP
+                </a>
+            ` : '';
+
             pixWaitView.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Pagamento via PIX</h3>
                 <p class="text-sm text-gray-600 dark:text-slate-400 mb-6">Escaneie o QR Code abaixo para finalizar.</p>
@@ -1026,10 +1046,11 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <input readonly value="${pixData.brCode}" class="bg-transparent text-xs text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate">
                     <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 dark:hover:text-white transition">COPIAR</button>
                 </div>
-                <button onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg mb-4">
+                <button onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg mb-2">
                     <i data-lucide="copy" class="w-4 h-4"></i> COPIAR PIX
                 </button>
-                <div class="animate-pulse text-green-600 dark:text-green-500 text-sm font-bold flex items-center justify-center gap-2">
+                ${whatsappSectionHtml}
+                <div class="mt-4 animate-pulse text-green-600 dark:text-green-500 text-sm font-bold flex items-center justify-center gap-2">
                     <i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Aguardando confirmação...
                 </div>
             `;
@@ -1040,7 +1061,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="bg-white p-2 rounded-xl inline-block mb-4 shadow-lg">
                             <img src="${pixData.qrCodeImage}" class="w-48 h-48">
                         </div>
-                        <div class="w-full bg-gray-100 dark:bg-slate-950 p-3 rounded-2xl border border-gray-200 dark:border-slate-800 flex flex-col gap-3 mb-4">
+                        <div class="w-full bg-gray-100 dark:bg-slate-950 p-3 rounded-2xl border border-gray-200 dark:border-slate-800 flex flex-col gap-3 mb-2">
                             <div class="flex items-center gap-2 px-1">
                                 <input readonly value="${pixData.brCode}" class="bg-transparent text-[10px] text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate">
                                 <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 transition uppercase shrink-0">Copiar</button>
@@ -1049,7 +1070,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <i data-lucide="copy" class="w-4 h-4"></i> COPIAR PIX
                             </button>
                         </div>
-                        <div class="animate-pulse text-green-600 dark:text-green-500 text-[10px] font-bold flex items-center gap-2">
+                        ${whatsappSectionHtml}
+                        <div class="mt-3 animate-pulse text-green-600 dark:text-green-500 text-[10px] font-bold flex items-center gap-2">
                             <i data-lucide="loader" class="w-3 h-3 animate-spin"></i> AGUARDANDO PAGAMENTO...
                         </div>
                     </div>

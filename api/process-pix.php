@@ -13,6 +13,7 @@ require_once __DIR__ . '/functions/generate_random_phone.php';
 require_once __DIR__ . '/functions/send_utmify_event.php';
 require_once __DIR__ . '/functions/handle_woovi_pix_payment.php';
 require_once __DIR__ . '/functions/handle_appmax_pix_payment.php';
+require_once __DIR__ . '/functions/handle_manual_pix_payment.php';
 
 header('Content-Type: application/json');
 
@@ -38,11 +39,27 @@ if (isset($params['gateway']) && !empty($params['gateway'])) {
         // Fallback default
         $gateway = 'woovi';
     }
+} elseif (isset($params['products'][0]['sku']) && !empty($params['products'][0]['sku'])) {
+    try {
+        $database = new Database();
+        $db = $database->getConnection();
+        $stmt = $db->prepare("SELECT payment_gateway FROM products WHERE slug = ?");
+        $stmt->execute([$params['products'][0]['sku']]);
+        $prodGateway = $stmt->fetchColumn();
+        if ($prodGateway) {
+            $gateway = strtolower(trim($prodGateway));
+        }
+    } catch (Exception $e) {
+        // Fallback default
+        $gateway = 'woovi';
+    }
 }
 
 // 4. Executa a função do gateway apropriado
 if ($gateway === 'appmax') {
     handle_appmax_pix_payment();
+} elseif ($gateway === 'manual_pix' || $gateway === 'pix_manual' || $gateway === 'direct_pix') {
+    handle_manual_pix_payment();
 } else {
     handle_woovi_pix_payment();
 }

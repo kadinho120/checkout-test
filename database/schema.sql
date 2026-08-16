@@ -45,6 +45,11 @@ CREATE TABLE IF NOT EXISTS products (
     twilio_media_url TEXT,
     sms_token TEXT,
     sms_message TEXT,
+    pix_key TEXT,
+    pix_receiver_name TEXT,
+    pix_receiver_city TEXT,
+    pix_whatsapp_number TEXT,
+    pix_whatsapp_message TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

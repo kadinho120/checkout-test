@@ -302,7 +302,63 @@ require_once 'auth.php';
                                     class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
                                     <option value="woovi">Woovi (OpenPix)</option>
                                     <option value="appmax">Appmax (Pix)</option>
+                                    <option value="manual_pix">Chave Pix Direta (QR Code Próprio + Envio de Comprovante no WhatsApp)</option>
                                 </select>
+                            </div>
+
+                            <!-- Configurações de Chave Pix Direta e WhatsApp -->
+                            <div x-show="form.payment_gateway === 'manual_pix'" x-transition class="bg-gradient-to-r from-emerald-950/30 to-slate-900/50 border border-emerald-500/30 rounded-xl p-4 space-y-3">
+                                <div class="flex items-center gap-2 border-b border-emerald-500/20 pb-2">
+                                    <i data-lucide="qr-code" class="w-4 h-4 text-emerald-400"></i>
+                                    <h4 class="font-bold text-white text-sm">Configurações da Chave Pix & WhatsApp</h4>
+                                </div>
+                                <p class="text-xs text-slate-400">
+                                    Gera o código <strong>Pix Copia e Cola</strong> e <strong>QR Code</strong> oficiais direto para a sua chave Pix (sem taxas de intermediário) e instrui o cliente a enviar o comprovante no WhatsApp.
+                                </p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-emerald-300 mb-1">Chave Pix *</label>
+                                        <input x-model="form.pix_key" type="text" placeholder="CPF, CNPJ, E-mail, Telefone ou EVP"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-emerald-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-emerald-300 mb-1">Nome do Titular da Conta *</label>
+                                        <input x-model="form.pix_receiver_name" type="text" placeholder="Ex: Rodrigo Neves (Max 25 caracteres)"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-emerald-500 outline-none">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-emerald-300 mb-1">Cidade do Titular</label>
+                                        <input x-model="form.pix_receiver_city" type="text" placeholder="Ex: Vitoria ou Sao Paulo"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-emerald-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-emerald-300 mb-1">WhatsApp para Envio do Comprovante *</label>
+                                        <input x-model="form.pix_whatsapp_number" type="text" placeholder="Ex: 5527981577407"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-emerald-500 outline-none">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-xs font-semibold text-emerald-300">Mensagem Pré-formatada do WhatsApp</label>
+                                        <span class="text-[10px] text-slate-400">Clique nas tags para copiar</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1 mb-1.5">
+                                        <span @click="copyToClipboard('{nome}')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{nome}</span>
+                                        <span @click="copyToClipboard('{primeiro_nome}')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{primeiro_nome}</span>
+                                        <span @click="copyToClipboard('{produto}')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{produto}</span>
+                                        <span @click="copyToClipboard('{valor}')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{valor}</span>
+                                        <span @click="copyToClipboard('{pedido_id}')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{pedido_id}</span>
+                                        <span @click="copyToClipboard('{pix_chave}')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{pix_chave}</span>
+                                    </div>
+                                    <textarea x-model="form.pix_whatsapp_message" rows="2"
+                                        placeholder="Olá! Acabei de fazer o pagamento do pedido #{pedido_id} ({produto}) no valor de {valor}. Segue o comprovante:"
+                                        class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-emerald-500 outline-none resize-none"></textarea>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-400 mb-1">Texto do Botão de CTA (Checkout)</label>
@@ -1301,6 +1357,11 @@ require_once 'auth.php';
                                     twilio_media_url: data.twilio_media_url || '',
                                     sms_token: data.sms_token || '',
                                     sms_message: data.sms_message || '',
+                                    pix_key: data.pix_key || '',
+                                    pix_receiver_name: data.pix_receiver_name || '',
+                                    pix_receiver_city: data.pix_receiver_city || '',
+                                    pix_whatsapp_number: data.pix_whatsapp_number || '',
+                                    pix_whatsapp_message: data.pix_whatsapp_message || '',
                                     bumps: data.bumps || [],
                                     pixels: data.pixels || [],
                                     fake_notifications: data.fake_notifications == 1,
@@ -1362,6 +1423,11 @@ require_once 'auth.php';
                             twilio_media_url: '',
                             sms_token: '',
                             sms_message: '',
+                            pix_key: '',
+                            pix_receiver_name: '',
+                            pix_receiver_city: '',
+                            pix_whatsapp_number: '',
+                            pix_whatsapp_message: '',
                             bumps: [],
                             pixels: [],
                             track_initiate_checkout: true,
