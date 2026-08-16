@@ -60,21 +60,7 @@ function sendSmsDisparoPro($apiKey = null, $phone = '', $message = '', $partnerI
         ];
     }
 
-    // 3. Extract URL if embedded in message or passed as separate argument
-    $targetUrl = !empty($url) ? trim($url) : null;
-    $cleanMessage = trim($message);
-
-    if (empty($targetUrl)) {
-        // Automatically extract any http/https URL present in the message text
-        if (preg_match('/(https?:\/\/[^\s]+)/i', $cleanMessage, $matches)) {
-            $targetUrl = $matches[1];
-            // Remove the raw URL from the message body so DisparoPro attaches its shortened version
-            $cleanMessage = trim(str_replace($targetUrl, '', $cleanMessage));
-            $cleanMessage = preg_replace('/\s+/', ' ', $cleanMessage);
-        }
-    }
-
-    // 4. Sanitize accents & special characters for 100% GSM-7 carrier compatibility
+    // 3. Sanitize accents & special characters for 100% GSM-7 carrier compatibility
     $accentMap = [
         'á'=>'a', 'à'=>'a', 'ã'=>'a', 'â'=>'a', 'ä'=>'a',
         'Á'=>'A', 'À'=>'A', 'Ã'=>'A', 'Â'=>'A', 'Ä'=>'A',
@@ -89,18 +75,23 @@ function sendSmsDisparoPro($apiKey = null, $phone = '', $message = '', $partnerI
         'ç'=>'c', 'Ç'=>'C',
         'ñ'=>'n', 'Ñ'=>'N'
     ];
-    $cleanMessage = strtr($cleanMessage, $accentMap);
+    $cleanMessage = strtr(trim($message), $accentMap);
     // Remove emojis or non-standard ASCII characters that cause carriers to drop the SMS
     $cleanMessage = preg_replace('/[^\x20-\x7E\n\r]/', '', $cleanMessage);
 
-    // 5. Generate or sanitize partner ID
+    // If separate URL is provided and not in message, append it
+    if (!empty($url) && strpos($cleanMessage, trim($url)) === false) {
+        $cleanMessage .= ' ' . trim($url);
+    }
+
+    // 4. Generate or sanitize partner ID
     if (empty($partnerId)) {
         $partnerId = substr(md5(uniqid(mt_rand(), true)), 0, 10);
     } else {
         $partnerId = substr(preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$partnerId), 0, 20);
     }
 
-    // 6. Build payload with separate 'url' field for DisparoPro smart shortening
+    // 5. Build payload
     $itemPayload = [
         'numero' => $cleanPhone,
         'servico' => 'short',
@@ -108,10 +99,6 @@ function sendSmsDisparoPro($apiKey = null, $phone = '', $message = '', $partnerI
         'parceiro_id' => $partnerId,
         'codificacao' => '0'
     ];
-
-    if (!empty($targetUrl)) {
-        $itemPayload['url'] = $targetUrl;
-    }
 
     $payload = [$itemPayload];
 
