@@ -130,13 +130,29 @@ require_once 'auth.php';
                                     <td class="p-4 text-white font-mono text-sm"
                                         x-text="'R$ ' + parseFloat(order.total_amount || 0).toFixed(2)"></td>
                                     <td class="p-4 text-center">
-                                        <span x-show="order.status === 'paid'"
-                                            class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-1 rounded text-xs font-bold">PAGO</span>
-                                        <span x-show="order.status === 'pending'"
-                                            class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded text-xs font-bold">PENDENTE</span>
+                                        <div class="flex items-center justify-center gap-1.5 mb-1.5">
+                                            <span x-show="order.status === 'paid'"
+                                                class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded text-xs font-bold">PAGO</span>
+                                            <span x-show="order.status === 'pending'"
+                                                class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded text-xs font-bold">PENDENTE</span>
+                                            <span x-show="order.gateway === 'manual_pix'"
+                                                class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold" title="Pix Manual">MANUAL</span>
+                                        </div>
 
-                                        <!-- Actions -->
-                                        <div x-show="order.status === 'paid'" class="mt-2 flex justify-center gap-2">
+                                        <!-- Botão Marcar Como Pago (Para Pedidos Pendentes / Pix Manual) -->
+                                        <div x-show="order.status === 'pending'" class="mb-2 flex justify-center">
+                                            <button @click="markAsPaid(order.id)"
+                                                :disabled="isMarkingPaid === order.id"
+                                                class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-2.5 py-1 rounded border border-emerald-500/30 flex items-center gap-1 transition shadow hover:shadow-emerald-500/20 active:scale-95"
+                                                title="Marcar como Pago e Enviar Acessos Automaticamente">
+                                                <i x-show="isMarkingPaid !== order.id" data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                                <i x-show="isMarkingPaid === order.id" data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>
+                                                <span>Marcar Pago</span>
+                                            </button>
+                                        </div>
+
+                                        <!-- Actions quando Pago -->
+                                        <div x-show="order.status === 'paid'" class="mt-1 flex justify-center gap-2">
                                             <!-- Reenviar WhatsApp -->
                                             <button @click="resendDeliverable(order.id, 'wpp')"
                                                 :disabled="isResending === order.id + '_wpp'"
@@ -159,7 +175,8 @@ require_once 'auth.php';
                                             </button>
                                         </div>
 
-                                        <div x-show="order.status === 'pending'" class="mt-2 flex justify-center gap-2">
+                                        <!-- Actions de Recuperação quando Pendente -->
+                                        <div x-show="order.status === 'pending'" class="flex justify-center gap-2">
                                             <!-- Recuperar WhatsApp -->
                                             <button @click="recoverPix(order.id, 'wpp')"
                                                 :disabled="isRecovering === order.id + '_wpp'"
@@ -374,6 +391,33 @@ require_once 'auth.php';
                             console.error(err);
                             this.isRecovering = null;
                             alert('Erro de conexão ao recuperar.');
+                        });
+                },
+
+                markAsPaid(orderId) {
+                    if (!confirm(`Tem certeza que deseja marcar o Pedido #${orderId} como PAGO?\n\nIsso irá liberar o acesso e enviar automaticamente as mensagens de entrega (WhatsApp/Email) ao cliente.`)) return;
+
+                    this.isMarkingPaid = orderId;
+
+                    fetch('../api/v1/mark-order-paid.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ order_id: orderId })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isMarkingPaid = null;
+                            if (data.success) {
+                                alert(data.message || `Pedido #${orderId} marcado como PAGO com sucesso!`);
+                                this.fetchOrders();
+                            } else {
+                                alert('Erro: ' + (data.message || 'Falha ao processar pedido'));
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            this.isMarkingPaid = null;
+                            alert('Erro de conexão ao marcar pedido como pago.');
                         });
                 }
             }

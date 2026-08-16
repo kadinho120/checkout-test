@@ -1,0 +1,3 @@
+[2026-08-16 09:52:07] DEBUG: Início trackMetaPurchase para Pedido #4. Correlation: test_mark_123
+[2026-08-16 09:52:07] DEBUG: Dados NÃO encontrados na tracking_logs para test_mark_123. Usando fallback do json_data.
+[2026-08-16 09:52:07] DEBUG: SKU do produto principal: 
