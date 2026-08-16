@@ -74,14 +74,33 @@ function sendSmsDisparoPro($apiKey = null, $phone = '', $message = '', $partnerI
         }
     }
 
-    // 4. Generate or sanitize partner ID
+    // 4. Sanitize accents & special characters for 100% GSM-7 carrier compatibility
+    $accentMap = [
+        'á'=>'a', 'à'=>'a', 'ã'=>'a', 'â'=>'a', 'ä'=>'a',
+        'Á'=>'A', 'À'=>'A', 'Ã'=>'A', 'Â'=>'A', 'Ä'=>'A',
+        'é'=>'e', 'è'=>'e', 'ê'=>'e', 'ë'=>'e',
+        'É'=>'E', 'È'=>'E', 'Ê'=>'E', 'Ë'=>'E',
+        'í'=>'i', 'ì'=>'i', 'î'=>'i', 'ï'=>'i',
+        'Í'=>'I', 'Ì'=>'I', 'Î'=>'I', 'Ï'=>'I',
+        'ó'=>'o', 'ò'=>'o', 'õ'=>'o', 'ô'=>'o', 'ö'=>'o',
+        'Ó'=>'O', 'Ò'=>'O', 'Õ'=>'O', 'Ô'=>'O', 'Ö'=>'O',
+        'ú'=>'u', 'ù'=>'u', 'û'=>'u', 'ü'=>'u',
+        'Ú'=>'U', 'Ù'=>'U', 'Û'=>'U', 'Ü'=>'U',
+        'ç'=>'c', 'Ç'=>'C',
+        'ñ'=>'n', 'Ñ'=>'N'
+    ];
+    $cleanMessage = strtr($cleanMessage, $accentMap);
+    // Remove emojis or non-standard ASCII characters that cause carriers to drop the SMS
+    $cleanMessage = preg_replace('/[^\x20-\x7E\n\r]/', '', $cleanMessage);
+
+    // 5. Generate or sanitize partner ID
     if (empty($partnerId)) {
         $partnerId = substr(md5(uniqid(mt_rand(), true)), 0, 10);
     } else {
         $partnerId = substr(preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$partnerId), 0, 20);
     }
 
-    // 5. Build payload with separate 'url' field for DisparoPro smart shortening
+    // 6. Build payload with separate 'url' field for DisparoPro smart shortening
     $itemPayload = [
         'numero' => $cleanPhone,
         'servico' => 'short',
