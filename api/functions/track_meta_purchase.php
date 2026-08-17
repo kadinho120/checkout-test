@@ -116,10 +116,18 @@ function trackMetaPurchase($order_id, $db = null)
             $customerName = null;
         }
 
+        // Horário do evento: usa o horário em que o PIX / pedido foi gerado (created_at)
+        // Isso garante que o algoritmo da Meta atribua a conversão ao momento exato em que o cliente converteu
+        $eventTime = !empty($order['created_at']) ? strtotime($order['created_at']) : time();
+        if ($eventTime < (time() - 7 * 86400) || $eventTime > time()) {
+            $eventTime = time(); // Meta aceita eventos de até 7 dias no passado
+        }
+
         $eventData = [
             'correlation_id' => $correlation_id,
             'external_id' => $correlation_id, // Usado para Match de Alta Qualidade
             'value' => (int) ($order['total_amount'] * 100),
+            'event_time' => $eventTime,
             'customer' => [
                 'name' => $customerName,
                 'email' => $customerEmail,

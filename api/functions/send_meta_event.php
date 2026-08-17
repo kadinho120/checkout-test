@@ -72,11 +72,14 @@ function sendMetaEvent($pixelId, $token, $eventName, $eventData, $context = [])
         $customData['contents'] = $contents;
     }
 
+    // Horário do evento (se passado, usa a data de criação do pedido; senão time())
+    $eventTime = !empty($eventData['event_time']) ? (int) $eventData['event_time'] : time();
+
     $payload = [
         'data' => [
             [
                 'event_name' => $eventName,
-                'event_time' => time(),
+                'event_time' => $eventTime,
                 'event_id' => $eventData['correlation_id'] ?? uniqid('evt_', true),
                 'event_source_url' => $context['source_url'] ?? null,
                 'action_source' => 'website',
