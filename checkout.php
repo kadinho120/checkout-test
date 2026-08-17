@@ -298,6 +298,14 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
         <?php endif; ?>
 
+        <?php
+        $reqName = (int) ($product['request_name'] ?? 1) !== 0;
+        $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
+        $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
+        $hasPersonalData = $reqName || $reqEmail || $reqPhone;
+        $isPhysical = ($product['product_type'] ?? 'digital') === 'physical';
+        ?>
+
         <!-- COLUMN 2: CHECKOUT FORM -->
         <div class="<?= $isMinimalist ? 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl overflow-hidden' : 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl' ?>">
             
@@ -315,12 +323,18 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <?php endif; ?>
 
+            <?php if ($hasPersonalData): ?>
             <h2 id="checkout-step-header"
                 class="font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2 <?= $isMinimalist ? 'justify-center' : '' ?>">
                 <span
                     class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm text-white">1</span>
                 Dados Pessoais
             </h2>
+            <?php else: ?>
+            <h2 id="checkout-step-header"
+                class="hidden font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2 <?= $isMinimalist ? 'justify-center' : '' ?>">
+            </h2>
+            <?php endif; ?>
 
             <div id="payment-error"
                 class="hidden bg-red-100 border border-red-400 text-red-700 dark:bg-red-900/50 dark:border-red-700 dark:text-red-300 px-4 py-3 rounded-md mb-4 text-sm"
@@ -328,8 +342,43 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
             <form id="checkout-form" novalidate>
 
+                <!-- Downsell Modal HTML -->
+                <div id="downsell-modal" class="fixed inset-0 z-[99999] hidden flex items-center justify-center p-4">
+                    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm shadow-2xl"></div>
+                    <div class="downsell-content relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl overflow-y-auto max-h-[95vh] border border-orange-500/30 p-6 sm:p-8 text-center shadow-2xl">
+                        <div class="mb-4 sm:mb-6 inline-flex p-3 sm:p-4 bg-orange-500/10 rounded-full">
+                            <i data-lucide="gift" class="w-10 h-10 sm:w-12 sm:h-12 text-orange-500"></i>
+                        </div>
+                        
+                        <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight">Espera aí! 🛑</h2>
+                        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-4 sm:mb-6 font-medium leading-relaxed">
+                            Notamos que você está prestes a sair. Queremos te dar uma última chance de levar o 
+                            <span class="text-orange-500 font-bold"><?= htmlspecialchars($product['name']) ?></span> 
+                            com um desconto especial de liberação imediata.
+                        </p>
+
+                        <div class="bg-orange-500/5 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-orange-500/20">
+                            <span class="block text-[10px] sm:text-xs text-slate-500 uppercase font-bold mb-1">Preço Atualizado</span>
+                            <div class="flex items-center justify-center gap-2 sm:gap-3">
+                                <span class="text-sm sm:text-lg text-slate-500 line-through">R$ <?= format_price($product['price']) ?></span>
+                                <span class="text-3xl sm:text-4xl font-black text-orange-500">R$ <span id="downsell-new-price">0,00</span></span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <button type="button" onclick="acceptDownsell()" class="cta-button w-full py-4 sm:py-5 rounded-2xl text-white font-black text-base sm:text-lg uppercase tracking-wider flex items-center justify-center gap-2">
+                                APROVEITAR DESCONTO AGORA
+                            </button>
+                            <button type="button" onclick="closeDownsell()" class="w-full py-2 text-slate-500 hover:text-red-400 text-xs sm:text-sm font-bold transition">
+                                Não, prefiro pagar o valor cheio depois
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ($hasPersonalData || $isPhysical): ?>
                 <div class="space-y-4 mb-8">
-                    <?php if ((int) ($product['request_name'] ?? 1) !== 0): ?>
+                    <?php if ($reqName): ?>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">NOME</label>
                         <input type="text" id="name" placeholder="Digite seu nome..."
@@ -337,7 +386,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                             required>
                     </div>
                     <?php endif; ?>
-                    <?php if ((int) $product['request_email'] !== 0): ?>
+                    <?php if ($reqEmail): ?>
                         <div>
                             <label
                                 class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">E-MAIL</label>
@@ -346,41 +395,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                                 required>
                         </div>
                     <?php endif; ?>
-
-                    <!-- Downsell Modal HTML -->
-                    <div id="downsell-modal" class="fixed inset-0 z-[99999] hidden flex items-center justify-center p-4">
-                        <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm shadow-2xl"></div>
-                        <div class="downsell-content relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl overflow-y-auto max-h-[95vh] border border-orange-500/30 p-6 sm:p-8 text-center shadow-2xl">
-                            <div class="mb-4 sm:mb-6 inline-flex p-3 sm:p-4 bg-orange-500/10 rounded-full">
-                                <i data-lucide="gift" class="w-10 h-10 sm:w-12 sm:h-12 text-orange-500"></i>
-                            </div>
-                            
-                            <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight">Espera aí! 🛑</h2>
-                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-4 sm:mb-6 font-medium leading-relaxed">
-                                Notamos que você está prestes a sair. Queremos te dar uma última chance de levar o 
-                                <span class="text-orange-500 font-bold"><?= htmlspecialchars($product['name']) ?></span> 
-                                com um desconto especial de liberação imediata.
-                            </p>
-
-                            <div class="bg-orange-500/5 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-orange-500/20">
-                                <span class="block text-[10px] sm:text-xs text-slate-500 uppercase font-bold mb-1">Preço Atualizado</span>
-                                <div class="flex items-center justify-center gap-2 sm:gap-3">
-                                    <span class="text-sm sm:text-lg text-slate-500 line-through">R$ <?= format_price($product['price']) ?></span>
-                                    <span class="text-3xl sm:text-4xl font-black text-orange-500">R$ <span id="downsell-new-price">0,00</span></span>
-                                </div>
-                            </div>
-
-                            <div class="space-y-3">
-                                <button type="button" onclick="acceptDownsell()" class="cta-button w-full py-4 sm:py-5 rounded-2xl text-white font-black text-base sm:text-lg uppercase tracking-wider flex items-center justify-center gap-2">
-                                    APROVEITAR DESCONTO AGORA
-                                </button>
-                                <button type="button" onclick="closeDownsell()" class="w-full py-2 text-slate-500 hover:text-red-400 text-xs sm:text-sm font-bold transition">
-                                    Não, prefiro pagar o valor cheio depois
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <?php if ((int) $product['request_phone'] !== 0): ?>
+                    <?php if ($reqPhone): ?>
                         <div>
                             <label
                                 class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">WHATSAPP</label>
@@ -390,8 +405,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     <?php endif; ?>
 
-                    <?php if (($product['product_type'] ?? 'digital') === 'physical'): ?>
-                        <div class="grid grid-cols-6 gap-4 pt-4 border-t border-gray-100 dark:border-slate-800">
+                    <?php if ($isPhysical): ?>
+                        <div class="grid grid-cols-6 gap-4 <?= $hasPersonalData ? 'pt-4 border-t border-gray-100 dark:border-slate-800' : '' ?>">
                             <div class="col-span-6">
                                 <h3 class="text-xs font-black text-blue-500 uppercase tracking-widest mb-4">Dados de Entrega</h3>
                             </div>
@@ -446,10 +461,11 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
 
                 <h2 class="font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                     <span
-                        class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm text-white">2</span>
+                        class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm text-white"><?= $hasPersonalData ? '2' : '1' ?></span>
                     Pagamento
                 </h2>
 
@@ -1083,6 +1099,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             // Update Header
             const header = document.getElementById('checkout-step-header');
             if (header) {
+                header.classList.remove('hidden');
                 header.innerHTML = `
                     <span class="bg-green-500 w-8 h-8 rounded-full flex items-center justify-center text-sm animate-pulse"><i data-lucide="clock" class="w-4 h-4 text-white"></i></span>
                     Aguardando Pagamento
@@ -1173,6 +1190,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         };
 
         const showSuccessView = () => {
+            const header = document.getElementById('checkout-step-header');
+            if (header) header.classList.add('hidden');
             pixWaitView.classList.add('hidden');
             successView.classList.remove('hidden');
             // Backend tracking handles Purchase event via N8N/S2S
