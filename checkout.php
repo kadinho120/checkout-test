@@ -968,82 +968,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }
         };
 
-        // Disparo do Purchase para Pix Manual (limitado a 1x a cada 24h por usuário)
-        const trackManualPixPurchase = () => {
-            const isManual = (PLANOS['main'].gateway === 'manual_pix') || (pixPaymentState && pixPaymentState.is_manual);
-            if (!isManual) return;
-
-            const sku = PLANOS['main'].sku || 'default';
-            const storageKey = 'manual_pix_purchase_' + sku;
-            const lastTimestamp = localStorage.getItem(storageKey);
-            const now = Date.now();
-            const twentyFourHoursMs = 24 * 60 * 60 * 1000;
-
-            if (lastTimestamp && (now - parseInt(lastTimestamp, 10)) < twentyFourHoursMs) {
-                console.log('[Meta Pixel] Purchase já disparado nas últimas 24h para este usuário.');
-                return;
-            }
-
-            // Grava o timestamp no localStorage para evitar duplicidade em 24h
-            localStorage.setItem(storageKey, now.toString());
-
-            const totalValueInCents = calculateCurrentTotal();
-            const totalValue = totalValueInCents / 100;
-            const mainProduct = PLANOS['main'];
-            const allProducts = [{ sku: mainProduct.sku, name: mainProduct.name, price: currentProductPrice, qty: 1 }];
-
-            document.querySelectorAll('input[name="bumps[]"]:checked').forEach(el => {
-                allProducts.push({ sku: el.dataset.sku, name: el.dataset.name, price: parseFloat(el.dataset.price), qty: 1 });
-            });
-
-            const correlationId = (pixPaymentState && pixPaymentState.correlationId) ? pixPaymentState.correlationId : ('manual_' + now);
-
-            // 1. Disparo do Pixel no Navegador (Purchase)
-            if (typeof fbq === 'function') {
-                fbq('track', 'Purchase', {
-                    content_name: allProducts.map(p => p.name).join(', '),
-                    content_ids: allProducts.map(p => p.sku),
-                    content_type: 'product',
-                    value: totalValue,
-                    currency: 'BRL',
-                    num_items: allProducts.length
-                }, {
-                    eventID: correlationId
-                });
-                console.log('[Meta Pixel] Evento Purchase disparado com sucesso no clique de copiar Pix Manual!');
-            }
-
-            // 2. Disparo Meta S2S (Conversões API)
-            try {
-                const getCookie = (name) => {
-                    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-                    return match ? match[2] : null;
-                };
-
-                fetch(BACKEND_BASE_PATH + '/meta-s2s-tracking/save_correlation.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        correlation_id: correlationId,
-                        event_name: 'Purchase',
-                        fbc: getCookie('_fbc'),
-                        fbp: getCookie('_fbp'),
-                        client_user_agent: navigator.userAgent,
-                        event_source_url: window.location.href,
-                        value: totalValue,
-                        currency: 'BRL',
-                        pixel_id: PIXEL_ID,
-                        product_description: allProducts.map(p => p.name).join(' + ')
-                    })
-                }).catch(err => console.warn('Meta S2S Warning:', err));
-            } catch (e) { console.error(e); }
-        };
-
         // Copy to clipboard helper
         window.copyToClipboard = (text, element) => {
-            // Dispara o evento de Purchase no clique de copiar se for Pix Manual
-            trackManualPixPurchase();
-
             const btn = element || document.getElementById('btn-copy-pix');
             if (!btn) return;
             const original = btn.innerHTML;
