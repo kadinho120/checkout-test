@@ -642,7 +642,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 },
                 tracking: {
                     initiateCheckout: <?= (int)($product['track_initiate_checkout'] ?? 1) !== 0 ? 'true' : 'false' ?>,
-                    addPaymentInfo: <?= (int)($product['track_add_payment_info'] ?? 1) !== 0 ? 'true' : 'false' ?>
+                    addPaymentInfo: <?= (int)($product['track_add_payment_info'] ?? 1) !== 0 ? 'true' : 'false' ?>,
+                    purchaseOnPixCopy: <?= (int)($product['track_purchase_on_pix_copy'] ?? 0) !== 0 ? 'true' : 'false' ?>
                 },
                 gateway: <?= json_encode($product['payment_gateway'] ?? 'woovi') ?>,
                 product_type: <?= json_encode($product['product_type'] ?? 'digital') ?>
@@ -968,8 +969,82 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }
         };
 
+        // Disparo opcional do Purchase ao copiar o Pix (conforme configuração do produto)
+        const trackPixCopyPurchase = () => {
+            if (!PLANOS['main'].tracking || !PLANOS['main'].tracking.purchaseOnPixCopy) return;
+
+            const sku = PLANOS['main'].sku || 'default';
+            const storageKey = 'pix_copy_purchase_' + sku;
+            const lastTimestamp = localStorage.getItem(storageKey);
+            const now = Date.now();
+            const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+
+            if (lastTimestamp && (now - parseInt(lastTimestamp, 10)) < twentyFourHoursMs) {
+                console.log('[Meta Pixel] Purchase no copiar Pix já disparado nas últimas 24h para este usuário.');
+                return;
+            }
+
+            // Grava o timestamp no localStorage para evitar duplicidade em 24h
+            localStorage.setItem(storageKey, now.toString());
+
+            const totalValueInCents = calculateCurrentTotal();
+            const totalValue = totalValueInCents / 100;
+            const mainProduct = PLANOS['main'];
+            const allProducts = [{ sku: mainProduct.sku, name: mainProduct.name, price: currentProductPrice, qty: 1 }];
+
+            document.querySelectorAll('input[name="bumps[]"]:checked').forEach(el => {
+                allProducts.push({ sku: el.dataset.sku, name: el.dataset.name, price: parseFloat(el.dataset.price), qty: 1 });
+            });
+
+            const correlationId = (pixPaymentState && pixPaymentState.correlationId) ? pixPaymentState.correlationId : ('pix_' + now);
+
+            // 1. Disparo do Pixel no Navegador (Purchase)
+            if (typeof fbq === 'function') {
+                fbq('track', 'Purchase', {
+                    content_name: allProducts.map(p => p.name).join(', '),
+                    content_ids: allProducts.map(p => p.sku),
+                    content_type: 'product',
+                    value: totalValue,
+                    currency: 'BRL',
+                    num_items: allProducts.length
+                }, {
+                    eventID: correlationId
+                });
+                console.log('[Meta Pixel] Evento Purchase disparado com sucesso ao copiar o Pix!');
+            }
+
+            // 2. Disparo Meta S2S (Conversões API)
+            try {
+                const getCookie = (name) => {
+                    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                    return match ? match[2] : null;
+                };
+
+                fetch(BACKEND_BASE_PATH + '/meta-s2s-tracking/save_correlation.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        correlation_id: correlationId,
+                        event_name: 'Purchase',
+                        fbc: getCookie('_fbc'),
+                        fbp: getCookie('_fbp'),
+                        client_user_agent: navigator.userAgent,
+                        event_source_url: window.location.href,
+                        value: totalValue,
+                        currency: 'BRL',
+                        pixel_id: PIXEL_ID,
+                        product_description: allProducts.map(p => p.name).join(' + ')
+                    })
+                }).catch(err => console.warn('Meta S2S Warning:', err));
+            } catch (e) { console.error(e); }
+        };
+
         // Copy to clipboard helper
         window.copyToClipboard = (text, element) => {
+            if (PLANOS['main'].tracking && PLANOS['main'].tracking.purchaseOnPixCopy) {
+                trackPixCopyPurchase();
+            }
+
             const btn = element || document.getElementById('btn-copy-pix');
             if (!btn) return;
             const original = btn.innerHTML;

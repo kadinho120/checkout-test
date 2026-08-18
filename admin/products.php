@@ -952,6 +952,27 @@ require_once 'auth.php';
                                 </button>
                             </div>
                         </div>
+                        <div class="pt-3 border-t border-slate-800/80">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex items-start gap-2">
+                                    <i data-lucide="shopping-bag" class="w-4 h-4 text-purple-400 mt-0.5"></i>
+                                    <div>
+                                        <span class="text-sm font-medium text-slate-300">Disparar Purchase ao Copiar Código Pix</span>
+                                        <p class="text-xs text-slate-500 mt-0.5" x-text="form.track_purchase_on_pix_copy ? 'Dispara o evento de Purchase no clique de copiar o Pix.' : 'Purchase será disparado somente via API após marcar como pago / aprovação.'"></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <span class="text-xs font-medium text-slate-400"
+                                        x-text="form.track_purchase_on_pix_copy ? 'Ativado' : 'Desativado'"></span>
+                                    <button @click="form.track_purchase_on_pix_copy = !form.track_purchase_on_pix_copy"
+                                        class="w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none"
+                                        :class="form.track_purchase_on_pix_copy ? 'bg-green-500' : 'bg-slate-700'">
+                                        <span class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm"
+                                            :class="form.track_purchase_on_pix_copy ? 'translate-x-5' : 'translate-x-0'"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1276,6 +1297,7 @@ require_once 'auth.php';
                     compare_at_price: '',
                     track_initiate_checkout: true,
                     track_add_payment_info: true,
+                    track_purchase_on_pix_copy: false,
                     checkout_style: 'default',
                     product_type: 'digital',
                     checkout_cta_text: ''
@@ -1376,18 +1398,20 @@ require_once 'auth.php';
                                     downsell_discount_amount: data.downsell_discount_amount || 0,
                                     track_initiate_checkout: data.track_initiate_checkout != 0,
                                     track_add_payment_info: data.track_add_payment_info != 0,
+                                    track_purchase_on_pix_copy: data.track_purchase_on_pix_copy == 1,
                                     checkout_style: data.checkout_style || 'default',
                                     product_type: data.product_type || 'digital',
                                     payment_gateway: data.payment_gateway || 'woovi',
                                     checkout_cta_text: data.checkout_cta_text || '',
                                     show_close_button: data.show_close_button !== 0
                                 };
-                                // Fallback for legacy records (null/undefined => true)
+                                // Fallback for legacy records (null/undefined => true/false)
                                 if (data.request_email === undefined || data.request_email === null) this.form.request_email = true;
                                 if (data.request_phone === undefined || data.request_phone === null) this.form.request_phone = true;
                                 if (data.request_name === undefined || data.request_name === null) this.form.request_name = true;
                                 if (data.track_initiate_checkout === undefined || data.track_initiate_checkout === null) this.form.track_initiate_checkout = true;
                                 if (data.track_add_payment_info === undefined || data.track_add_payment_info === null) this.form.track_add_payment_info = true;
+                                if (data.track_purchase_on_pix_copy === undefined || data.track_purchase_on_pix_copy === null) this.form.track_purchase_on_pix_copy = false;
                                 if (data.show_close_button === undefined || data.show_close_button === null) this.form.show_close_button = true;
 
                                 this.isModalOpen = true;
@@ -1432,6 +1456,7 @@ require_once 'auth.php';
                             pixels: [],
                             track_initiate_checkout: true,
                             track_add_payment_info: true,
+                            track_purchase_on_pix_copy: false,
                             checkout_style: 'default',
                             product_type: 'digital',
                             payment_gateway: 'woovi',
