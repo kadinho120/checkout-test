@@ -96,6 +96,141 @@ require_once 'auth.php';
 
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 p-6">
 
+                <!-- Filtros de Busca e Data/Horário -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-6 shadow-xl space-y-4">
+                    <!-- Linha 1: Busca Geral + Status + Limite -->
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                        <!-- Campo de Busca -->
+                        <div class="md:col-span-6 relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 pointer-events-none">
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                            </span>
+                            <input type="text" x-model="filters.search" @keydown.enter="applyFilters()"
+                                placeholder="Buscar por cliente, e-mail, telefone, ID, transação..."
+                                class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5 placeholder-slate-500 transition">
+                        </div>
+
+                        <!-- Filtro de Status -->
+                        <div class="md:col-span-3">
+                            <select x-model="filters.status" @change="applyFilters()"
+                                class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block p-2.5 cursor-pointer">
+                                <option value="all">Todos os Status</option>
+                                <option value="paid">Aprovados / Pagos</option>
+                                <option value="pending">Pendentes</option>
+                                <option value="cancelled">Cancelados / Expirados</option>
+                            </select>
+                        </div>
+
+                        <!-- Limite por Página -->
+                        <div class="md:col-span-3">
+                            <select x-model="filters.limit" @change="applyFilters()"
+                                class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block p-2.5 cursor-pointer">
+                                <option value="10">10 por página</option>
+                                <option value="25">25 por página</option>
+                                <option value="50">50 por página</option>
+                                <option value="100">100 por página</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Linha 2: Filtro por Data e Range de Horas -->
+                    <div class="pt-3 border-t border-slate-800/80 grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                        <!-- Seletor de Data -->
+                        <div class="lg:col-span-5 flex flex-col sm:flex-row sm:items-center gap-2">
+                            <label class="text-xs font-semibold text-slate-400 flex items-center gap-1.5 whitespace-nowrap min-w-[50px]">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-400"></i> Data:
+                            </label>
+                            <div class="flex-1 flex items-center gap-1.5">
+                                <input type="date" x-model="filters.date" @change="applyFilters()"
+                                    class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-2 [&::-webkit-calendar-picker-indicator]:invert cursor-pointer">
+                                <button type="button" @click="setQuickDate('today')"
+                                    :class="filters.date === getTodayString() ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'"
+                                    class="px-2.5 py-1.5 rounded-lg text-xs transition whitespace-nowrap" title="Filtrar hoje">
+                                    Hoje
+                                </button>
+                                <button type="button" @click="setQuickDate('yesterday')"
+                                    :class="filters.date === getYesterdayString() ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'"
+                                    class="px-2.5 py-1.5 rounded-lg text-xs transition whitespace-nowrap" title="Filtrar ontem">
+                                    Ontem
+                                </button>
+                                <button type="button" x-show="filters.date" @click="filters.date = ''; applyFilters()"
+                                    class="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition" title="Remover data">
+                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Range de Horas -->
+                        <div class="lg:col-span-5 flex flex-col sm:flex-row sm:items-center gap-2">
+                            <label class="text-xs font-semibold text-slate-400 flex items-center gap-1.5 whitespace-nowrap min-w-[50px]">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-blue-400"></i> Horário:
+                            </label>
+                            <div class="flex-1 flex items-center gap-1.5">
+                                <input type="time" x-model="filters.startTime" @change="applyFilters()"
+                                    class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-2 [&::-webkit-calendar-picker-indicator]:invert"
+                                    placeholder="00:00" title="Hora Inicial">
+                                <span class="text-slate-500 text-xs font-medium">até</span>
+                                <input type="time" x-model="filters.endTime" @change="applyFilters()"
+                                    class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-2 [&::-webkit-calendar-picker-indicator]:invert"
+                                    placeholder="23:59" title="Hora Final">
+                                <button type="button" x-show="filters.startTime || filters.endTime" @click="filters.startTime = ''; filters.endTime = ''; applyFilters()"
+                                    class="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition" title="Remover horário">
+                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Botões de Ação (Filtrar e Limpar) -->
+                        <div class="lg:col-span-2 flex items-center gap-2 justify-end">
+                            <button type="button" @click="applyFilters()"
+                                class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition shadow hover:shadow-blue-500/20 active:scale-95">
+                                <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                                <span>Filtrar</span>
+                            </button>
+                            <button type="button" @click="clearFilters()"
+                                class="bg-slate-800 hover:bg-slate-700 hover:text-red-400 text-slate-400 text-xs font-medium p-2.5 rounded-lg border border-slate-700 transition"
+                                title="Limpar todos os filtros">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Linha 3: Atalhos de Horário Rápidos + Status dos Filtros Ativos -->
+                    <div class="pt-2 flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="text-slate-500 text-[11px] font-medium mr-1">Faixas rápidas:</span>
+                            <button type="button" @click="setQuickTime('06:00', '12:00')"
+                                class="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[11px] border border-slate-700/60 transition">
+                                🌅 Manhã (06h-12h)
+                            </button>
+                            <button type="button" @click="setQuickTime('12:00', '18:00')"
+                                class="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[11px] border border-slate-700/60 transition">
+                                ☀️ Tarde (12h-18h)
+                            </button>
+                            <button type="button" @click="setQuickTime('18:00', '23:59')"
+                                class="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[11px] border border-slate-700/60 transition">
+                                🌙 Noite (18h-23h59)
+                            </button>
+                            <button type="button" @click="setQuickTime('00:00', '23:59')"
+                                class="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[11px] border border-slate-700/60 transition">
+                                ⏱️ Dia Todo
+                            </button>
+                        </div>
+
+                        <!-- Indicador de Registros / Filtros Ativos -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-400 font-medium">
+                                Total encontrado: <strong class="text-white" x-text="totalCount"></strong> pedidos
+                            </span>
+                            <template x-if="hasActiveFilters()">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-semibold">
+                                    <i data-lucide="check" class="w-3 h-3"></i> Filtros ativos
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Loading State -->
                 <div x-show="isLoading" class="flex justify-center py-10">
                     <i data-lucide="loader" class="w-8 h-8 animate-spin text-blue-500"></i>
@@ -255,8 +390,8 @@ require_once 'auth.php';
                     <!-- Pagination Controls -->
                     <div x-show="totalPages > 1" class="px-6 py-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between">
                         <div class="text-xs text-slate-400">
-                            Mostrando <span class="font-semibold text-white" x-text="((page - 1) * limit) + 1"></span> a 
-                            <span class="font-semibold text-white" x-text="Math.min(page * limit, totalCount)"></span> de 
+                            Mostrando <span class="font-semibold text-white" x-text="totalCount > 0 ? ((page - 1) * filters.limit) + 1 : 0"></span> a 
+                            <span class="font-semibold text-white" x-text="Math.min(page * filters.limit, totalCount)"></span> de 
                             <span class="font-semibold text-white" x-text="totalCount"></span> pedidos
                         </div>
                         <div class="flex items-center gap-2">
@@ -295,24 +430,100 @@ require_once 'auth.php';
                 page: 1,
                 totalPages: 1,
                 totalCount: 0,
-                limit: 10,
                 isLoading: true,
                 isResending: null,
                 isRecovering: null,
                 isMarkingPaid: null,
 
+                filters: {
+                    date: '',
+                    startTime: '',
+                    endTime: '',
+                    status: 'all',
+                    search: '',
+                    limit: 10
+                },
+
                 init() {
+                    this.fetchOrders();
+                },
+
+                getTodayString() {
+                    const d = new Date();
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                },
+
+                getYesterdayString() {
+                    const d = new Date();
+                    d.setDate(d.getDate() - 1);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                },
+
+                setQuickDate(type) {
+                    if (type === 'today') {
+                        this.filters.date = this.getTodayString();
+                    } else if (type === 'yesterday') {
+                        this.filters.date = this.getYesterdayString();
+                    }
+                    this.applyFilters();
+                },
+
+                setQuickTime(start, end) {
+                    this.filters.startTime = start;
+                    this.filters.endTime = end;
+                    this.applyFilters();
+                },
+
+                hasActiveFilters() {
+                    return !!(
+                        this.filters.date ||
+                        this.filters.startTime ||
+                        this.filters.endTime ||
+                        (this.filters.status && this.filters.status !== 'all') ||
+                        (this.filters.search && this.filters.search.trim().length > 0)
+                    );
+                },
+
+                applyFilters() {
+                    this.page = 1;
+                    this.fetchOrders();
+                },
+
+                clearFilters() {
+                    this.filters.date = '';
+                    this.filters.startTime = '';
+                    this.filters.endTime = '';
+                    this.filters.status = 'all';
+                    this.filters.search = '';
+                    this.page = 1;
                     this.fetchOrders();
                 },
 
                 fetchOrders() {
                     this.isLoading = true;
-                    fetch(`../api/v1/orders.php?page=${this.page}&limit=${this.limit}`)
+                    const params = new URLSearchParams({
+                        page: this.page,
+                        limit: this.filters.limit
+                    });
+
+                    if (this.filters.date) params.append('date', this.filters.date);
+                    if (this.filters.startTime) params.append('start_time', this.filters.startTime);
+                    if (this.filters.endTime) params.append('end_time', this.filters.endTime);
+                    if (this.filters.status && this.filters.status !== 'all') params.append('status', this.filters.status);
+                    if (this.filters.search && this.filters.search.trim()) params.append('search', this.filters.search.trim());
+
+                    fetch(`../api/v1/orders.php?${params.toString()}`)
                         .then(res => res.json())
                         .then(data => {
-                            this.orders = data.data.map(o => ({ ...o, expanded: false }));
-                            this.totalPages = data.total_pages;
-                            this.totalCount = data.total_count;
+                            this.orders = (data.data || []).map(o => ({ ...o, expanded: false }));
+                            this.totalPages = data.total_pages || 1;
+                            this.totalCount = data.total_count || 0;
                             this.isLoading = false;
                             this.$nextTick(() => lucide.createIcons());
                         })

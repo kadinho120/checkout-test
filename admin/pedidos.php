@@ -1,11 +1,7 @@
 <?php
-session_start();
-
-// Segurança: Mesma lógica do index.php
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header("Location: index.php");
-    exit;
-}
+require_once 'auth.php';
+header("Location: orders.php");
+exit;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
