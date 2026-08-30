@@ -1,11 +1,23 @@
 /**
- * Checkout Embed iFrame Script
+ * Checkout Embed iFrame Script - Failsafe & Meta Ads Optimized
  * Author: Antigravity AI
  * Usage: Add this script to your landing page and add a container div:
  *        <div class="checkout-embed" data-slug="product-slug"></div>
  */
 
 (function () {
+    if (window.__CHECKOUT_EMBED_INITIALIZED__) return;
+    window.__CHECKOUT_EMBED_INITIALIZED__ = true;
+
+    function getParentCookie(name) {
+        try {
+            const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? match[2] : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     function init() {
         const embeds = document.querySelectorAll('.checkout-embed');
         embeds.forEach(container => {
@@ -34,20 +46,34 @@
             url.searchParams.set('embed', 'true');
             
             // Forward parent window URL parameters (like UTMs, fbclid, etc.)
-            const parentParams = new URLSearchParams(window.location.search);
-            parentParams.forEach((value, key) => {
-                url.searchParams.set(key, value);
-            });
+            try {
+                const parentParams = new URLSearchParams(window.location.search);
+                parentParams.forEach((value, key) => {
+                    url.searchParams.set(key, value);
+                });
+            } catch (e) {}
+
+            // Forward first-party Meta cookies (_fbp, _fbc) from parent window
+            const fbp = getParentCookie('_fbp');
+            const fbc = getParentCookie('_fbc');
+            if (fbp && !url.searchParams.has('parent_fbp')) url.searchParams.set('parent_fbp', fbp);
+            if (fbc && !url.searchParams.has('parent_fbc')) url.searchParams.set('parent_fbc', fbc);
+
+            if (document.referrer && !url.searchParams.has('parent_referrer')) {
+                try {
+                    url.searchParams.set('parent_referrer', encodeURIComponent(document.referrer));
+                } catch (e) {}
+            }
 
             // Create iframe
             const iframe = document.createElement('iframe');
             iframe.src = url.toString();
             iframe.className = 'checkout-embed-iframe';
-            iframe.setAttribute('allow', 'clipboard-write');
+            iframe.setAttribute('allow', 'clipboard-write; clipboard-read; payment; accelerometer; gyroscope; camera');
             iframe.style.width = '100%';
             iframe.style.border = 'none';
             iframe.style.overflow = 'hidden';
-            iframe.style.height = '450px'; // Initial sensible fallback height
+            iframe.style.height = '500px'; // Initial fallback height
             iframe.style.transition = 'height 0.15s ease-out';
             iframe.style.background = 'transparent';
             

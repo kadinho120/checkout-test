@@ -10,8 +10,8 @@ $slug = $_GET['slug'] ?? '';
 $isModal = ($_GET['modal'] ?? '') === 'true';
 $isEmbed = ($_GET['embed'] ?? '') === 'true';
 
-// Cabeçalhos para permitir iFrame (opcionalmente pode ser restrito por domínio se o usuário preferir)
-header('X-Frame-Options: ALLOWALL'); 
+// Headers para permitir iFrame
+@header_remove('X-Frame-Options');
 header('Content-Security-Policy: frame-ancestors *');
 
 if (!$slug) {
@@ -603,6 +603,26 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         lucide.createIcons();
         const BACKEND_BASE_PATH = '/api';
 
+        // Safe Storage Helper to prevent SecurityError in cross-origin WebViews/iFrames
+        const safeStorage = {
+            getItem: (key, isSession = false) => {
+                try {
+                    return isSession ? sessionStorage.getItem(key) : localStorage.getItem(key);
+                } catch (e) {
+                    return null;
+                }
+            },
+            setItem: (key, val, isSession = false) => {
+                try {
+                    if (isSession) sessionStorage.setItem(key, val);
+                    else localStorage.setItem(key, val);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+        };
+
         // Tell the parent window (host page modal) about the close button setting
         if (window.self !== window.top) {
             window.parent.postMessage({
@@ -846,14 +866,18 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 trackingParams[key] = value;
             }
 
-            // Cookie helpers
+            // Cookie helper with fallback to parent parameters passed via URL (for iframe/webview compatibility)
             const getCookie = (name) => {
-                const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-                return match ? match[2] : null;
+                try {
+                    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                    return match ? match[2] : null;
+                } catch (e) {
+                    return null;
+                }
             };
 
-            const fbp = getCookie('_fbp');
-            const fbc = getCookie('_fbc');
+            const fbp = getCookie('_fbp') || urlParams.get('parent_fbp') || urlParams.get('fbp') || null;
+            const fbc = getCookie('_fbc') || urlParams.get('parent_fbc') || urlParams.get('fbc') || null;
 
             // Extract standalone fbclid
             let fbclid = trackingParams.fbclid || '';
@@ -900,22 +924,14 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
             // --- META S2S INTELLIGENT TRACKING ---
             try {
-                const getCookie = (name) => {
-                    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-                    return match ? match[2] : null;
-                };
-
-                // Capture URL Params effectively
-                const urlParams = new URLSearchParams(window.location.search);
-
                 // Fire & Forget call to save correlation data
                 fetch(BACKEND_BASE_PATH + '/meta-s2s-tracking/save_correlation.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         correlation_id: correlationId,
-                        fbc: getCookie('_fbc'),
-                        fbp: getCookie('_fbp'),
+                        fbc: fbc,
+                        fbp: fbp,
                         client_user_agent: navigator.userAgent,
                         event_source_url: window.location.href, // Includes UTMs, fbclid, etc.
                         value: totalValue,
@@ -975,7 +991,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
             const sku = PLANOS['main'].sku || 'default';
             const storageKey = 'pix_copy_purchase_' + sku;
-            const lastTimestamp = localStorage.getItem(storageKey);
+            const lastTimestamp = safeStorage.getItem(storageKey);
             const now = Date.now();
             const twentyFourHoursMs = 24 * 60 * 60 * 1000;
 
@@ -985,7 +1001,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
             // Grava o timestamp no localStorage para evitar duplicidade em 24h
-            localStorage.setItem(storageKey, now.toString());
+            safeStorage.setItem(storageKey, now.toString());
 
             const totalValueInCents = calculateCurrentTotal();
             const totalValue = totalValueInCents / 100;
@@ -1016,9 +1032,17 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             // 2. Disparo Meta S2S (Conversões API)
             try {
                 const getCookie = (name) => {
-                    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-                    return match ? match[2] : null;
+                    try {
+                        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                        return match ? match[2] : null;
+                    } catch (e) {
+                        return null;
+                    }
                 };
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const fbcVal = getCookie('_fbc') || urlParams.get('parent_fbc') || urlParams.get('fbc') || null;
+                const fbpVal = getCookie('_fbp') || urlParams.get('parent_fbp') || urlParams.get('fbp') || null;
 
                 fetch(BACKEND_BASE_PATH + '/meta-s2s-tracking/save_correlation.php', {
                     method: 'POST',
@@ -1026,8 +1050,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     body: JSON.stringify({
                         correlation_id: correlationId,
                         event_name: 'Purchase',
-                        fbc: getCookie('_fbc'),
-                        fbp: getCookie('_fbp'),
+                        fbc: fbcVal,
+                        fbp: fbpVal,
                         client_user_agent: navigator.userAgent,
                         event_source_url: window.location.href,
                         value: totalValue,
@@ -1307,10 +1331,10 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
         // REAL-TIME VISITOR HEARTBEAT
         (function() {
-            let sessionId = sessionStorage.getItem('checkout_session_id');
+            let sessionId = safeStorage.getItem('checkout_session_id', true);
             if (!sessionId) {
                 sessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now().toString(36);
-                sessionStorage.setItem('checkout_session_id', sessionId);
+                safeStorage.setItem('checkout_session_id', sessionId, true);
             }
 
             let lastInputTime = 0;
@@ -1547,7 +1571,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     let endTime;
 
                     try {
-                        const storedData = localStorage.getItem(storageKey);
+                        const storedData = safeStorage.getItem(storageKey);
                         if (storedData) {
                             const parsed = JSON.parse(storedData);
                             // If the timer setting (duration) changed in the DB, restart it
@@ -1556,16 +1580,12 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                             }
                         }
                     } catch (e) {
-                        console.error('Error reading checkout timer from localStorage', e);
+                        console.error('Error reading checkout timer from storage', e);
                     }
 
                     if (!endTime) {
                         endTime = Date.now() + durationInSeconds * 1000;
-                        try {
-                            localStorage.setItem(storageKey, JSON.stringify({ endTime: endTime, duration: timerStr }));
-                        } catch (e) {
-                            console.error('Error saving checkout timer to localStorage', e);
-                        }
+                        safeStorage.setItem(storageKey, JSON.stringify({ endTime: endTime, duration: timerStr }));
                     }
 
                     const updateTimer = () => {
@@ -1574,11 +1594,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                         if (remaining <= 0) {
                             // Reset the timer to the original duration instead of freezing at 00:00
                             endTime = Date.now() + durationInSeconds * 1000;
-                            try {
-                                localStorage.setItem(storageKey, JSON.stringify({ endTime: endTime, duration: timerStr }));
-                            } catch (e) {
-                                console.error('Error saving checkout timer to localStorage', e);
-                            }
+                            safeStorage.setItem(storageKey, JSON.stringify({ endTime: endTime, duration: timerStr }));
                         }
 
                         const m = Math.floor(remaining / 60);
