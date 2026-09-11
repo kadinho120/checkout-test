@@ -302,7 +302,7 @@ require_once 'auth.php';
                                     class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
                                     <option value="woovi">Woovi (OpenPix)</option>
                                     <option value="appmax">Appmax (Pix)</option>
-                                    <option value="manual_pix">Chave Pix Direta (QR Code Próprio + Envio de Comprovante no WhatsApp)</option>
+                                    <option value="manual_pix">Chave Pix Direta (QR Code Próprio + WhatsApp)</option>
                                 </select>
                             </div>
 
@@ -313,7 +313,7 @@ require_once 'auth.php';
                                     <h4 class="font-bold text-white text-sm">Configurações da Chave Pix & WhatsApp</h4>
                                 </div>
                                 <p class="text-xs text-slate-400">
-                                    Gera o código <strong>Pix Copia e Cola</strong> e <strong>QR Code</strong> oficiais direto para a sua chave Pix (sem taxas de intermediário) e instrui o cliente a enviar o comprovante no WhatsApp.
+                                    Gera o código <strong>Pix Copia e Cola</strong> e <strong>QR Code</strong> oficiais direto para a sua chave Pix (sem taxas de intermediário) e instrui o cliente a confirmar no WhatsApp.
                                 </p>
                                 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -336,8 +336,25 @@ require_once 'auth.php';
                                             class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-emerald-500 outline-none">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-emerald-300 mb-1">WhatsApp para Envio do Comprovante *</label>
+                                        <label class="block text-xs font-semibold text-emerald-300 mb-1">WhatsApp para Atendimento / Confirmação *</label>
                                         <input x-model="form.pix_whatsapp_number" type="text" placeholder="Ex: 5527981577407"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-emerald-500 outline-none">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-emerald-300 mb-1">Instruções no Checkout *</label>
+                                        <select x-model="form.pix_instruction_type"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-emerald-500 outline-none">
+                                            <option value="name">Informar Nome Completo (Recomendado)</option>
+                                            <option value="comprovante">Enviar Comprovante de Pagamento</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-emerald-300 mb-1">Texto do Botão do WhatsApp (Opcional)</label>
+                                        <input x-model="form.pix_whatsapp_button_text" type="text" 
+                                            :placeholder="form.pix_instruction_type === 'comprovante' ? 'Ex: ENVIAR COMPROVANTE NO WHATSAPP' : 'Ex: INFORMAR NOME NO WHATSAPP'"
                                             class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-emerald-500 outline-none">
                                     </div>
                                 </div>
@@ -356,7 +373,7 @@ require_once 'auth.php';
                                         <span @click="copyToClipboard('{pix_chave}')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{pix_chave}</span>
                                     </div>
                                     <textarea x-model="form.pix_whatsapp_message" rows="2"
-                                        placeholder="Olá! Acabei de fazer o pagamento do pedido #{pedido_id} ({produto}) no valor de {valor}. Segue o comprovante:"
+                                        :placeholder="form.pix_instruction_type === 'comprovante' ? 'Olá! Acabei de fazer o pagamento do pedido #{pedido_id} ({produto}) no valor de {valor}. Segue o comprovante:' : 'Olá! Acabei de fazer o pagamento do pedido #{pedido_id} ({produto}) no valor de {valor}. Meu nome completo é: {nome}'"
                                         class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-emerald-500 outline-none resize-none"></textarea>
                                 </div>
                             </div>
@@ -1384,6 +1401,8 @@ require_once 'auth.php';
                                     pix_receiver_city: data.pix_receiver_city || '',
                                     pix_whatsapp_number: data.pix_whatsapp_number || '',
                                     pix_whatsapp_message: data.pix_whatsapp_message || '',
+                                    pix_instruction_type: data.pix_instruction_type || 'name',
+                                    pix_whatsapp_button_text: data.pix_whatsapp_button_text || '',
                                     bumps: data.bumps || [],
                                     pixels: data.pixels || [],
                                     fake_notifications: data.fake_notifications == 1,
@@ -1452,6 +1471,8 @@ require_once 'auth.php';
                             pix_receiver_city: '',
                             pix_whatsapp_number: '',
                             pix_whatsapp_message: '',
+                            pix_instruction_type: 'name',
+                            pix_whatsapp_button_text: '',
                             bumps: [],
                             pixels: [],
                             track_initiate_checkout: true,

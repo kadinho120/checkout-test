@@ -51,6 +51,8 @@ CREATE TABLE IF NOT EXISTS products (
     pix_receiver_city TEXT,
     pix_whatsapp_number TEXT,
     pix_whatsapp_message TEXT,
+    pix_instruction_type TEXT DEFAULT 'name',
+    pix_whatsapp_button_text TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

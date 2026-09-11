@@ -666,7 +666,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     purchaseOnPixCopy: <?= (int)($product['track_purchase_on_pix_copy'] ?? 0) !== 0 ? 'true' : 'false' ?>
                 },
                 gateway: <?= json_encode($product['payment_gateway'] ?? 'woovi') ?>,
-                product_type: <?= json_encode($product['product_type'] ?? 'digital') ?>
+                product_type: <?= json_encode($product['product_type'] ?? 'digital') ?>,
+                pix_instruction_type: <?= json_encode($product['pix_instruction_type'] ?? 'name') ?>,
+                pix_whatsapp_button_text: <?= json_encode($product['pix_whatsapp_button_text'] ?? '') ?>
             }
         };
 
@@ -1132,6 +1134,24 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
             const isManualPix = !!(pixData.is_manual || pixData.whatsapp_url);
+            const instructionType = pixData.pix_instruction_type || (PLANOS['main'] && PLANOS['main'].pix_instruction_type) || 'name';
+
+            let whatsappInstructionStep = '';
+            let whatsappBtnText = '';
+
+            if (instructionType === 'comprovante') {
+                whatsappInstructionStep = 'Clique no botão abaixo para <strong>enviar o comprovante no WhatsApp</strong> e liberar seu produto!';
+                whatsappBtnText = 'ENVIAR COMPROVANTE NO WHATSAPP';
+            } else {
+                whatsappInstructionStep = 'Clique no botão abaixo para <strong>informar seu nome completo no WhatsApp</strong> e liberar seu produto!';
+                whatsappBtnText = 'INFORMAR NOME NO WHATSAPP';
+            }
+
+            if (pixData.whatsapp_button_text && pixData.whatsapp_button_text.trim() !== '') {
+                whatsappBtnText = pixData.whatsapp_button_text.trim();
+            } else if (PLANOS['main'] && PLANOS['main'].pix_whatsapp_button_text && PLANOS['main'].pix_whatsapp_button_text.trim() !== '') {
+                whatsappBtnText = PLANOS['main'].pix_whatsapp_button_text.trim();
+            }
 
             const whatsappSectionHtml = (isManualPix && pixData.whatsapp_url) ? `
                 <div class="mt-4 p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/50 rounded-xl text-left">
@@ -1142,11 +1162,11 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <ol class="text-[11px] text-emerald-900 dark:text-slate-300 space-y-1 list-decimal list-inside pl-0.5">
                         <li>Copie o código Pix acima ou escaneie o QR Code no seu banco.</li>
                         <li>Efetue o pagamento de <strong>${pixData.formattedPrice}</strong>.</li>
-                        <li>Clique no botão abaixo para <strong>enviar o comprovante no WhatsApp</strong> e liberar seu produto!</li>
+                        <li>${whatsappInstructionStep}</li>
                     </ol>
                 </div>
                 <a href="${pixData.whatsapp_url}" target="_blank" rel="noopener" class="mt-3 w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold py-3.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-500/20 active:scale-[0.99]">
-                    <i data-lucide="message-circle" class="w-5 h-5"></i> ENVIAR COMPROVANTE NO WHATSAPP
+                    <i data-lucide="message-circle" class="w-5 h-5"></i> ${whatsappBtnText}
                 </a>
             ` : '';
 

@@ -100,9 +100,16 @@ function handle_manual_pix_payment()
     $brCode = generatePixBrcode($pixKey, $receiverName, $receiverCity, $totalValueInReais, $correlationID);
     $qrCodeImage = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($brCode);
 
+    $instructionType = !empty($productConfig['pix_instruction_type']) ? trim($productConfig['pix_instruction_type']) : 'name';
+    $customButtonText = !empty($productConfig['pix_whatsapp_button_text']) ? trim($productConfig['pix_whatsapp_button_text']) : '';
+
     // Formatação da Mensagem do WhatsApp
     if (empty($whatsappMsgTemplate)) {
-        $whatsappMsgTemplate = "Olá! Acabei de fazer o pagamento do pedido #{pedido_id} ({produto}) no valor de {valor}.\n\nSegue o comprovante em anexo:";
+        if ($instructionType === 'comprovante') {
+            $whatsappMsgTemplate = "Olá! Acabei de fazer o pagamento do pedido #{pedido_id} ({produto}) no valor de {valor}.\n\nSegue o comprovante em anexo:";
+        } else {
+            $whatsappMsgTemplate = "Olá! Acabei de fazer o pagamento do pedido #{pedido_id} ({produto}) no valor de {valor}.\n\nMeu nome completo é: {nome}";
+        }
     }
 
     $whatsappReplacements = [
@@ -137,7 +144,9 @@ function handle_manual_pix_payment()
         'receiver_city' => $receiverCity,
         'whatsapp_url' => $whatsappUrl,
         'whatsapp_number' => $cleanWhatsappNumber,
-        'whatsapp_message' => $whatsappMessageFinal
+        'whatsapp_message' => $whatsappMessageFinal,
+        'pix_instruction_type' => $instructionType,
+        'whatsapp_button_text' => $customButtonText
     ];
 
     // --- SALVAMENTO NO BANCO SQLITE ---
@@ -215,6 +224,8 @@ function handle_manual_pix_payment()
         'pixData' => $pix_data,
         'correlationId' => $correlationID,
         'is_manual' => true,
-        'whatsapp_url' => $whatsappUrl
+        'whatsapp_url' => $whatsappUrl,
+        'pix_instruction_type' => $instructionType,
+        'whatsapp_button_text' => $customButtonText
     ]);
 }

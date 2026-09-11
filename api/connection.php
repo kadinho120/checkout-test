@@ -441,6 +441,19 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN pix_whatsapp_message TEXT;");
             }
 
+            $hasPixInstructionType = false;
+            $hasPixWhatsappButtonText = false;
+            foreach ($prodColsManualPix as $col) {
+                if ($col['name'] === 'pix_instruction_type') $hasPixInstructionType = true;
+                if ($col['name'] === 'pix_whatsapp_button_text') $hasPixWhatsappButtonText = true;
+            }
+            if (!$hasPixInstructionType) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN pix_instruction_type TEXT DEFAULT 'name';");
+            }
+            if (!$hasPixWhatsappButtonText) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN pix_whatsapp_button_text TEXT;");
+            }
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {
