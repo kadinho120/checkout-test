@@ -59,7 +59,8 @@
             max-width: 1100px;
             height: 90vh;
             max-height: 90dvh;
-            background: transparent;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
             position: relative;
             overflow: hidden;
@@ -72,42 +73,71 @@
         .checkout-modal-overlay.active .checkout-modal-container {
             transform: translateY(0) scale(1);
         }
+        .checkout-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: #0f172a;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+            z-index: 20;
+            box-sizing: border-box;
+        }
+        .checkout-modal-badge {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            letter-spacing: 0.02em;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+        }
+        .checkout-modal-badge svg {
+            color: #10b981;
+            flex-shrink: 0;
+        }
+        .checkout-modal-close {
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            line-height: 1;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            box-sizing: border-box;
+        }
+        .checkout-modal-close:hover {
+            transform: scale(1.05);
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.35);
+        }
+        .checkout-modal-close:active {
+            transform: scale(0.95);
+        }
+        .checkout-modal-close svg {
+            pointer-events: none;
+            display: block;
+        }
         .checkout-modal-iframe {
             width: 100% !important;
             height: 100% !important;
-            min-height: 100%;
             border: none !important;
             flex: 1;
             background: transparent;
             -webkit-overflow-scrolling: touch;
             display: block;
-        }
-        .checkout-modal-close {
-            position: absolute;
-            top: 14px;
-            right: 14px;
-            width: 36px;
-            height: 36px;
-            background: #1e293b;
-            color: #ffffff;
-            border: 2px solid rgba(255, 255, 255, 0.25);
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            line-height: 1;
-            z-index: 30;
-            transition: transform 0.2s ease, background-color 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-        .checkout-modal-close:hover {
-            transform: scale(1.08);
-            background: #ef4444;
         }
         .checkout-modal-loader {
             position: absolute;
@@ -168,15 +198,17 @@
                 height: 100dvh;
                 max-height: 100dvh;
                 border-radius: 0;
+                border: none;
                 margin: 0;
                 padding-bottom: env(safe-area-inset-bottom, 0);
             }
+            .checkout-modal-header {
+                padding: 10px 14px;
+                padding-top: max(10px, env(safe-area-inset-top, 10px));
+            }
             .checkout-modal-close {
-                top: 10px;
-                right: 10px;
-                width: 38px;
-                height: 38px;
-                font-size: 24px;
+                width: 32px;
+                height: 32px;
             }
         }
     `;
@@ -254,7 +286,21 @@
         overlay.className = 'checkout-modal-overlay';
         overlay.innerHTML = `
             <div class="checkout-modal-container">
-                <button class="checkout-modal-close" title="Fechar">&times;</button>
+                <div class="checkout-modal-header">
+                    <div class="checkout-modal-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <span>Ambiente Seguro</span>
+                    </div>
+                    <button class="checkout-modal-close" title="Fechar" aria-label="Fechar checkout">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
                 <div class="checkout-modal-loader">
                     <div class="checkout-spinner"></div>
                     <span style="font-size: 14px; font-weight: 600; color: #f1f5f9;">Carregando Checkout Seguro...</span>
