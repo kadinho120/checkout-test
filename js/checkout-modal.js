@@ -404,12 +404,12 @@
                 return;
             }
 
-            // Safety fallback: if iframe doesn't reply within 350ms, close anyway to never trap the user
+            // Safety fallback: if iframe doesn't reply within 800ms, close anyway to never trap the user
             downsellTimeout = setTimeout(() => {
                 if (downsellPending) {
                     closeModal(true);
                 }
-            }, 350);
+            }, 800);
         }
 
         // Listen for messages from the iframe (e.g. close request after downsell or configuration)
@@ -418,6 +418,10 @@
                 if (downsellTimeout) clearTimeout(downsellTimeout);
                 downsellPending = false;
                 closeModal(true);
+            } else if (event.data === 'downsell-opened') {
+                // Downsell foi aberto com sucesso no checkout: cancela o fechamento
+                if (downsellTimeout) clearTimeout(downsellTimeout);
+                downsellPending = false;
             } else if (event.data && event.data.type === 'checkout-config') {
                 if (event.data.showCloseButton === false) {
                     closeBtn.style.display = 'none';

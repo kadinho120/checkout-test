@@ -344,7 +344,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- Downsell Modal HTML -->
                 <div id="downsell-modal" class="fixed inset-0 z-[99999] hidden flex items-center justify-center p-4">
-                    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm shadow-2xl"></div>
+                    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm shadow-2xl" onclick="closeDownsell()"></div>
                     <div class="downsell-content relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl overflow-y-auto max-h-[95vh] border border-orange-500/30 p-6 sm:p-8 text-center shadow-2xl">
                         <div class="mb-4 sm:mb-6 inline-flex p-3 sm:p-4 bg-orange-500/10 rounded-full">
                             <i data-lucide="gift" class="w-10 h-10 sm:w-12 sm:h-12 text-orange-500"></i>
@@ -1262,6 +1262,10 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             setTimeout(() => modal.classList.add('active'), 10);
             
             downsellTriggered = true;
+
+            if (window.self !== window.top) {
+                window.parent.postMessage('downsell-opened', '*');
+            }
         }
 
         function acceptDownsell() {
@@ -1317,6 +1321,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             if (event.data === 'trigger-downsell') {
                 if (downsellEnabled && !downsellTriggered && !downsellAccepted) {
                     showDownsell();
+                    if (window.self !== window.top) {
+                        window.parent.postMessage('downsell-opened', '*');
+                    }
                 } else {
                     // Se não houver downsell ou já foi negado/aceito, avisa o pai para fechar
                     window.parent.postMessage('close-checkout-modal', '*');
