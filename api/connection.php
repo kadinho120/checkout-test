@@ -203,6 +203,20 @@ class Database
                 $this->conn->exec("ALTER TABLE orders ADD COLUMN meta_purchase_log TEXT;");
             }
 
+            // Check for pix_copied in orders
+            $hasPixCopied = false;
+            $hasPixCopiedAt = false;
+            foreach ($orderCols as $col) {
+                if ($col['name'] === 'pix_copied') $hasPixCopied = true;
+                if ($col['name'] === 'pix_copied_at') $hasPixCopiedAt = true;
+            }
+            if (!$hasPixCopied) {
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN pix_copied INTEGER DEFAULT 0;");
+            }
+            if (!$hasPixCopiedAt) {
+                $this->conn->exec("ALTER TABLE orders ADD COLUMN pix_copied_at DATETIME;");
+            }
+
             // Check for fake notifications in products
             $prodCols3 = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_ASSOC);
             $hasFakeNotif = false;

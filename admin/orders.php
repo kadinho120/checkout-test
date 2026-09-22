@@ -117,6 +117,9 @@ require_once 'auth.php';
                                 <option value="all">Todos os Status</option>
                                 <option value="paid">Aprovados / Pagos</option>
                                 <option value="pending">Pendentes</option>
+                                <option value="manual_pix_copied">Pix Manual: Copiou Código</option>
+                                <option value="manual_pix_not_copied">Pix Manual: Não Copiou</option>
+                                <option value="manual_pix">Todos Pix Manual</option>
                                 <option value="cancelled">Cancelados / Expirados</option>
                             </select>
                         </div>
@@ -265,14 +268,37 @@ require_once 'auth.php';
                                     <td class="p-4 text-white font-mono text-sm"
                                         x-text="'R$ ' + parseFloat(order.total_amount || 0).toFixed(2)"></td>
                                     <td class="p-4 text-center">
-                                        <div class="flex items-center justify-center gap-1.5 mb-1.5">
-                                            <span x-show="order.status === 'paid'"
-                                                class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded text-xs font-bold">PAGO</span>
-                                            <span x-show="order.status === 'pending'"
-                                                class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded text-xs font-bold">PENDENTE</span>
-                                            <span x-show="order.gateway === 'manual_pix'"
-                                                class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold" title="Pix Manual">MANUAL</span>
-                                        </div>
+                                        <!-- Pedidos com Pix Manual -->
+                                        <template x-if="order.gateway === 'manual_pix' || order.gateway === 'pix_manual' || order.gateway === 'direct_pix'">
+                                            <div class="flex flex-col items-center gap-1.5 mb-1.5">
+                                                <div class="flex items-center justify-center gap-1.5">
+                                                    <span x-show="order.pix_copied == 1"
+                                                        class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded text-xs font-bold inline-flex items-center gap-1 shadow-sm"
+                                                        title="Cliente copiou o código Pix no checkout">
+                                                        <i data-lucide="copy-check" class="w-3.5 h-3.5"></i> COPIOU PIX
+                                                    </span>
+                                                    <span x-show="!order.pix_copied || order.pix_copied == 0"
+                                                        class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded text-xs font-bold inline-flex items-center gap-1"
+                                                        title="Cliente ainda não copiou o código Pix">
+                                                        <i data-lucide="copy-x" class="w-3.5 h-3.5"></i> NÃO COPIOU
+                                                    </span>
+                                                    <span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold" title="Chave Pix Manual">MANUAL</span>
+                                                </div>
+                                                <span x-show="order.status === 'paid'" class="text-[10px] text-green-400 font-semibold inline-flex items-center gap-1">
+                                                    <i data-lucide="check" class="w-3 h-3"></i> Aprovado / Pago
+                                                </span>
+                                            </div>
+                                        </template>
+
+                                        <!-- Outros Gateways (Woovi, Appmax, etc.) -->
+                                        <template x-if="order.gateway !== 'manual_pix' && order.gateway !== 'pix_manual' && order.gateway !== 'direct_pix'">
+                                            <div class="flex items-center justify-center gap-1.5 mb-1.5">
+                                                <span x-show="order.status === 'paid'"
+                                                    class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded text-xs font-bold">PAGO</span>
+                                                <span x-show="order.status === 'pending'"
+                                                    class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded text-xs font-bold">PENDENTE</span>
+                                            </div>
+                                        </template>
 
                                         <!-- Botão Marcar Como Pago (Para Pedidos Pendentes / Pix Manual) -->
                                         <div x-show="order.status === 'pending'" class="mb-2 flex justify-center">

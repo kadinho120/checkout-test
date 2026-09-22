@@ -112,6 +112,8 @@ CREATE TABLE IF NOT EXISTS orders (
     state TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME,
+    pix_copied INTEGER DEFAULT 0,
+    pix_copied_at DATETIME,
     json_data TEXT -- Store full payload for safety
 );
 

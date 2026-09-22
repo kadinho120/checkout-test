@@ -62,6 +62,12 @@ try {
             $whereParts[] = "status = 'pending'";
         } elseif ($status === 'cancelled') {
             $whereParts[] = "status IN ('cancelled', 'expired', 'failed', 'refunded')";
+        } elseif ($status === 'manual_pix_copied') {
+            $whereParts[] = "gateway IN ('manual_pix', 'pix_manual', 'direct_pix') AND pix_copied = 1";
+        } elseif ($status === 'manual_pix_not_copied') {
+            $whereParts[] = "gateway IN ('manual_pix', 'pix_manual', 'direct_pix') AND (pix_copied = 0 OR pix_copied IS NULL)";
+        } elseif ($status === 'manual_pix') {
+            $whereParts[] = "gateway IN ('manual_pix', 'pix_manual', 'direct_pix')";
         } else {
             $whereParts[] = "status = :status";
             $params[':status'] = $status;

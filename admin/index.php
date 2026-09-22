@@ -117,7 +117,7 @@ require_once 'auth.php';
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 p-6">
 
                 <!-- KPI CARDS -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-6 mb-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
 
                     <!-- Faturamento -->
                     <div
@@ -177,7 +177,7 @@ require_once 'auth.php';
                         <p class="text-xs text-slate-500 mt-2 relative z-10">Pedidos pagos sobre iniciados</p>
                     </div>
 
-                    <!-- Ticket Médio (Calculado no front) -->
+                    <!-- Ticket Médio -->
                     <div
                         class="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-lg relative overflow-hidden group">
                         <div
@@ -194,7 +194,7 @@ require_once 'auth.php';
                         </div>
                     </div>
 
-                    <!-- Pix Pendentes (Novo) -->
+                    <!-- Pix Pendentes -->
                     <div
                         class="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-lg relative overflow-hidden group">
                         <div
@@ -209,6 +209,33 @@ require_once 'auth.php';
                             </div>
                             <div class="p-2 bg-slate-800 rounded-lg text-orange-500"><i data-lucide="clock"
                                     class="w-5 h-5"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Pix Manual - Cópias de Código (Novo Card) -->
+                    <div
+                        class="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-lg relative overflow-hidden group">
+                        <div
+                            class="absolute -right-6 -top-6 bg-emerald-500/10 w-24 h-24 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition">
+                        </div>
+                        <div class="flex justify-between items-start mb-4 relative z-10">
+                            <div>
+                                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                    Pix Manual
+                                </p>
+                                <h3 class="text-2xl font-bold text-white mt-1">
+                                    <span x-text="stats.manual_pix_copied || 0">0</span>
+                                    <span class="text-sm font-normal text-slate-400">/ <span x-text="stats.manual_pix_total || 0">0</span> copiado(s)</span>
+                                </h3>
+                                <p class="text-xs text-emerald-400 mt-1 font-medium flex items-center gap-1">
+                                    <i data-lucide="copy" class="w-3 h-3"></i>
+                                    <span x-text="(stats.manual_pix_rate || 0) + '% taxa cópia (' + (stats.manual_pix_not_copied || 0) + ' sem cópia)'">0%</span>
+                                </p>
+                            </div>
+                            <div class="p-2 bg-slate-800 rounded-lg text-emerald-400" title="Cópia de Pix Manual no Checkout">
+                                <i data-lucide="copy-check" class="w-5 h-5"></i>
+                            </div>
                         </div>
                     </div>
 
@@ -323,12 +350,28 @@ require_once 'auth.php';
                                     <div class="text-right">
                                         <p class="text-sm font-bold text-white text-green-400"
                                             x-text="formatCurrency(order.total_amount)"></p>
-                                        <span :class="{
-                                            'bg-green-500/10 text-green-400 border-green-500/20': ['paid', 'completed'].includes(order.status.toLowerCase()),
-                                            'bg-yellow-500/10 text-yellow-500 border-yellow-500/20': ['pending'].includes(order.status.toLowerCase()),
-                                        }" class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase inline-block mt-1"
-                                            x-text="order.status === 'paid' ? 'PAGO' : (order.status === 'pending' ? 'PENDENTE' : order.status)">
-                                        </span>
+                                        <template x-if="order.gateway === 'manual_pix' || order.gateway === 'pix_manual' || order.gateway === 'direct_pix'">
+                                            <div class="mt-1">
+                                                <span x-show="order.pix_copied == 1"
+                                                    class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-sm"
+                                                    title="O cliente copiou o código Pix no checkout">
+                                                    <i data-lucide="copy-check" class="w-3 h-3"></i> COPIOU PIX
+                                                </span>
+                                                <span x-show="!order.pix_copied || order.pix_copied == 0"
+                                                    class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase inline-flex items-center gap-1 bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                                    title="O cliente ainda não copiou o código Pix">
+                                                    <i data-lucide="copy-x" class="w-3 h-3"></i> NÃO COPIOU
+                                                </span>
+                                            </div>
+                                        </template>
+                                        <template x-if="order.gateway !== 'manual_pix' && order.gateway !== 'pix_manual' && order.gateway !== 'direct_pix'">
+                                            <span :class="{
+                                                'bg-green-500/10 text-green-400 border-green-500/20': ['paid', 'completed'].includes((order.status || '').toLowerCase()),
+                                                'bg-yellow-500/10 text-yellow-500 border-yellow-500/20': ['pending'].includes((order.status || '').toLowerCase()),
+                                            }" class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase inline-block mt-1"
+                                                x-text="order.status === 'paid' ? 'PAGO' : (order.status === 'pending' ? 'PENDENTE' : order.status)">
+                                            </span>
+                                        </template>
                                     </div>
                                 </div>
                             </template>
@@ -355,6 +398,10 @@ require_once 'auth.php';
                     paid_orders: 0,
                     pending_orders: 0,
                     pending_revenue: 0,
+                    manual_pix_total: 0,
+                    manual_pix_copied: 0,
+                    manual_pix_not_copied: 0,
+                    manual_pix_rate: 0,
                     conversion_rate: 0,
                     recent_orders: [],
                     online_users: 0,

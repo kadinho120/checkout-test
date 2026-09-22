@@ -1065,8 +1065,32 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             } catch (e) { console.error(e); }
         };
 
+        // Rastreia evento de cópia do Pix no backend
+        const recordPixCopyEvent = () => {
+            if (pixPaymentState && pixPaymentState.correlationId) {
+                try {
+                    fetch('api/track_pix_copy.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            correlation_id: pixPaymentState.correlationId
+                        })
+                    }).then(res => res.json()).then(data => {
+                        console.log('[Pix Copy] Status registrado no backend:', data);
+                    }).catch(err => {
+                        console.warn('[Pix Copy] Aviso ao registrar cópia:', err);
+                    });
+                } catch (e) {
+                    console.warn('[Pix Copy] Exceção:', e);
+                }
+            }
+        };
+        window.recordPixCopyEvent = recordPixCopyEvent;
+
         // Copy to clipboard helper
         window.copyToClipboard = (text, element) => {
+            recordPixCopyEvent();
+
             if (PLANOS['main'].tracking && PLANOS['main'].tracking.purchaseOnPixCopy) {
                 trackPixCopyPurchase();
             }
@@ -1181,7 +1205,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <p class="text-2xl font-black text-gray-900 dark:text-white">${pixData.formattedPrice}</p>
                 </div>
                 <div class="bg-gray-100 dark:bg-slate-950 p-3 rounded border border-gray-200 dark:border-slate-800 flex items-center gap-2 mb-4">
-                    <input readonly value="${pixData.brCode}" class="bg-transparent text-xs text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate">
+                    <input readonly value="${pixData.brCode}" oncopy="window.recordPixCopyEvent()" onclick="this.select()" class="bg-transparent text-xs text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate cursor-pointer" title="Clique para selecionar ou copiar">
                     <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 dark:hover:text-white transition">COPIAR</button>
                 </div>
                 <button onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg mb-2">
@@ -1201,7 +1225,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                         <div class="w-full bg-gray-100 dark:bg-slate-950 p-3 rounded-2xl border border-gray-200 dark:border-slate-800 flex flex-col gap-3 mb-2">
                             <div class="flex items-center gap-2 px-1">
-                                <input readonly value="${pixData.brCode}" class="bg-transparent text-[10px] text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate">
+                                <input readonly value="${pixData.brCode}" oncopy="window.recordPixCopyEvent()" onclick="this.select()" class="bg-transparent text-[10px] text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate cursor-pointer" title="Clique para selecionar ou copiar">
                                 <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 transition uppercase shrink-0">Copiar</button>
                             </div>
                             <button onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg">

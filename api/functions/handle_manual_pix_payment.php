@@ -153,12 +153,13 @@ function handle_manual_pix_payment()
     try {
         $externalID = $params['customer']['external_id'] ?? '';
 
-        $stmt = $db->prepare("INSERT INTO orders (product_id, customer_name, customer_email, customer_phone, customer_cpf, total_amount, status, payment_method, gateway, transaction_id, external_id, cep, address, address_number, complement, neighborhood, city, state, json_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-03:00'))");
+        $stmt = $db->prepare("INSERT INTO orders (product_id, customer_name, customer_email, customer_phone, customer_cpf, total_amount, status, payment_method, gateway, transaction_id, external_id, cep, address, address_number, complement, neighborhood, city, state, json_data, pix_copied, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-03:00'))");
 
         $json_data_store = json_encode([
             'correlation_id' => $correlationID,
             'external_id' => $externalID,
             'gateway' => 'manual_pix',
+            'pix_copied' => 0,
             'pix_data' => $pix_data,
             'products' => $params['products'] ?? [],
             'tracking' => array_merge($params['tracking'] ?? [], ['client_ip' => $client_ip])
@@ -183,7 +184,8 @@ function handle_manual_pix_payment()
             $params['customer']['neighborhood'] ?? '',
             $params['customer']['city'] ?? '',
             $params['customer']['state'] ?? '',
-            $json_data_store
+            $json_data_store,
+            0
         ]);
 
         $order_id = $db->lastInsertId();

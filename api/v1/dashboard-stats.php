@@ -80,6 +80,21 @@ try {
     $pendingOrders = $pendingData['count'] ?? 0;
     $pendingRevenue = $pendingData['total'] ?? 0;
 
+    // 3.2 Pix Manual Stats (Total, Copied, Not Copied, Rate)
+    $manualPixWhere = "gateway IN ('manual_pix', 'pix_manual', 'direct_pix')";
+    $stmt = $db->prepare("SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN pix_copied = 1 THEN 1 ELSE 0 END) as copied,
+        SUM(CASE WHEN pix_copied = 0 OR pix_copied IS NULL THEN 1 ELSE 0 END) as not_copied
+    FROM orders $whereClause AND $manualPixWhere");
+    $stmt->execute($params);
+    $manualPixData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $manualPixTotal = (int) ($manualPixData['total'] ?? 0);
+    $manualPixCopied = (int) ($manualPixData['copied'] ?? 0);
+    $manualPixNotCopied = (int) ($manualPixData['not_copied'] ?? 0);
+    $manualPixRate = $manualPixTotal > 0 ? round(($manualPixCopied / $manualPixTotal) * 100, 1) : 0;
+
     // 4. Conversion Rate
     $conversionRate = $totalOrders > 0 ? ($paidOrders / $totalOrders) * 100 : 0;
 
@@ -122,8 +137,7 @@ try {
     });
 
     // 6. Recent Orders (Last 5)
-    // 6. Recent Orders (Last 5)
-    $stmt = $db->prepare("SELECT id, customer_name, total_amount, status, created_at, json_data FROM orders $whereClause ORDER BY created_at DESC LIMIT 5");
+    $stmt = $db->prepare("SELECT id, customer_name, total_amount, status, gateway, pix_copied, created_at, json_data FROM orders $whereClause ORDER BY created_at DESC LIMIT 5");
     $stmt->execute($params);
     $recentOrdersRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -142,6 +156,8 @@ try {
             'customer_name' => $order['customer_name'],
             'total_amount' => $order['total_amount'],
             'status' => $order['status'],
+            'gateway' => $order['gateway'] ?? '',
+            'pix_copied' => (int) ($order['pix_copied'] ?? 0),
             'created_at' => $order['created_at'],
             'product_name' => $productName
         ];
@@ -169,7 +185,11 @@ try {
         'sales_by_product' => $salesByProduct,
         'recent_orders' => $recentOrders,
         'online_users' => (int) $onlineUsers,
-        'typing_users' => (int) $typingUsers
+        'typing_users' => (int) $typingUsers,
+        'manual_pix_total' => (int) $manualPixTotal,
+        'manual_pix_copied' => (int) $manualPixCopied,
+        'manual_pix_not_copied' => (int) $manualPixNotCopied,
+        'manual_pix_rate' => (float) $manualPixRate
     ]);
 
 } catch (Exception $e) {
