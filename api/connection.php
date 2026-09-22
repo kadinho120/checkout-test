@@ -281,10 +281,12 @@ class Database
             $hasTrackIC = false;
             $hasTrackAPI = false;
             $hasTrackPixCopy = false;
+            $hasTrackWhatsAppClick = false;
             foreach ($prodCols6 as $col) {
                 if ($col['name'] === 'track_initiate_checkout') $hasTrackIC = true;
                 if ($col['name'] === 'track_add_payment_info') $hasTrackAPI = true;
                 if ($col['name'] === 'track_purchase_on_pix_copy') $hasTrackPixCopy = true;
+                if ($col['name'] === 'track_purchase_on_whatsapp_click') $hasTrackWhatsAppClick = true;
             }
             if (!$hasTrackIC) {
                 $this->conn->exec("ALTER TABLE products ADD COLUMN track_initiate_checkout INTEGER DEFAULT 1;");
@@ -294,6 +296,9 @@ class Database
             }
             if (!$hasTrackPixCopy) {
                 $this->conn->exec("ALTER TABLE products ADD COLUMN track_purchase_on_pix_copy INTEGER DEFAULT 0;");
+            }
+            if (!$hasTrackWhatsAppClick) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN track_purchase_on_whatsapp_click INTEGER DEFAULT 0;");
             }
 
             // Check for checkout_style column

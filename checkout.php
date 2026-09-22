@@ -663,7 +663,8 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 tracking: {
                     initiateCheckout: <?= (int)($product['track_initiate_checkout'] ?? 1) !== 0 ? 'true' : 'false' ?>,
                     addPaymentInfo: <?= (int)($product['track_add_payment_info'] ?? 1) !== 0 ? 'true' : 'false' ?>,
-                    purchaseOnPixCopy: <?= (int)($product['track_purchase_on_pix_copy'] ?? 0) !== 0 ? 'true' : 'false' ?>
+                    purchaseOnPixCopy: <?= (int)($product['track_purchase_on_pix_copy'] ?? 0) !== 0 ? 'true' : 'false' ?>,
+                    purchaseOnWhatsAppClick: <?= (int)($product['track_purchase_on_whatsapp_click'] ?? 0) !== 0 ? 'true' : 'false' ?>
                 },
                 gateway: <?= json_encode($product['payment_gateway'] ?? 'woovi') ?>,
                 product_type: <?= json_encode($product['product_type'] ?? 'digital') ?>,
@@ -987,23 +988,29 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }
         };
 
-        // Disparo opcional do Purchase ao copiar o Pix (conforme configuração do produto)
-        const trackPixCopyPurchase = () => {
-            if (!PLANOS['main'].tracking || !PLANOS['main'].tracking.purchaseOnPixCopy) return;
-
+        // Disparo centralizado de Purchase (Meta Pixel e CAPI) com deduplicação de 24h
+        const firePurchaseTracking = (triggerSource) => {
             const sku = PLANOS['main'].sku || 'default';
-            const storageKey = 'pix_copy_purchase_' + sku;
-            const lastTimestamp = safeStorage.getItem(storageKey);
             const now = Date.now();
             const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+            const correlationId = (pixPaymentState && pixPaymentState.correlationId) ? pixPaymentState.correlationId : ('pix_' + now);
+
+            // Chaves de deduplicação por SKU e por correlationId
+            const skuStorageKey = 'pix_purchase_fired_' + sku;
+            const corrStorageKey = 'pix_purchase_fired_' + correlationId;
+            const legacyKey = 'pix_copy_purchase_' + sku;
+
+            const lastTimestamp = safeStorage.getItem(skuStorageKey) || safeStorage.getItem(legacyKey) || safeStorage.getItem(corrStorageKey);
 
             if (lastTimestamp && (now - parseInt(lastTimestamp, 10)) < twentyFourHoursMs) {
-                console.log('[Meta Pixel] Purchase no copiar Pix já disparado nas últimas 24h para este usuário.');
+                console.log(`[Meta Pixel] Purchase (${triggerSource}) já disparado nas últimas 24h para este usuário/pedido.`);
                 return;
             }
 
             // Grava o timestamp no localStorage para evitar duplicidade em 24h
-            safeStorage.setItem(storageKey, now.toString());
+            safeStorage.setItem(skuStorageKey, now.toString());
+            safeStorage.setItem(corrStorageKey, now.toString());
+            safeStorage.setItem(legacyKey, now.toString());
 
             const totalValueInCents = calculateCurrentTotal();
             const totalValue = totalValueInCents / 100;
@@ -1013,8 +1020,6 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             document.querySelectorAll('input[name="bumps[]"]:checked').forEach(el => {
                 allProducts.push({ sku: el.dataset.sku, name: el.dataset.name, price: parseFloat(el.dataset.price), qty: 1 });
             });
-
-            const correlationId = (pixPaymentState && pixPaymentState.correlationId) ? pixPaymentState.correlationId : ('pix_' + now);
 
             // 1. Disparo do Pixel no Navegador (Purchase)
             if (typeof fbq === 'function') {
@@ -1028,7 +1033,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 }, {
                     eventID: correlationId
                 });
-                console.log('[Meta Pixel] Evento Purchase disparado com sucesso ao copiar o Pix!');
+                console.log(`[Meta Pixel] Evento Purchase disparado com sucesso (${triggerSource})!`);
             }
 
             // 2. Disparo Meta S2S (Conversões API)
@@ -1064,6 +1069,19 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 }).catch(err => console.warn('Meta S2S Warning:', err));
             } catch (e) { console.error(e); }
         };
+
+        // Disparo opcional do Purchase ao copiar o Pix (conforme configuração do produto)
+        const trackPixCopyPurchase = () => {
+            if (!PLANOS['main'].tracking || !PLANOS['main'].tracking.purchaseOnPixCopy) return;
+            firePurchaseTracking('ao copiar Pix');
+        };
+
+        // Disparo opcional do Purchase ao clicar no botão de enviar comprovante no WhatsApp
+        const trackWhatsAppReceiptPurchase = () => {
+            if (!PLANOS['main'].tracking || !PLANOS['main'].tracking.purchaseOnWhatsAppClick) return;
+            firePurchaseTracking('ao clicar no WhatsApp');
+        };
+        window.trackWhatsAppReceiptClick = trackWhatsAppReceiptPurchase;
 
         // Rastreia evento de cópia do Pix no backend
         const recordPixCopyEvent = () => {
@@ -1189,7 +1207,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                         <li>${whatsappInstructionStep}</li>
                     </ol>
                 </div>
-                <a href="${pixData.whatsapp_url}" target="_blank" rel="noopener" class="mt-3 w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold py-3.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-500/20 active:scale-[0.99]">
+                <a href="${pixData.whatsapp_url}" target="_blank" rel="noopener" onclick="window.trackWhatsAppReceiptClick()" class="mt-3 w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold py-3.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-500/20 active:scale-[0.99]">
                     <i data-lucide="message-circle" class="w-5 h-5"></i> ${whatsappBtnText}
                 </a>
             ` : '';

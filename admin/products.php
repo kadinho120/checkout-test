@@ -990,6 +990,27 @@ require_once 'auth.php';
                                 </div>
                             </div>
                         </div>
+                        <div class="pt-3 border-t border-slate-800/80">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex items-start gap-2">
+                                    <i data-lucide="message-circle" class="w-4 h-4 text-emerald-400 mt-0.5"></i>
+                                    <div>
+                                        <span class="text-sm font-medium text-slate-300">Disparar Purchase ao Enviar Comprovante no WhatsApp</span>
+                                        <p class="text-xs text-slate-500 mt-0.5" x-text="form.track_purchase_on_whatsapp_click ? 'Dispara o evento de Purchase quando o cliente clicar no botão do WhatsApp.' : 'Não dispara Purchase no clique do botão do WhatsApp.'"></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <span class="text-xs font-medium text-slate-400"
+                                        x-text="form.track_purchase_on_whatsapp_click ? 'Ativado' : 'Desativado'"></span>
+                                    <button @click="form.track_purchase_on_whatsapp_click = !form.track_purchase_on_whatsapp_click"
+                                        class="w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none"
+                                        :class="form.track_purchase_on_whatsapp_click ? 'bg-green-500' : 'bg-slate-700'">
+                                        <span class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm"
+                                            :class="form.track_purchase_on_whatsapp_click ? 'translate-x-5' : 'translate-x-0'"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1315,6 +1336,7 @@ require_once 'auth.php';
                     track_initiate_checkout: true,
                     track_add_payment_info: true,
                     track_purchase_on_pix_copy: false,
+                    track_purchase_on_whatsapp_click: false,
                     checkout_style: 'default',
                     product_type: 'digital',
                     checkout_cta_text: ''
@@ -1418,6 +1440,7 @@ require_once 'auth.php';
                                     track_initiate_checkout: data.track_initiate_checkout != 0,
                                     track_add_payment_info: data.track_add_payment_info != 0,
                                     track_purchase_on_pix_copy: data.track_purchase_on_pix_copy == 1,
+                                    track_purchase_on_whatsapp_click: data.track_purchase_on_whatsapp_click == 1,
                                     checkout_style: data.checkout_style || 'default',
                                     product_type: data.product_type || 'digital',
                                     payment_gateway: data.payment_gateway || 'woovi',
@@ -1431,6 +1454,7 @@ require_once 'auth.php';
                                 if (data.track_initiate_checkout === undefined || data.track_initiate_checkout === null) this.form.track_initiate_checkout = true;
                                 if (data.track_add_payment_info === undefined || data.track_add_payment_info === null) this.form.track_add_payment_info = true;
                                 if (data.track_purchase_on_pix_copy === undefined || data.track_purchase_on_pix_copy === null) this.form.track_purchase_on_pix_copy = false;
+                                if (data.track_purchase_on_whatsapp_click === undefined || data.track_purchase_on_whatsapp_click === null) this.form.track_purchase_on_whatsapp_click = false;
                                 if (data.show_close_button === undefined || data.show_close_button === null) this.form.show_close_button = true;
 
                                 this.isModalOpen = true;
@@ -1478,6 +1502,7 @@ require_once 'auth.php';
                             track_initiate_checkout: true,
                             track_add_payment_info: true,
                             track_purchase_on_pix_copy: false,
+                            track_purchase_on_whatsapp_click: false,
                             checkout_style: 'default',
                             product_type: 'digital',
                             payment_gateway: 'woovi',
