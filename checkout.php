@@ -1105,6 +1105,44 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         };
         window.recordPixCopyEvent = recordPixCopyEvent;
 
+        let pixCountdownInterval = null;
+
+        function startPixCountdown(durationSeconds) {
+            if (pixCountdownInterval) clearInterval(pixCountdownInterval);
+            let remaining = durationSeconds;
+            const updateDisplay = () => {
+                const timerEls = document.querySelectorAll('.pix-countdown-timer');
+                if (!timerEls.length) return;
+                const minutes = Math.floor(remaining / 60);
+                const seconds = remaining % 60;
+                const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                timerEls.forEach(el => el.textContent = formatted);
+                if (remaining <= 0) {
+                    clearInterval(pixCountdownInterval);
+                    timerEls.forEach(el => el.textContent = "00:00");
+                } else {
+                    remaining--;
+                }
+            };
+            updateDisplay();
+            pixCountdownInterval = setInterval(updateDisplay, 1000);
+        }
+
+        window.togglePixQrCode = () => {
+            const qrBox = document.getElementById('pix-qr-code-box');
+            const toggleText = document.getElementById('btn-toggle-qr-text');
+            if (!qrBox) return;
+            const isHidden = qrBox.classList.contains('hidden');
+            if (isHidden) {
+                qrBox.classList.remove('hidden');
+                if (toggleText) toggleText.textContent = 'Ocultar QR Code';
+            } else {
+                qrBox.classList.add('hidden');
+                if (toggleText) toggleText.textContent = 'Prefere pagar por outro aparelho? Ver QR Code';
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
         // Copy to clipboard helper
         window.copyToClipboard = (text, element) => {
             recordPixCopyEvent();
@@ -1113,22 +1151,41 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 trackPixCopyPurchase();
             }
 
-            const btn = element || document.getElementById('btn-copy-pix');
-            if (!btn) return;
-            const original = btn.innerHTML;
+            if ('vibrate' in navigator) {
+                try { navigator.vibrate([50, 40, 50]); } catch (e) {}
+            }
+
+            const mainBtn = document.getElementById('btn-main-copy-pix');
+            const smallBtn = document.getElementById('btn-copy-pix');
+            const feedbackBox = document.getElementById('pix-copy-feedback');
+
+            const originalMainHtml = mainBtn ? mainBtn.innerHTML : null;
+            const originalSmallHtml = smallBtn ? smallBtn.innerHTML : null;
 
             const updateButton = () => {
-                const hasIcon = btn.querySelector('[data-lucide="copy"]') || btn.querySelector('svg');
-                if (hasIcon) {
-                    btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> PIX COPIADO!';
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
-                } else {
-                    btn.innerHTML = 'COPIADO!';
+                if (mainBtn) {
+                    mainBtn.classList.remove('animate-pulse');
+                    mainBtn.classList.add('bg-emerald-700', 'ring-2', 'ring-emerald-300');
+                    mainBtn.innerHTML = '<i data-lucide="check-check" class="w-5 h-5 text-white"></i> <span>PIX COPIADO! ABRA SEU BANCO</span>';
                 }
+                if (smallBtn) {
+                    smallBtn.textContent = 'COPIADO!';
+                }
+                if (feedbackBox) {
+                    feedbackBox.classList.remove('hidden');
+                }
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+
                 setTimeout(() => {
-                    btn.innerHTML = original;
-                    if (hasIcon && typeof lucide !== 'undefined') lucide.createIcons();
-                }, 2000);
+                    if (mainBtn && originalMainHtml) {
+                        mainBtn.classList.remove('bg-emerald-700', 'ring-2', 'ring-emerald-300');
+                        mainBtn.innerHTML = originalMainHtml;
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    }
+                    if (smallBtn && originalSmallHtml) {
+                        smallBtn.innerHTML = originalSmallHtml;
+                    }
+                }, 4000);
             };
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1196,39 +1253,53 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
             const whatsappSectionHtml = (isManualPix && pixData.whatsapp_url) ? `
-                <div class="mt-4 p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/50 rounded-xl text-left">
-                    <div class="flex items-center gap-2 mb-1.5 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
-                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
-                        <span>Instruções para Liberação do Acesso:</span>
+                <div class="mt-3.5 p-3.5 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-left">
+                    <div class="flex items-center gap-2 mb-1 text-slate-800 dark:text-slate-200 font-bold text-xs">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>
+                        <span>Já efetuou o pagamento no seu banco?</span>
                     </div>
-                    <ol class="text-[11px] text-emerald-900 dark:text-slate-300 space-y-1 list-decimal list-inside pl-0.5">
-                        <li>Copie o código Pix acima ou escaneie o QR Code no seu banco.</li>
-                        <li>Efetue o pagamento de <strong>${pixData.formattedPrice}</strong>.</li>
-                        <li>${whatsappInstructionStep}</li>
-                    </ol>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-2.5">
+                        ${whatsappInstructionStep}
+                    </p>
+                    <a href="${pixData.whatsapp_url}" target="_blank" rel="noopener" onclick="window.trackWhatsAppReceiptClick()" class="w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold py-3 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-md hover:shadow-emerald-500/20 active:scale-[0.99]">
+                        <i data-lucide="message-circle" class="w-4 h-4"></i> ${whatsappBtnText}
+                    </a>
                 </div>
-                <a href="${pixData.whatsapp_url}" target="_blank" rel="noopener" onclick="window.trackWhatsAppReceiptClick()" class="mt-3 w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold py-3.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-500/20 active:scale-[0.99]">
-                    <i data-lucide="message-circle" class="w-5 h-5"></i> ${whatsappBtnText}
-                </a>
             ` : '';
 
             pixWaitView.innerHTML = `
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Pagamento via PIX</h3>
-                <p class="text-sm text-gray-600 dark:text-slate-400 mb-6">Escaneie o QR Code abaixo para finalizar.</p>
-                <div class="bg-white p-2 rounded-lg inline-block mb-4 shadow-sm border border-gray-200 dark:border-none">
-                    <img src="${pixData.qrCodeImage}" class="w-48 h-48">
+                <div class="w-full max-w-sm mx-auto mb-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-2.5 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                        </span>
+                        <span>Código Pix reservado</span>
+                    </div>
+                    <div class="flex items-center gap-1 font-mono font-black text-sm text-amber-600 dark:text-amber-400 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-500/20">
+                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                        <span class="pix-countdown-timer">10:00</span>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Pagamento via PIX</h3>
+                <p class="text-xs text-gray-600 dark:text-slate-400 mb-4">Escaneie o QR Code abaixo ou copie o código Pix.</p>
+                <div class="bg-white p-2 rounded-xl inline-block mb-4 shadow-sm border border-gray-200 dark:border-none">
+                    <img src="${pixData.qrCodeImage}" class="w-44 h-44">
                 </div>
                 <div class="mb-4">
                     <p class="text-gray-500 dark:text-slate-400 text-xs uppercase font-bold">Valor a Pagar</p>
                     <p class="text-2xl font-black text-gray-900 dark:text-white">${pixData.formattedPrice}</p>
                 </div>
-                <div class="bg-gray-100 dark:bg-slate-950 p-3 rounded border border-gray-200 dark:border-slate-800 flex items-center gap-2 mb-4">
-                    <input readonly value="${pixData.brCode}" oncopy="window.recordPixCopyEvent()" onclick="this.select()" class="bg-transparent text-xs text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate cursor-pointer" title="Clique para selecionar ou copiar">
-                    <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 dark:hover:text-white transition">COPIAR</button>
-                </div>
-                <button onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg mb-2">
-                    <i data-lucide="copy" class="w-4 h-4"></i> COPIAR PIX
+                <button id="btn-main-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg mb-2 animate-pulse active:scale-[0.98]">
+                    <i data-lucide="copy" class="w-4 h-4"></i> <span>COPIAR CÓDIGO PIX</span>
                 </button>
+                <div class="bg-gray-100 dark:bg-slate-950 p-2.5 rounded-xl border border-gray-200 dark:border-slate-800 flex items-center gap-2 mb-2">
+                    <input readonly value="${pixData.brCode}" oncopy="window.recordPixCopyEvent()" onclick="copyToClipboard('${pixData.brCode}', this)" class="bg-transparent text-xs text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate cursor-pointer" title="Clique para copiar">
+                    <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-emerald-600 dark:text-emerald-400 font-bold text-xs hover:underline transition uppercase shrink-0">Copiar</button>
+                </div>
+                <div id="pix-copy-feedback" class="hidden p-2.5 mb-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-600/50 rounded-xl text-emerald-800 dark:text-emerald-300 text-xs font-bold text-center">
+                    ✓ Código Pix copiado! Abra o app do seu banco e cole na opção Pix Copia e Cola.
+                </div>
                 ${whatsappSectionHtml}
                 <div class="mt-4 animate-pulse text-green-600 dark:text-green-500 text-sm font-bold flex items-center justify-center gap-2">
                     <i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Aguardando confirmação...
@@ -1237,22 +1308,100 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
             if (PLANOS.main.style === 'minimalist') {
                 pixWaitView.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-2">
-                        <div class="bg-white p-2 rounded-xl inline-block mb-4 shadow-lg">
-                            <img src="${pixData.qrCodeImage}" class="w-48 h-48">
-                        </div>
-                        <div class="w-full bg-gray-100 dark:bg-slate-950 p-3 rounded-2xl border border-gray-200 dark:border-slate-800 flex flex-col gap-3 mb-2">
-                            <div class="flex items-center gap-2 px-1">
-                                <input readonly value="${pixData.brCode}" oncopy="window.recordPixCopyEvent()" onclick="this.select()" class="bg-transparent text-[10px] text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate cursor-pointer" title="Clique para selecionar ou copiar">
-                                <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 transition uppercase shrink-0">Copiar</button>
+                    <div class="flex flex-col items-center justify-center py-1">
+                        
+                        <!-- Alerta de Urgência / Timer Regressivo -->
+                        <div class="w-full mb-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-2.5 flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold">
+                                <span class="relative flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                </span>
+                                <span>Código Pix reservado</span>
                             </div>
-                            <button onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg">
-                                <i data-lucide="copy" class="w-4 h-4"></i> COPIAR PIX
-                            </button>
+                            <div class="flex items-center gap-1 font-mono font-black text-sm text-amber-600 dark:text-amber-400 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-500/20">
+                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                <span class="pix-countdown-timer">10:00</span>
+                            </div>
                         </div>
+
+                        <!-- Resumo com Valor a Pagar em Destaque -->
+                        <div class="w-full bg-gray-50 dark:bg-slate-950/70 border border-gray-200 dark:border-slate-800 rounded-2xl p-3 mb-3 flex items-center justify-between text-left">
+                            <div class="min-w-0 pr-2">
+                                <span class="text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider block">Valor a pagar</span>
+                                <span class="text-xs font-bold text-gray-800 dark:text-slate-200 truncate block">${PLANOS['main'].name || 'Produto'}</span>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400">${pixData.formattedPrice}</span>
+                            </div>
+                        </div>
+
+                        <!-- CTA PRINCIPAL: COPIAR PIX EM GRANDE DESTAQUE (MOBILE FIRST) -->
+                        <div class="w-full space-y-2 mb-3">
+                            <button id="btn-main-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 px-4 rounded-2xl text-base shadow-xl shadow-emerald-600/25 active:scale-[0.98] transition flex items-center justify-center gap-2.5 animate-pulse">
+                                <i data-lucide="copy" class="w-5 h-5"></i>
+                                <span class="tracking-wide">COPIAR CÓDIGO PIX</span>
+                            </button>
+                            
+                            <!-- Campo do código com clique para copiar -->
+                            <div class="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-slate-950 rounded-xl border border-gray-200 dark:border-slate-800">
+                                <input readonly value="${pixData.brCode}" oncopy="window.recordPixCopyEvent()" onclick="copyToClipboard('${pixData.brCode}', this)" class="bg-transparent text-[11px] text-gray-500 dark:text-slate-400 w-full outline-none font-mono truncate cursor-pointer" title="Clique para copiar">
+                                <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-emerald-600 dark:text-emerald-400 font-bold text-xs hover:underline uppercase shrink-0">Copiar</button>
+                            </div>
+
+                            <!-- Feedback animado pós-cópia -->
+                            <div id="pix-copy-feedback" class="hidden p-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-600/50 rounded-xl text-emerald-800 dark:text-emerald-300 text-xs font-bold text-center space-y-1">
+                                <div class="flex items-center justify-center gap-1.5 text-sm">
+                                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i>
+                                    <span>Código Pix copiado com sucesso!</span>
+                                </div>
+                                <p class="text-[11px] font-normal text-emerald-900/80 dark:text-emerald-200/80">
+                                    Abra o aplicativo do seu Banco e selecione a opção <strong>PIX > Copia e Cola</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Passo a Passo Rápido -->
+                        <div class="w-full p-3 bg-gray-50 dark:bg-slate-950/50 border border-gray-200 dark:border-slate-800/80 rounded-2xl text-left mb-3">
+                            <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 mb-2 flex items-center gap-1.5">
+                                <i data-lucide="help-circle" class="w-3.5 h-3.5 text-blue-500"></i>
+                                <span>Como pagar pelo celular em 3 passos:</span>
+                            </div>
+                            <div class="space-y-1.5 text-[11px] text-gray-700 dark:text-slate-300">
+                                <div class="flex items-start gap-2">
+                                    <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                                    <span>Clique no botão verde acima para <strong>Copiar o Código Pix</strong>.</span>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                                    <span>Abra o app do seu Banco e vá em <strong>PIX > Copia e Cola</strong>.</span>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                                    <span>Cole o código e confirme o pagamento.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- QR Code Opcional (Toggle para evitar poluição no mobile) -->
+                        <div class="w-full text-center mb-1">
+                            <button type="button" onclick="window.togglePixQrCode()" id="btn-toggle-qr" class="text-[11px] text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800/60">
+                                <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+                                <span id="btn-toggle-qr-text">Prefere pagar por outro aparelho? Ver QR Code</span>
+                            </button>
+                            <div id="pix-qr-code-box" class="hidden mt-2 bg-white p-3 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-md inline-block">
+                                <img src="${pixData.qrCodeImage}" class="w-44 h-44 mx-auto" alt="QR Code Pix">
+                                <p class="text-[10px] text-gray-500 mt-1.5">Aponte a câmera do aplicativo do seu banco</p>
+                            </div>
+                        </div>
+
+                        <!-- Seção do WhatsApp (Instruções pós-pagamento) -->
                         ${whatsappSectionHtml}
-                        <div class="mt-3 animate-pulse text-green-600 dark:text-green-500 text-[10px] font-bold flex items-center gap-2">
-                            <i data-lucide="loader" class="w-3 h-3 animate-spin"></i> AGUARDANDO PAGAMENTO...
+
+                        <!-- Indicador de Status / Polling -->
+                        <div class="mt-3 text-gray-500 dark:text-slate-400 text-[10px] font-semibold flex items-center justify-center gap-1.5">
+                            <i data-lucide="loader" class="w-3 h-3 animate-spin text-emerald-500"></i>
+                            <span>AGUARDANDO CONFIRMAÇÃO DO BANCO...</span>
                         </div>
                     </div>
                 `;
@@ -1260,6 +1409,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
             pixWaitView.classList.remove('hidden');
             lucide.createIcons();
+            startPixCountdown(600); // 10 minutos
 
             // Real Polling
             const pollInterval = setInterval(async () => {
@@ -1277,6 +1427,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         };
 
         const showSuccessView = () => {
+            if (pixCountdownInterval) clearInterval(pixCountdownInterval);
             const header = document.getElementById('checkout-step-header');
             if (header) header.classList.add('hidden');
             pixWaitView.classList.add('hidden');
