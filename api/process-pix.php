@@ -14,6 +14,7 @@ require_once __DIR__ . '/functions/send_utmify_event.php';
 require_once __DIR__ . '/functions/handle_woovi_pix_payment.php';
 require_once __DIR__ . '/functions/handle_appmax_pix_payment.php';
 require_once __DIR__ . '/functions/handle_manual_pix_payment.php';
+require_once __DIR__ . '/functions/handle_woovi_whatsapp_payment.php';
 
 header('Content-Type: application/json');
 
@@ -60,6 +61,9 @@ if ($gateway === 'appmax') {
     handle_appmax_pix_payment();
 } elseif ($gateway === 'manual_pix' || $gateway === 'pix_manual' || $gateway === 'direct_pix') {
     handle_manual_pix_payment();
+} elseif ($gateway === 'woovi_whatsapp') {
+    handle_woovi_whatsapp_payment();
 } else {
     handle_woovi_pix_payment();
 }
+

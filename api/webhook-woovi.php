@@ -102,10 +102,14 @@ try {
             // Dispara para UTMIFY
             sendUtmifyEvent($order, 'paid');
 
-            // Envia os produtos via Evolution/Gmail
-            log_message("INFO: Iniciando entrega de produtos para Pedido ID {$order['id']}");
-            $deliveryResult = processOrderDeliverables($productsList, $customerDataForHelper, $db);
-            log_message("INFO: Resultado entrega: " . json_encode($deliveryResult));
+            // Envia os produtos via Evolution/Gmail (apenas se não for entrega manual via WhatsApp)
+            if (($order['gateway'] ?? '') !== 'woovi_whatsapp') {
+                log_message("INFO: Iniciando entrega de produtos para Pedido ID {$order['id']}");
+                $deliveryResult = processOrderDeliverables($productsList, $customerDataForHelper, $db);
+                log_message("INFO: Resultado entrega: " . json_encode($deliveryResult));
+            } else {
+                log_message("INFO: Pedido ID {$order['id']} usa o gateway 'woovi_whatsapp' (entrega manual via WhatsApp). Disparo de entregáveis automáticos pulado.");
+            }
 
             log_message("INFO: Iniciando trackMetaPurchase para Pedido #" . $order['id']);
             require_once __DIR__ . '/functions/track_meta_purchase.php';

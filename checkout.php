@@ -669,7 +669,9 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 gateway: <?= json_encode($product['payment_gateway'] ?? 'woovi') ?>,
                 product_type: <?= json_encode($product['product_type'] ?? 'digital') ?>,
                 pix_instruction_type: <?= json_encode($product['pix_instruction_type'] ?? 'name') ?>,
-                pix_whatsapp_button_text: <?= json_encode($product['pix_whatsapp_button_text'] ?? '') ?>
+                pix_whatsapp_button_text: <?= json_encode($product['pix_whatsapp_button_text'] ?? '') ?>,
+                pix_whatsapp_number: <?= json_encode($product['pix_whatsapp_number'] ?? '') ?>,
+                pix_whatsapp_message: <?= json_encode($product['pix_whatsapp_message'] ?? '') ?>
             }
         };
 
@@ -1268,7 +1270,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     const data = await res.json();
                     if (data.status === 'PAID' || data.status === 'COMPLETED') {
                         clearInterval(pollInterval);
-                        showSuccessView();
+                        showSuccessView(pixData);
                     }
                 } catch (e) {
                     console.error('Polling error', e);
@@ -1276,13 +1278,94 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }, 5000); // Check every 5s
         };
 
-        const showSuccessView = () => {
+        const showSuccessView = (currentPixData) => {
+            const dataToUse = currentPixData || (pixPaymentState && pixPaymentState.pixData) || {};
+            const isWhatsAppDelivery = !!(dataToUse.whatsapp_delivery || (PLANOS['main'] && PLANOS['main'].gateway === 'woovi_whatsapp' && (dataToUse.whatsapp_url || PLANOS['main'].pix_whatsapp_number)));
+
             const header = document.getElementById('checkout-step-header');
-            if (header) header.classList.add('hidden');
+            if (header) {
+                if (isWhatsAppDelivery) {
+                    header.classList.remove('hidden');
+                    header.innerHTML = `
+                        <span class="bg-emerald-500 w-8 h-8 rounded-full flex items-center justify-center text-sm"><i data-lucide="check" class="w-4 h-4 text-white"></i></span>
+                        Pagamento Aprovado
+                    `;
+                } else {
+                    header.classList.add('hidden');
+                }
+            }
+
             pixWaitView.classList.add('hidden');
+
+            if (isWhatsAppDelivery) {
+                const instructionType = dataToUse.pix_instruction_type || (PLANOS['main'] && PLANOS['main'].pix_instruction_type) || 'name';
+                let instructionStepText = '';
+                let whatsappBtnText = '';
+
+                if (instructionType === 'comprovante') {
+                    instructionStepText = 'Clique no botão verde abaixo para <strong>enviar seu comprovante no WhatsApp</strong> e liberar seu produto imediatamente:';
+                    whatsappBtnText = 'ENVIAR COMPROVANTE NO WHATSAPP';
+                } else {
+                    instructionStepText = 'Clique no botão verde abaixo para <strong>informar seu nome completo no WhatsApp</strong> e liberar seu acesso imediatamente:';
+                    whatsappBtnText = 'RECEBER MEU ACESSO NO WHATSAPP';
+                }
+
+                if (dataToUse.whatsapp_button_text && dataToUse.whatsapp_button_text.trim() !== '') {
+                    whatsappBtnText = dataToUse.whatsapp_button_text.trim();
+                } else if (PLANOS['main'] && PLANOS['main'].pix_whatsapp_button_text && PLANOS['main'].pix_whatsapp_button_text.trim() !== '') {
+                    whatsappBtnText = PLANOS['main'].pix_whatsapp_button_text.trim();
+                }
+
+                // Fallback para montar URL do WhatsApp se não veio em dataToUse
+                let targetWhatsappUrl = dataToUse.whatsapp_url || '';
+                if (!targetWhatsappUrl && PLANOS['main'] && PLANOS['main'].pix_whatsapp_number) {
+                    const cleanPhone = (PLANOS['main'].pix_whatsapp_number || '').replace(/\D/g, '');
+                    const cleanWithDDI = (cleanPhone.length >= 10 && cleanPhone.length <= 11) ? ('55' + cleanPhone) : cleanPhone;
+                    const defaultMsg = instructionType === 'comprovante' 
+                        ? 'Olá! Meu pagamento foi aprovado. Segue meu comprovante:'
+                        : 'Olá! Meu pagamento foi aprovado. Vim receber meu acesso!';
+                    targetWhatsappUrl = `https://wa.me/${cleanWithDDI}?text=${encodeURIComponent(defaultMsg)}`;
+                }
+
+                successView.innerHTML = `
+                    <div class="flex justify-center mb-4">
+                        <div class="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                            <i data-lucide="check-circle-2" class="w-12 h-12 text-emerald-500"></i>
+                        </div>
+                    </div>
+                    <h2 class="font-display text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">PAGAMENTO APROVADO!</h2>
+                    <p class="text-gray-600 dark:text-slate-300 my-2 text-sm md:text-base">
+                        Identificamos a confirmação do seu pagamento com sucesso.
+                    </p>
+
+                    <div class="mt-4 mb-4 p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/50 rounded-2xl text-left shadow-sm">
+                        <div class="flex items-center gap-2 mb-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs uppercase tracking-wide">
+                            <i data-lucide="gift" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                            <span>Liberar meu Acesso / Produto:</span>
+                        </div>
+                        <p class="text-xs text-emerald-900 dark:text-slate-200 mb-2 leading-relaxed">
+                            ${instructionStepText}
+                        </p>
+                        <div class="text-[11px] text-emerald-700 dark:text-slate-400 flex items-center gap-1.5 pt-1.5 border-t border-emerald-200/50 dark:border-emerald-800/40">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0"></i>
+                            <span>Nossa equipe está disponível para atender você agora mesmo.</span>
+                        </div>
+                    </div>
+
+                    <a href="${targetWhatsappUrl}" target="_blank" rel="noopener" onclick="window.trackWhatsAppReceiptClick()" class="w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold py-4 px-6 rounded-xl text-base transition flex items-center justify-center gap-2.5 shadow-lg hover:shadow-emerald-500/30 active:scale-[0.99] animate-bounce">
+                        <i data-lucide="message-circle" class="w-6 h-6"></i>
+                        <span>${whatsappBtnText}</span>
+                    </a>
+                    <p class="text-[11px] text-gray-500 dark:text-slate-500 text-center mt-3">
+                        Caso a conversa não abra automaticamente, verifique se o WhatsApp Web ou aplicativo está instalado.
+                    </p>
+                `;
+            }
+
             successView.classList.remove('hidden');
+            lucide.createIcons();
             // Backend tracking handles Purchase event via N8N/S2S
-        }
+        };
 
         // ---- DOWNSELL LOGIC ----
 
