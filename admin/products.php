@@ -397,6 +397,7 @@ require_once 'auth.php';
                                         <span @click="copyToClipboard('{produto}')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{produto}</span>
                                         <span @click="copyToClipboard('{valor}')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{valor}</span>
                                         <span @click="copyToClipboard('{pedido_id}')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{pedido_id}</span>
+                                        <span @click="copyToClipboard('{codigo_cliente}')" title="Ex: #XXXX (Código do cliente sem 'Cliente ')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{codigo_cliente}</span>
                                         <span x-show="form.payment_gateway === 'manual_pix'" @click="copyToClipboard('{pix_chave}')" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 transition">{pix_chave}</span>
                                     </div>
                                     <textarea x-model="form.pix_whatsapp_message" rows="2"

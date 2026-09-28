@@ -112,12 +112,16 @@ function handle_manual_pix_payment()
         }
     }
 
+    $shortCustomerCode = '#' . strtoupper(substr($correlationID, -4));
+
     $whatsappReplacements = [
         '{nome}' => $customer_name,
         '{primeiro_nome}' => $firstName,
         '{produto}' => $product_description,
         '{valor}' => $formattedPrice,
         '{pedido_id}' => $correlationID,
+        '{codigo_cliente}' => $shortCustomerCode,
+        '{codigo}' => $shortCustomerCode,
         '{pix_chave}' => $pixKey
     ];
 
