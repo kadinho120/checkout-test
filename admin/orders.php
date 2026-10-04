@@ -24,77 +24,32 @@ require_once 'auth.php';
 
     <div class="flex h-screen overflow-hidden">
 
-        <!-- Sidebar -->
-        <aside class="w-64 bg-slate-900 border-r border-slate-800 hidden md:flex flex-col">
-            <div class="p-6 border-b border-slate-800 flex items-center gap-3">
-                <div
-                    class="w-10 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-xs">
-                    APP</div>
-                <span class="font-bold text-lg tracking-tight text-white">Checkout Admin</span>
-            </div>
-
-            <nav class="flex-1 p-4 space-y-2">
-                <a href="index.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
-                </a>
-                <a href="products.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="package" class="w-5 h-5"></i> Produtos
-                </a>
-                <a href="orders.php"
-                    class="flex items-center gap-3 px-4 py-3 bg-blue-600/10 text-blue-400 rounded-lg border border-blue-600/20 font-medium">
-                    <i data-lucide="shopping-cart" class="w-5 h-5"></i> Pedidos
-                </a>
-                <a href="pix-rotations.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="key-round" class="w-5 h-5"></i> Chaves Pix
-                </a>
-                <a href="meta-events.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="activity" class="w-5 h-5"></i> Monitor Meta
-                </a>
-                <a href="tracking.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="scan-line" class="w-5 h-5"></i> Rastreamento
-                </a>
-                <a href="webhooks.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks
-                </a>
-                <a href="capi.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="activity" class="w-5 h-5"></i> Testar CAPI
-                </a>
-            </nav>
-
-            <div class="p-4 border-t border-slate-800">
-                <div class="flex items-center gap-3 px-4 py-2">
-                    <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs">AD</div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-white truncate">Admin</p>
-                    </div>
-                    <a href="login.php?logout=true" class="text-slate-400 hover:text-red-400 transition" title="Sair">
-                        <i data-lucide="log-out" class="w-4 h-4"></i>
-                    </a>
-                </div>
-            </div>
-        </aside>
+        <!-- Sidebar & Mobile Drawer -->
+        <?php include 'sidebar.php'; ?>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden relative">
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
             <header
-                class="h-16 bg-slate-900/50 backdrop-blur border-b border-slate-800 flex items-center justify-between px-6">
-                <div class="flex items-center gap-4">
-                    <h2 class="text-lg font-semibold text-white">Pedidos Realizados</h2>
+                class="min-h-16 bg-slate-900/80 backdrop-blur border-b border-slate-800 flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-0 gap-3">
+                <div class="flex items-center gap-3">
+                    <button 
+                        type="button" 
+                        @click="$store.nav.toggle()"
+                        class="md:hidden p-2 -ml-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-label="Abrir menu"
+                    >
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <h2 class="text-base sm:text-lg font-semibold text-white">Pedidos Realizados</h2>
                 </div>
                 <button @click="fetchOrders()"
-                    class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
-                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Atualizar
+                    class="bg-slate-800 hover:bg-slate-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 border border-slate-700">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Atualizar</span>
                 </button>
             </header>
 
-            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 p-6">
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 p-3 sm:p-6">
 
                 <!-- Filtros de Busca e Data/Horário -->
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-6 shadow-xl space-y-4">
@@ -241,8 +196,8 @@ require_once 'auth.php';
 
                 <!-- Orders Table -->
                 <div x-show="!isLoading"
-                    class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
-                    <table class="w-full text-left border-collapse">
+                    class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse min-w-[720px]">
                         <thead>
                             <tr class="text-xs text-slate-400 border-b border-slate-800 bg-slate-900/50">
                                 <th class="p-4 uppercase font-medium"># ID</th>

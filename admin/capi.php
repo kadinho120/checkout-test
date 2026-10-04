@@ -22,59 +22,26 @@ require_once 'auth.php';
 <body class="bg-slate-950 text-slate-200 font-sans antialiased" x-data="capiTester()">
 
     <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-slate-900 border-r border-slate-800 hidden md:flex flex-col">
-            <div class="p-6 border-b border-slate-800 flex items-center gap-3">
-                <div
-                    class="w-10 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-xs">
-                    APP</div>
-                <span class="font-bold text-lg tracking-tight text-white">Checkout Admin</span>
-            </div>
-            <nav class="flex-1 p-4 space-y-2">
-                <a href="index.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"><i
-                        data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
-                <a href="products.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"><i
-                        data-lucide="package" class="w-5 h-5"></i> Produtos</a>
-                <a href="orders.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"><i
-                        data-lucide="shopping-cart" class="w-5 h-5"></i> Pedidos</a>
-                <a href="pix-rotations.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"><i
-                        data-lucide="key-round" class="w-5 h-5"></i> Chaves Pix</a>
-                <a href="meta-events.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"><i
-                        data-lucide="activity" class="w-5 h-5"></i> Monitor Meta</a>
-                <a href="tracking.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"><i
-                        data-lucide="scan-line" class="w-5 h-5"></i> Rastreamento</a>
-                <a href="webhooks.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"><i
-                        data-lucide="webhook" class="w-5 h-5"></i> Webhooks</a>
-                <a href="capi.php"
-                    class="flex items-center gap-3 px-4 py-3 bg-blue-600/10 text-blue-400 rounded-lg border border-blue-600/20 font-medium"><i
-                        data-lucide="activity" class="w-5 h-5"></i> Testar CAPI</a>
-            </nav>
-            <div class="p-4 border-t border-slate-800">
-                <div class="flex items-center gap-3 px-4 py-2">
-                    <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs">AD</div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-white truncate">Admin</p>
-                    </div>
-                    <a href="login.php?logout=true" class="text-slate-400 hover:text-red-400 transition"><i
-                            data-lucide="log-out" class="w-4 h-4"></i></a>
-                </div>
-            </div>
-        </aside>
+        <!-- Sidebar Navigation -->
+        <?php include 'sidebar.php'; ?>
 
-        <div class="flex-1 flex flex-col overflow-hidden relative">
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
             <header
-                class="h-16 bg-slate-900/50 backdrop-blur border-b border-slate-800 flex items-center justify-between px-6">
-                <h2 class="text-lg font-semibold text-white">Testador de API de Conversões (CAPI)</h2>
+                class="min-h-16 bg-slate-900/80 backdrop-blur border-b border-slate-800 flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-0 gap-3">
+                <div class="flex items-center gap-3">
+                    <button 
+                        type="button" 
+                        @click="$store.nav.toggle()"
+                        class="md:hidden p-2 -ml-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-label="Abrir menu"
+                    >
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <h2 class="text-base sm:text-lg font-semibold text-white truncate">Testador de API de Conversões (CAPI)</h2>
+                </div>
             </header>
 
-            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 p-6">
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 p-3 sm:p-6">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Config Box -->
                     <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg h-fit">

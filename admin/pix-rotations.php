@@ -25,69 +25,25 @@ if (!($_SESSION['logged_in'] ?? false)) {
 
 <body class="bg-slate-950 text-slate-200 font-sans antialiased selection:bg-purple-500/30">
 
-    <div class="flex h-screen" x-data="pixRotationsPage()">
+    <div class="flex h-screen overflow-hidden" x-data="pixRotationsPage()">
 
         <!-- Sidebar Navigation -->
-        <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col">
-            <div class="p-6 flex items-center gap-3">
-                <div class="w-10 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-xs">
-                    APP
-                </div>
-                <span class="font-bold text-lg tracking-tight text-white">Checkout Admin</span>
-            </div>
-
-            <nav class="flex-1 p-4 space-y-2">
-                <a href="index.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
-                </a>
-                <a href="products.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="package" class="w-5 h-5"></i> Produtos
-                </a>
-                <a href="orders.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="shopping-cart" class="w-5 h-5"></i> Pedidos
-                </a>
-                <a href="pix-rotations.php"
-                    class="flex items-center gap-3 px-4 py-3 bg-purple-600/10 text-purple-400 rounded-lg border border-purple-600/20 font-medium">
-                    <i data-lucide="key-round" class="w-5 h-5"></i> Chaves Pix
-                </a>
-                <a href="meta-events.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="activity" class="w-5 h-5"></i> Monitor Meta
-                </a>
-                <a href="tracking.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="scan-line" class="w-5 h-5"></i> Rastreamento
-                </a>
-                <a href="webhooks.php"
-                    class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                    <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks
-                </a>
-            </nav>
-
-            <div class="p-4 border-t border-slate-800">
-                <div class="flex items-center gap-3 px-4 py-2">
-                    <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs">AD</div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-white truncate">
-                            <?= htmlspecialchars($_SESSION['user'] ?? 'Admin') ?>
-                        </p>
-                    </div>
-                    <a href="login.php?logout=true" class="text-slate-400 hover:text-red-400 transition" title="Sair">
-                        <i data-lucide="log-out" class="w-4 h-4"></i>
-                    </a>
-                </div>
-            </div>
-        </aside>
+        <?php include 'sidebar.php'; ?>
 
         <!-- Main Content -->
-        <main class="flex-1 flex flex-col overflow-hidden bg-slate-950">
+        <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-950">
             <!-- Header -->
-            <header class="h-16 bg-slate-900/50 backdrop-blur border-b border-slate-800 flex items-center justify-between px-6">
-                <div class="flex items-center gap-4">
-                    <h2 class="text-lg font-semibold text-white">Histórico de Rotação de Chaves Pix (Woovi)</h2>
+            <header class="min-h-16 bg-slate-900/80 backdrop-blur border-b border-slate-800 flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-0 gap-3">
+                <div class="flex items-center gap-3">
+                    <button 
+                        type="button" 
+                        @click="$store.nav.toggle()"
+                        class="md:hidden p-2 -ml-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-label="Abrir menu"
+                    >
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <h2 class="text-base sm:text-lg font-semibold text-white truncate">Rotação de Chaves Pix</h2>
                 </div>
                 <div class="flex items-center gap-3">
                     <button @click="triggerRotation()" :disabled="isRotating"

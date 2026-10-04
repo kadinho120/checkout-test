@@ -19,12 +19,38 @@ try {
     $endTime = isset($_GET['end_time']) ? trim($_GET['end_time']) : '';
     $status = isset($_GET['status']) ? trim($_GET['status']) : 'all';
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+    $searchDate = isset($_GET['searchDate']) ? trim($_GET['searchDate']) : '';
+    $startDate = isset($_GET['startDate']) ? trim($_GET['startDate']) : '';
+    $endDate = isset($_GET['endDate']) ? trim($_GET['endDate']) : '';
 
     $whereParts = [];
     $params = [];
 
-    // 1. Filtro por Data e Range de Horas
-    if (!empty($date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+    // 1. Filtro por Data
+    if (!empty($searchDate)) {
+        if ($searchDate === 'custom' && !empty($startDate) && !empty($endDate)) {
+            $whereParts[] = "created_at BETWEEN :start_custom AND :end_custom";
+            $params[':start_custom'] = $startDate . " 00:00:00";
+            $params[':end_custom'] = $endDate . " 23:59:59";
+        } elseif ($searchDate === 'today') {
+            $now = new DateTime();
+            $whereParts[] = "date(created_at) = :today_date";
+            $params[':today_date'] = $now->format('Y-m-d');
+        } elseif ($searchDate === 'yesterday') {
+            $whereParts[] = "date(created_at) = date('now', '-03:00', '-1 day')";
+        } elseif ($searchDate === 'last7') {
+            $whereParts[] = "created_at >= date('now', '-03:00', '-7 days')";
+        } elseif ($searchDate === 'last14') {
+            $whereParts[] = "created_at >= date('now', '-03:00', '-14 days')";
+        } elseif ($searchDate === 'last30') {
+            $whereParts[] = "created_at >= date('now', '-03:00', '-30 days')";
+        } elseif ($searchDate === 'this_month') {
+            $whereParts[] = "strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now', '-03:00')";
+        } elseif ($searchDate === 'this_year') {
+            $whereParts[] = "strftime('%Y', created_at) = strftime('%Y', 'now', '-03:00')";
+        }
+        // 'all' -> no date filter
+    } elseif (!empty($date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
         $st = !empty($startTime) ? (strlen($startTime) === 5 ? $startTime . ':00' : $startTime) : '00:00:00';
         $et = !empty($endTime) ? (strlen($endTime) === 5 ? $endTime . ':59' : $endTime) : '23:59:59';
 
@@ -113,6 +139,20 @@ try {
     $stmt->execute();
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    foreach ($orders as &$order) {
+        $data = json_decode($order['json_data'] ?? '{}', true);
+        $productName = 'Produto desconhecido';
+        if (isset($data['products']) && is_array($data['products']) && count($data['products']) > 0) {
+            $names = array_column($data['products'], 'name');
+            $productName = $names[0] . (count($names) > 1 ? ' + ' . (count($names) - 1) . ' item(s)' : '');
+        } elseif (!empty($order['product_name'])) {
+            $productName = $order['product_name'];
+        }
+        $order['product_name'] = $productName;
+        $order['pix_copied'] = (int)($order['pix_copied'] ?? 0);
+    }
+    unset($order);
+
     echo json_encode([
         'data' => $orders,
         'total_pages' => $totalPages,
@@ -124,6 +164,9 @@ try {
             'end_time' => $endTime,
             'status' => $status,
             'search' => $search,
+            'searchDate' => $searchDate,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
             'limit' => $limit
         ]
     ]);
