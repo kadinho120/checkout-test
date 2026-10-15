@@ -668,11 +668,22 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 },
                 gateway: <?= json_encode($product['payment_gateway'] ?? 'woovi') ?>,
                 product_type: <?= json_encode($product['product_type'] ?? 'digital') ?>,
+                request_email: <?= (int)($product['request_email'] ?? 1) !== 0 ? 'true' : 'false' ?>,
                 pix_instruction_type: <?= json_encode($product['pix_instruction_type'] ?? 'name') ?>,
                 pix_whatsapp_button_text: <?= json_encode($product['pix_whatsapp_button_text'] ?? '') ?>,
                 pix_whatsapp_number: <?= json_encode($product['pix_whatsapp_number'] ?? '') ?>,
                 pix_whatsapp_message: <?= json_encode($product['pix_whatsapp_message'] ?? '') ?>
             }
+        };
+
+        const escapeHtml = (text) => {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         };
 
         const formatPriceJS = (amount) => {
@@ -976,10 +987,11 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 pixPaymentState = {
                     correlationId: result.correlationId,
                     is_manual: !!(result.is_manual || (result.pixData && result.pixData.is_manual) || PLANOS['main'].gateway === 'manual_pix'),
-                    pixData: result.pixData
+                    pixData: result.pixData,
+                    customer: customerData
                 };
 
-                showPixWaitView(result.pixData, result.correlationId);
+                showPixWaitView(result.pixData, result.correlationId, customerData);
 
             } catch (error) {
                 console.error(error);
@@ -1165,7 +1177,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             document.body.removeChild(textArea);
         }
 
-        const showPixWaitView = (pixData, correlationId) => {
+        const showPixWaitView = (pixData, correlationId, customerData) => {
             form.classList.add('hidden');
             // Update Header
             const header = document.getElementById('checkout-step-header');
@@ -1177,7 +1189,16 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 `;
             }
 
-            const isManualPix = !!(pixData.is_manual || pixData.whatsapp_url);
+            const isManualPix = !!(
+                pixData.is_manual || 
+                pixData.whatsapp_url || 
+                (pixPaymentState && pixPaymentState.is_manual) || 
+                (PLANOS['main'] && (PLANOS['main'].gateway === 'manual_pix' || PLANOS['main'].gateway === 'pix_manual' || PLANOS['main'].gateway === 'direct_pix'))
+            );
+            const isEmailRequired = !!(
+                (PLANOS['main'] && PLANOS['main'].request_email) || 
+                document.getElementById('email')
+            );
             const instructionType = pixData.pix_instruction_type || (PLANOS['main'] && PLANOS['main'].pix_instruction_type) || 'name';
 
             let whatsappInstructionStep = '';
@@ -1214,6 +1235,33 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 </a>
             ` : '';
 
+            let emailInstructionHtml = '';
+            if (!isManualPix && isEmailRequired) {
+                const currentEmail = (customerData && customerData.email) 
+                    || (document.getElementById('email') && document.getElementById('email').value.trim()) 
+                    || (pixPaymentState && pixPaymentState.customer && pixPaymentState.customer.email) 
+                    || '';
+                const emailDisplay = (currentEmail && !currentEmail.includes('@naoinformado.com'))
+                    ? ` no e-mail <strong>${escapeHtml(currentEmail)}</strong>`
+                    : ' no seu e-mail';
+
+                emailInstructionHtml = `
+                    <div class="w-full mt-4 p-3.5 bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl text-left shadow-sm">
+                        <div class="flex items-center gap-2 mb-1.5 text-blue-900 dark:text-blue-300 font-bold text-xs">
+                            <i data-lucide="mail" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
+                            <span>Instruções de Acesso por E-mail:</span>
+                        </div>
+                        <p class="text-[11px] text-blue-950 dark:text-slate-300 leading-relaxed">
+                            Assim que o pagamento do Pix for confirmado, você receberá seus dados de acesso diretamente${emailDisplay}.
+                        </p>
+                        <div class="mt-2 pt-2 border-t border-blue-100 dark:border-blue-900/40 flex items-start gap-1.5 text-[10px] text-blue-900/80 dark:text-slate-400">
+                            <i data-lucide="info" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
+                            <span>Caso não localize a mensagem na sua <strong>Caixa de Entrada</strong> em alguns minutos, verifique também sua pasta de <strong>Spam</strong> ou <strong>Lixo Eletrônico</strong>.</span>
+                        </div>
+                    </div>
+                `;
+            }
+
             pixWaitView.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Pagamento via PIX</h3>
                 <p class="text-sm text-gray-600 dark:text-slate-400 mb-6">Escaneie o QR Code abaixo para finalizar.</p>
@@ -1232,6 +1280,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     <i data-lucide="copy" class="w-4 h-4"></i> COPIAR PIX
                 </button>
                 ${whatsappSectionHtml}
+                ${emailInstructionHtml}
                 <div class="mt-4 animate-pulse text-green-600 dark:text-green-500 text-sm font-bold flex items-center justify-center gap-2">
                     <i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Aguardando confirmação...
                 </div>
@@ -1253,6 +1302,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                             </button>
                         </div>
                         ${whatsappSectionHtml}
+                        ${emailInstructionHtml}
                         <div class="mt-3 animate-pulse text-green-600 dark:text-green-500 text-[10px] font-bold flex items-center gap-2">
                             <i data-lucide="loader" class="w-3 h-3 animate-spin"></i> AGUARDANDO PAGAMENTO...
                         </div>
