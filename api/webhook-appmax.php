@@ -46,9 +46,14 @@ $event_type = $payload['event_type'] ?? '';
 $paid_events = [
     'order_paid_by_pix',
     'order_approved',
+    'order_authorized',
     'order_paid',
+    'order_integrated',
     'order_up_sold',
-    'payment_approved'
+    'payment_approved',
+    'payment_authorized',
+    'order_authorized_with_delay',
+    'payment_authorized_with_delay'
 ];
 
 // Identificação do correlation_id e/ou order_id da Appmax
@@ -64,7 +69,7 @@ if (!$client_key && !$appmax_order_id) {
 }
 
 // Verifica se é um evento de pagamento
-$is_paid_event = in_array($event, $paid_events) || (isset($payload['data']['status']) && in_array(strtolower($payload['data']['status']), ['aprovado', 'pago', 'paid', 'approved']));
+$is_paid_event = in_array($event, $paid_events) || (isset($payload['data']['status']) && in_array(strtolower($payload['data']['status']), ['aprovado', 'pago', 'paid', 'approved', 'autorizado', 'authorized']));
 
 if (!$is_paid_event) {
     log_appmax_webhook("INFO: Evento ignorado ou não conclusivo para pagamento: {$event}");

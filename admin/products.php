@@ -94,9 +94,9 @@ require_once 'auth.php';
                                         x-text="'R$ ' + parseFloat(product.price).toFixed(2)"></td>
                                     <td class="p-4 text-center">
                                         <span
-                                            :class="product.payment_gateway === 'appmax' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : (product.payment_gateway === 'manual_pix' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : (product.payment_gateway === 'woovi_whatsapp' ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'))"
+                                            :class="product.payment_gateway === 'appmax' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : (product.payment_gateway === 'appmax_card_woovi_pix' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : (product.payment_gateway === 'manual_pix' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : (product.payment_gateway === 'woovi_whatsapp' ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20')))"
                                             class="px-2 py-1 rounded text-xs font-bold border uppercase">
-                                            <span x-text="product.payment_gateway === 'appmax' ? 'Appmax' : (product.payment_gateway === 'manual_pix' ? 'Pix Direto' : (product.payment_gateway === 'woovi_whatsapp' ? 'Woovi + Whats' : 'Woovi'))"></span>
+                                            <span x-text="product.payment_gateway === 'appmax' ? 'Appmax (Cartão + Pix)' : (product.payment_gateway === 'appmax_card_woovi_pix' ? 'Appmax Cartão + Pix Woovi' : (product.payment_gateway === 'manual_pix' ? 'Pix Direto' : (product.payment_gateway === 'woovi_whatsapp' ? 'Woovi + Whats' : 'Woovi (Pix)')))"></span>
                                         </span>
                                     </td>
                                     <td class="p-4 text-center">
@@ -252,14 +252,21 @@ require_once 'auth.php';
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-slate-400 mb-1">Gateway de Pagamento Pix</label>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Gateway de Pagamento</label>
                                 <select x-model="form.payment_gateway"
                                     class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
-                                    <option value="woovi">Woovi (OpenPix) - Padrão com Tela de Sucesso</option>
-                                    <option value="woovi_whatsapp">Woovi + WhatsApp (API Woovi + Entrega Manual)</option>
-                                    <option value="appmax">Appmax (Pix)</option>
+                                    <option value="appmax">Appmax (Cartão de Crédito + Pix)</option>
+                                    <option value="appmax_card_woovi_pix">Appmax Cartão + Pix Woovi</option>
+                                    <option value="woovi">Woovi (Apenas Pix)</option>
+                                    <option value="woovi_whatsapp">Woovi + WhatsApp (Apenas Pix)</option>
                                     <option value="manual_pix">Chave Pix Direta (QR Code Próprio + WhatsApp)</option>
                                 </select>
+                                <p class="text-[11px] text-slate-500 mt-1" x-show="form.payment_gateway === 'appmax'">
+                                    * Aceita Cartão de Crédito e Pix pela Appmax (solicita CPF no checkout).
+                                </p>
+                                <p class="text-[11px] text-slate-500 mt-1" x-show="form.payment_gateway === 'appmax_card_woovi_pix'">
+                                    * Aceita Cartão Appmax (com CPF) e Pix Woovi (sem CPF obrigatório).
+                                </p>
                             </div>
 
                             <!-- Configurações de Chave Pix Direta e WhatsApp / Woovi + WhatsApp -->

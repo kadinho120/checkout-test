@@ -14,6 +14,9 @@ if (!defined('ABSPATH')) {
 // O operador '?:' define uma string vazia '' caso a variável não exista, evitando erros.
 
 define('APPMAX_API_TOKEN', getenv('APPMAX_API_TOKEN') ?: 'CC4136CD-AE5AEDD0-FB9612A1-3D66212A');
+define('APPMAX_CLIENT_ID', getenv('APPMAX_CLIENT_ID') ?: '3848dbbfa69b41cfb8bb3ba7de3eb2db');
+define('APPMAX_CLIENT_SECRET', getenv('APPMAX_CLIENT_SECRET') ?: '98b800f0b4bd455ba39be5abb93a974e');
+define('APPMAX_EXTERNAL_ID', getenv('APPMAX_EXTERNAL_ID') ?: 'a688709f-01c4-4ff5-a2ae-d5555d23e956');
 
 define('WOOVI_APP_ID', getenv('WOOVI_APP_ID') ?: '');
 

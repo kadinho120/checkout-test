@@ -1,7 +1,7 @@
 <?php
 /**
  * api/functions/handle_appmax_pix_payment.php
- * Função principal para processar o pagamento PIX da Appmax.
+ * Processa o pagamento PIX da Appmax utilizando a nova API V1 (unified-order).
  */
 
 function handle_appmax_pix_payment()
@@ -25,14 +25,14 @@ function handle_appmax_pix_payment()
         die(json_encode(['success' => false, 'message' => 'Dados inválidos. Valor, correlation_id e customer são obrigatórios.']));
     }
 
-    // Busca a chave/token da API definida no config.php
-    $api_token = defined('APPMAX_API_TOKEN') && !empty(APPMAX_API_TOKEN) ? APPMAX_API_TOKEN : (getenv('APPMAX_API_TOKEN') ?: '');
-    if (empty($api_token)) {
-        http_response_code(500);
-        die(json_encode(['success' => false, 'message' => 'Erro de configuração: APPMAX_API_TOKEN não definida.']));
-    }
-
     $correlationID = $params['correlation_id'];
+
+    // Tratamento de Documento / CPF (Obrigatório Appmax)
+    $raw_document = preg_replace('/[^0-9]/', '', $params['customer']['document'] ?? '');
+    if (strlen($raw_document) !== 11 && strlen($raw_document) !== 14) {
+        http_response_code(400);
+        die(json_encode(['success' => false, 'message' => 'CPF obrigatório para pagamentos via Appmax. Por favor, informe um CPF válido.']));
+    }
 
     // Tratamento de Nome
     $customer_name = trim($params['customer']['name'] ?? '');
@@ -40,10 +40,6 @@ function handle_appmax_pix_payment()
         $customer_name = 'Cliente #' . strtoupper(substr($correlationID, -4));
         $params['customer']['name'] = $customer_name;
     }
-
-    $name_parts = preg_split('/\s+/', $customer_name);
-    $first_name = $name_parts[0] ?? 'Cliente';
-    $last_name = count($name_parts) > 1 ? implode(' ', array_slice($name_parts, 1)) : 'Appmax';
 
     // Tratamento de Telefone
     $raw_phone = $params['customer']['phone'] ?? '';
@@ -68,77 +64,68 @@ function handle_appmax_pix_payment()
         $params['customer']['email'] = $customer_email;
     }
 
-    // Tratamento de Documento / CPF
-    $raw_document = preg_replace('/[^0-9]/', '', $params['customer']['document'] ?? '');
-    if (strlen($raw_document) !== 11 && strlen($raw_document) !== 14) {
-        $raw_document = preg_replace('/[^0-9]/', '', generate_valid_cpf());
-    }
-
     // --- LÓGICA DE PRODUTOS & VALOR ---
     $value_in_cents = (int) round($params['value'] ?? 0);
     $product_name = 'Acesso ao Produto';
     $product_sku = 'PROD-' . substr($correlationID, -6);
 
+    $items = [];
     if (isset($params['products']) && is_array($params['products']) && !empty($params['products'])) {
-        $first_prod = $params['products'][0];
-        if (!empty($first_prod['name'])) {
-            $product_name = $first_prod['name'];
-        }
-        if (!empty($first_prod['id'])) {
-            $product_sku = 'SKU-' . $first_prod['id'];
+        foreach ($params['products'] as $idx => $p) {
+            $p_price_cents = (int) round(($p['price'] ?? 0) * 100);
+            if ($p_price_cents <= 0) $p_price_cents = $value_in_cents;
+            $items[] = [
+                'amount' => $p_price_cents,
+                'description' => !empty($p['name']) ? $p['name'] : ('Item ' . ($idx + 1)),
+                'quantity' => (int) ($p['qty'] ?? 1),
+                'code' => !empty($p['sku']) ? $p['sku'] : ('SKU-' . ($idx + 1))
+            ];
         }
     }
 
-    $address_postcode = preg_replace('/[^0-9]/', '', $params['customer']['cep'] ?? '01310100');
-    $address_street = !empty($params['customer']['address']) ? $params['customer']['address'] : 'Av. Paulista';
-    $address_number = !empty($params['customer']['address_number']) ? $params['customer']['address_number'] : '1000';
+    if (empty($items)) {
+        $items[] = [
+            'amount' => $value_in_cents,
+            'description' => $product_name,
+            'quantity' => 1,
+            'code' => $product_sku
+        ];
+    } else {
+        // Ajusta arredondamento na soma dos itens para coincidir exatamente com o total
+        $sum_cents = 0;
+        foreach ($items as $it) {
+            $sum_cents += $it['amount'] * $it['quantity'];
+        }
+        if ($sum_cents !== $value_in_cents) {
+            $items[0]['amount'] += ($value_in_cents - $sum_cents);
+        }
+    }
+
+    $address_postcode = preg_replace('/[^0-9]/', '', $params['customer']['cep'] ?? '');
+    $address_street = !empty($params['customer']['address']) ? $params['customer']['address'] : '';
+    $address_number = !empty($params['customer']['address_number']) ? $params['customer']['address_number'] : '';
     $address_complement = $params['customer']['complement'] ?? '';
-    $address_neighborhood = !empty($params['customer']['neighborhood']) ? $params['customer']['neighborhood'] : 'Bela Vista';
-    $address_city = !empty($params['customer']['city']) ? $params['customer']['city'] : 'São Paulo';
-    $address_state = !empty($params['customer']['state']) ? strtoupper($params['customer']['state']) : 'SP';
+    $address_neighborhood = !empty($params['customer']['neighborhood']) ? $params['customer']['neighborhood'] : '';
+    $address_city = !empty($params['customer']['city']) ? $params['customer']['city'] : '';
+    $address_state = !empty($params['customer']['state']) ? strtoupper($params['customer']['state']) : '';
 
     // ========================================================
-    // REQUISIÇÃO À API DA APPMAX
-    // Tentativa 1: API V1 REST / Unified Order ou Payments Pix
-    // Tentativa 2: API V3 Classic (admin.appmax.com.br/api/v3)
+    // REQUISIÇÃO À NOVA API DA APPMAX (Unified Order)
     // ========================================================
 
-    $br_code = null;
-    $qr_code_image = null;
-    $appmax_order_id = null;
-    $appmax_error = null;
-
-    // 1. Tentar Endpoint V1 Unified Order
-    $v1_unified_payload = [
+    $unified_payload = [
         'customer' => [
             'name' => $customer_name,
             'email' => $customer_email,
-            'document_number' => $raw_document,
             'phones' => [
                 'mobile_phone' => [
                     'area_code' => $area_code,
                     'number' => $phone_number
                 ]
-            ],
-            'address' => [
-                'postcode' => $address_postcode,
-                'street' => $address_street,
-                'number' => $address_number,
-                'complement' => $address_complement,
-                'district' => $address_neighborhood,
-                'city' => $address_city,
-                'state' => $address_state
-            ],
-            'ip' => !empty($client_ip) ? $client_ip : '127.0.0.1'
-        ],
-        'items' => [
-            [
-                'sku' => $product_sku,
-                'description' => $product_name,
-                'amount' => $value_in_cents,
-                'quantity' => 1
             ]
         ],
+        'ip' => !empty($client_ip) ? $client_ip : '127.0.0.1',
+        'items' => $items,
         'payments' => [
             [
                 'payment_method' => 'pix',
@@ -151,100 +138,44 @@ function handle_appmax_pix_payment()
         'external_key' => $correlationID
     ];
 
-    $v1_response = appmax_request(
-        'https://api.appmax.com.br/v1/orders/unified-order',
-        'POST',
-        $v1_unified_payload,
-        ['Authorization: Bearer ' . $api_token]
-    );
+    if (!empty($address_street) && !empty($address_postcode)) {
+        $unified_payload['shipping'] = [
+            'amount' => 0,
+            'address' => [
+                'line_1' => trim($address_number . ', ' . $address_street . ', ' . $address_neighborhood, ', '),
+                'line_2' => $address_complement,
+                'zip_code' => $address_postcode,
+                'city' => $address_city,
+                'state' => $address_state
+            ]
+        ];
+    }
 
-    if ($v1_response['http_code'] >= 200 && $v1_response['http_code'] < 300 && !empty($v1_response['data'])) {
-        $resData = $v1_response['data']['data'] ?? $v1_response['data'];
-        
-        $appmax_order_id = $resData['order']['id'] ?? ($resData['id'] ?? null);
-        
-        $pixObj = $resData['pix'] ?? ($resData['payment']['pix'] ?? ($resData['payments'][0]['pix'] ?? null));
+    $appmax_res = appmax_request('https://api.appmax.com.br/v1/orders/unified-order', 'POST', $unified_payload);
+
+    $br_code = null;
+    $qr_code_image = null;
+    $appmax_order_id = null;
+    $appmax_error = null;
+
+    if ($appmax_res['http_code'] >= 200 && $appmax_res['http_code'] < 300 && !empty($appmax_res['data'])) {
+        $resData = $appmax_res['data']['data'] ?? $appmax_res['data'];
+        $appmax_order_id = $resData['order']['id'] ?? ($resData['order_id'] ?? ($resData['id'] ?? null));
+
+        $pixObj = $resData['payment']['pix'] ?? ($resData['pix'] ?? ($resData['payments'][0]['pix'] ?? null));
         if ($pixObj) {
-            $br_code = $pixObj['emv_code'] ?? ($pixObj['pix_emv'] ?? ($pixObj['brCode'] ?? ($pixObj['payload'] ?? null)));
-            $qr_code_image = $pixObj['qr_code'] ?? ($pixObj['pix_qrcode'] ?? ($pixObj['qrCodeImage'] ?? null));
+            $br_code = $pixObj['pix_emv'] ?? ($pixObj['emv_code'] ?? ($pixObj['brCode'] ?? null));
+            $qr_code_image = $pixObj['pix_qrcode'] ?? ($pixObj['qr_code'] ?? null);
         }
     } else {
-        $appmax_error = $v1_response['data']['message'] ?? ($v1_response['data']['error'] ?? $v1_response['error']);
-        log_activity('Appmax V1 unified order error: ' . json_encode($v1_response), 'appmax_errors.log', __DIR__ . '/..');
+        $appmax_error = $appmax_res['data']['message'] ?? ($appmax_res['data']['error'] ?? ($appmax_res['data']['data']['message'] ?? $appmax_res['error']));
+        log_activity('Appmax V1 PIX error: ' . json_encode($appmax_res), 'appmax_errors.log', __DIR__ . '/..');
     }
 
-    // 2. Se a V1 não retornou o Pix, tentar o fluxo V3 Classic (com "access-token")
-    if (empty($br_code)) {
-        // Passo A: Criar/Atualizar Cliente V3
-        $v3_cust_payload = [
-            'access-token' => $api_token,
-            'firstname' => $first_name,
-            'lastname' => $last_name,
-            'email' => $customer_email,
-            'telephone' => $area_code . $phone_number,
-            'postcode' => $address_postcode,
-            'address' => $address_street,
-            'number' => $address_number,
-            'complement' => $address_complement,
-            'district' => $address_neighborhood,
-            'city' => $address_city,
-            'state' => $address_state,
-            'ip' => !empty($client_ip) ? $client_ip : '127.0.0.1'
-        ];
-
-        $v3_cust_res = appmax_request('https://admin.appmax.com.br/api/v3/customer', 'POST', $v3_cust_payload);
-
-        $v3_cust_id = $v3_cust_res['data']['data']['id'] ?? ($v3_cust_res['data']['id'] ?? null);
-
-        if ($v3_cust_id) {
-            // Passo B: Criar Pedido V3
-            $v3_order_payload = [
-                'access-token' => $api_token,
-                'customer_id' => $v3_cust_id,
-                'products' => [
-                    [
-                        'sku' => $product_sku,
-                        'name' => $product_name,
-                        'qty' => 1,
-                        'price' => (float) ($value_in_cents / 100)
-                    ]
-                ]
-            ];
-
-            $v3_order_res = appmax_request('https://admin.appmax.com.br/api/v3/order', 'POST', $v3_order_payload);
-            $v3_order_id = $v3_order_res['data']['data']['id'] ?? ($v3_order_res['data']['id'] ?? null);
-
-            if ($v3_order_id) {
-                $appmax_order_id = $v3_order_id;
-                // Passo C: Gerar Pagamento Pix V3
-                $v3_pix_payload = [
-                    'access-token' => $api_token,
-                    'order_id' => $v3_order_id,
-                    'customer_id' => $v3_cust_id,
-                    'payment' => [
-                        'pix' => [
-                            'document_number' => $raw_document
-                        ]
-                    ]
-                ];
-
-                $v3_pix_res = appmax_request('https://admin.appmax.com.br/api/v3/payment/pix', 'POST', $v3_pix_payload);
-
-                $pixDataV3 = $v3_pix_res['data']['data'] ?? ($v3_pix_res['data'] ?? []);
-                $br_code = $pixDataV3['pix_emv'] ?? ($pixDataV3['emv_code'] ?? ($pixDataV3['brCode'] ?? null));
-                $qr_code_image = $pixDataV3['pix_qrcode'] ?? ($pixDataV3['qr_code'] ?? null);
-            } else {
-                log_activity('Appmax V3 order error: ' . json_encode($v3_order_res), 'appmax_errors.log', __DIR__ . '/..');
-            }
-        } else {
-            log_activity('Appmax V3 customer error: ' . json_encode($v3_cust_res), 'appmax_errors.log', __DIR__ . '/..');
-        }
-    }
-
-    // Se após as tentativas ainda não houver código Pix, retornar erro detalhado
+    // Se a V1 não retornou o Pix, erro claro
     if (empty($br_code)) {
         http_response_code(500);
-        $err_msg = !empty($appmax_error) ? $appmax_error : 'Falha ao gerar o Pix na Appmax. Verifique o token e as credenciais.';
+        $err_msg = !empty($appmax_error) ? $appmax_error : 'Falha ao gerar o Pix na Appmax. Verifique o CPF informado e tente novamente.';
         log_activity("Appmax PIX Generation Failed: {$err_msg}", 'appmax_errors.log', __DIR__ . '/..');
         die(json_encode(['success' => false, 'message' => 'Gateway Appmax: ' . $err_msg]));
     }
@@ -255,7 +186,7 @@ function handle_appmax_pix_payment()
             $qr_code_image = 'data:image/png;base64,' . $qr_code_image;
         }
     } else {
-        // Fallback para renderização do QR Code a partir do código EMV (Google Chart API / QuickChart)
+        // Fallback de renderização caso a API envie só o código EMV
         $qr_code_image = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' . urlencode($br_code);
     }
 
@@ -323,9 +254,6 @@ function handle_appmax_pix_payment()
         require_once __DIR__ . '/trigger_custom_webhooks.php';
         trigger_custom_webhooks('order.created', $order_id);
 
-        // Webhook N8N (Legado/Fixo)
-        $n8n_webhook_url = 'https://n8n-n8n.tutv5u.easypanel.host/webhook/pix-gerado-abacatepay';
-
         $full_webhook_payload = [
             'correlation_id' => $correlationID,
             'external_id' => $externalID,
@@ -348,22 +276,12 @@ function handle_appmax_pix_payment()
             'pix_data' => $pix_data
         ];
 
-        $ch = curl_init($n8n_webhook_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($full_webhook_payload));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 5000);
-        curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
-        curl_exec($ch);
-        curl_close($ch);
-
         // UTMIFY
         require_once __DIR__ . '/send_utmify_event.php';
         sendUtmifyEvent($full_webhook_payload, 'pending');
 
     } catch (Exception $e) {
-        error_log('Erro interno ao salvar pedido Appmax SQLite: ' . $e->getMessage());
+        log_activity('Erro interno ao salvar pedido Appmax SQLite: ' . $e->getMessage(), 'appmax_errors.log', __DIR__ . '/..');
     }
 
     http_response_code(200);

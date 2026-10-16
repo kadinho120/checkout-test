@@ -56,14 +56,19 @@ if (isset($params['gateway']) && !empty($params['gateway'])) {
     }
 }
 
+if ($gateway === 'appmax_card_woovi_pix') {
+    $gateway = 'woovi';
+}
+
 // 4. Executa a função do gateway apropriado
-if ($gateway === 'appmax') {
+if ($gateway === 'appmax' || $gateway === 'appmax_pix') {
     handle_appmax_pix_payment();
 } elseif ($gateway === 'manual_pix' || $gateway === 'pix_manual' || $gateway === 'direct_pix') {
     handle_manual_pix_payment();
 } elseif ($gateway === 'woovi_whatsapp') {
     handle_woovi_whatsapp_payment();
 } else {
+    // Padrão Woovi (também utilizado quando o gateway do produto for appmax_card_woovi_pix)
     handle_woovi_pix_payment();
 }
 

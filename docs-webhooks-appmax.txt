@@ -1,0 +1,912 @@
+Webhooks
+Visão Geral
+Webhooks da Appstore permitem que seu aplicativo receba notificações em tempo real sobre eventos que ocorrem na plataforma Appmax. Quando um evento acontece (pedido aprovado, cliente criado, assinatura cancelada, etc.), a Appmax envia uma requisição POST para a URL que você configurou durante a criação do app.
+
+O payload é enviado em JSON com um envelope padrão que inclui metadados do evento e os dados específicos do recurso. Existem 5 tipos de evento (order, customer, payment, subscription, withdraw) totalizando 42 eventos disponíveis.
+
+INFO
+
+Os webhooks da Appstore são despachados em tempo real assim que o evento ocorre na plataforma.
+
+Testar no sandbox
+No sandbox, Pix e boleto são aprovados automaticamente cerca de 5 segundos depois de gerados, sem precisar pagar. Assim você recebe todos os webhooks do pedido pago sem esperar um pagamento real.
+
+O que decide o cenário é o document_number enviado em POST /v1/payments/pix ou POST /v1/payments/boleto:
+
+document_number enviado	O que acontece com o pedido	Webhooks que você recebe
+Qualquer CPF ou CNPJ válido (ex.: 19100000000)	Aprovado em ~5 segundos e depois integrado	Pix: order_pix_created → order_paid, order_approved, order_paid_by_pix → order_integrated
+Boleto: order_billet_created → order_paid, order_approved → order_integrated
+CPF 40827365144 ou CNPJ 40827365000109	Fica pendente: o pagamento não é confirmado	Só o de geração: order_pix_created ou order_billet_created
+Use os documentos da segunda linha para testar a tela de "aguardando pagamento" e o comportamento do seu app enquanto o pedido está pendente.
+
+Exemplo para testar um pedido pendente com Pix (no boleto, troque pix por boleto):
+
+
+{
+  "order_id": 123,
+  "payment_data": {
+    "pix": {
+      "document_number": "40827365000109"
+    }
+  }
+}
+Só no sandbox
+
+Em produção nada é aprovado automaticamente: Pix e boleto só são aprovados quando o comprador paga. Para cartão de crédito, o cenário é definido pelo número do cartão: veja os cartões de teste.
+
+TIP
+
+No Pix, a passagem para integrado segue a rotina de integração de pedidos e pode levar algumas horas; order_paid_by_pix e order_approved chegam em segundos. Cada webhook só é entregue se o app tiver a permissão correspondente.
+
+Estrutura do Payload (Envelope)
+Todos os webhooks compartilham o mesmo envelope. O campo data varia conforme o event_type.
+
+
+{
+  "event": "order_approved",
+  "event_type": "order",
+  "site_id": "uuid-do-site",
+  "app_id": "uuid-do-app",
+  "client_key": "chave-externa",
+  "external_key": "chave-externa",
+  "data": { },
+  "partner_merchant": {
+    "merchant_email": "merchant@example.com",
+    "merchant_document_number": "12345678000199",
+    "merchant_phone": "11999999999"
+  }
+}
+Campo	Tipo	Obrigatório	Descrição
+event	string	Sim	Identificador do evento (ex: order_approved)
+event_type	string	Sim	Tipo do evento: order, customer, payment, subscription ou withdraw
+site_id	string	Sim	UUID do site no qual o evento ocorreu
+app_id	string	Sim	UUID do app que está recebendo o webhook
+client_key	string | null	Não	Chave configurada pelo merchant para identificação externa
+external_key	string | null	Não	Chave externa associada ao recurso
+data	object	Sim	Dados do recurso — varia conforme o event_type
+partner_merchant	object	Sim	Dados do merchant: merchant_email, merchant_document_number, merchant_phone
+Tabela de Eventos
+Customer
+Descrição	event	event_type
+Cliente criado	customer_created	customer
+Cliente interessado	customer_interested	customer
+Cliente contatado	customer_contacted	customer
+Order
+Descrição	event	event_type
+Pedido autorizado	order_authorized	order
+Pedido aprovado	order_approved	order
+Boleto criado	order_billet_created	order
+Pedido pago	order_paid	order
+Pedido pendente integração	order_pending_integration	order
+Pedido estornado	order_refund	order
+Estorno parcial	order_partial_refund	order
+Upsell pago	order_up_sold	order
+Pix gerado	order_pix_created	order
+Pix pago	order_paid_by_pix	order
+Pix expirado	order_pix_expired	order
+Pedido integrado	order_integrated	order
+Boleto vencido	order_billet_overdue	order
+Pedido autorizado com atraso	order_authorized_with_delay	order
+Chargeback em tratamento	order_chargeback_in_treatment	order
+Recusado por risco	order_refused_by_risk	order
+Split de pagamento	split_orders	order
+Payment
+Descrição	event	event_type
+Pagamento autorizado com atraso	payment_authorized_with_delay	payment
+Pagamento não autorizado	payment_not_authorized	payment
+Subscription
+Descrição	event	event_type
+Assinatura criada	subscription_created	subscription
+Assinatura cancelada	subscription_cancelation	subscription
+Assinatura pausada	subscription_paused	subscription
+Assinatura retomada	subscription_resumed	subscription
+Cobrança recorrente aprovada	subscription_charge_success	subscription
+Cobrança recorrente recusada	subscription_charge_failed	subscription
+Produto adicionado	subscription_product_added	subscription
+Produto removido	subscription_product_removed	subscription
+Quantidade de produto alterada	subscription_product_quantity_changed	subscription
+Frequência alterada	subscription_frequency_changed	subscription
+Ciclo pulado	subscription_cycle_skipped	subscription
+Ciclo despulado	subscription_cycle_unskipped	subscription
+Dia de cobrança alterado	subscription_billing_day_changed	subscription
+Data da próxima cobrança alterada	subscription_next_billing_day_changed	subscription
+Endereço atualizado	subscription_address_updated	subscription
+Forma de pagamento atualizada	subscription_payment_method_updated	subscription
+Assinatura atrasada (legado)	subscription_delayed	subscription
+Withdraw
+Descrição	event	event_type
+Saque aprovado	withdraw_request_approved	withdraw
+Saque pago	withdraw_request_paid	withdraw
+Saque recusado	withdraw_request_refused	withdraw
+INFO
+
+Os eventos essenciais para integração são os de pedido (order_*) e pagamento (payment_*).
+
+WARNING
+
+Cada evento depende da permissão correspondente concedida ao app. Um app sem a permissão subscription-product-added, por exemplo, não recebe subscription_product_added — mesmo que o evento ocorra na loja. Revise as permissões do app na Appstore antes de investigar um evento que "não chega".
+
+subscription_delayed é um evento legado, mantido apenas por compatibilidade: o motor de assinaturas atual não o emite. Use subscription_charge_failed para detectar falha de cobrança recorrente.
+
+Payloads por Tipo de Evento
+Valores monetários em reais
+
+Nos webhooks, os valores monetários (total, freight_value, price, cashback_used etc.) chegam em reais, como decimal (123.45 = R$ 123,45). É o contrário das requisições para a API, que recebem valores inteiros em centavos. A exceção são os eventos de saque (withdraw_*), cujos valores chegam em centavos, como inteiro, igual à API de saque. Veja Withdraw Events.
+
+Order Events
+O campo data para eventos do tipo order contém os seguintes campos:
+
+Campo	Tipo	Descrição
+order_id	int	ID do pedido
+status	string	Status atual do pedido
+total	float	Valor total em reais (123.00 = R$ 123,00)
+freight_value	float	Valor do frete em reais
+merchant_total	float	Valor líquido do merchant em reais
+merchant_affiliate_total	float	Valor do afiliado do merchant em reais
+discount	float	Valor do desconto em reais
+interest	float	Valor de juros em reais
+upsell_order_id	int | null	ID do pedido de upsell associado
+payment_link_id	int | null	ID do link de pagamento
+paid_at	string | null	Data/hora do pagamento
+integrated_at	string | null	Data/hora da integração
+refund_at	string | null	Data/hora do estorno
+created_at	string	Data/hora de criação do pedido
+products	array	Lista de produtos do pedido
+payment_info	object	Informações do pagamento (varia por método)
+client_key	string | null	Chave de identificação externa
+external_key	string | null	Chave externa
+cashback_used	float | null	Cashback utilizado em reais
+cashback_reserved	float | null	Cashback reservado em reais
+cashback_status	string | null	Status do cashback
+notification_type	string	Tipo da notificação
+Campos de products[]:
+
+Campo	Tipo	Descrição
+sku	string	SKU do produto
+name	string	Nome do produto
+price	float	Preço unitário em reais
+quantity	int	Quantidade
+Campos de payment_info (condicional por método de pagamento):
+
+Para Pix:
+
+Campo	Tipo	Descrição
+pix.end_to_end_id	string	ID end-to-end da transação Pix
+pix.pix_creation_date	string	Data de criação do Pix
+pix.pix_expiration_date	string	Data de expiração do Pix
+pix.pix_emv	string	Código EMV (copia e cola)
+pix.pix_ref	string	Referência do Pix
+pix.pix_qrcode	string	URL da imagem do QR Code
+pix.pix_payment_link	string	Link de pagamento Pix
+Para Boleto:
+
+Campo	Tipo	Descrição
+boleto.boleto_overdue_date	string	Data de vencimento
+boleto.boleto_url	string	URL do boleto
+boleto.boleto_digitable_line	string	Linha digitável
+Para Cartão de Crédito / Apple Pay:
+
+Campo	Tipo	Descrição
+credit_card.installments	int	Número de parcelas
+credit_card.card_brand	string	Bandeira do cartão
+credit_card.nsu	string	NSU da transação
+credit_card.authorization_code	string	Código de autorização
+credit_card.captured_at	string	Data/hora da captura
+Exemplo: Pedido aprovado com cartão (order_approved)
+
+{
+  "event": "order_approved",
+  "event_type": "order",
+  "site_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "app_id": "f9e8d7c6-b5a4-3210-fedc-ba0987654321",
+  "client_key": "merchant-key-123",
+  "external_key": "ext-order-456",
+  "data": {
+    "order_id": 3531,
+    "status": "aprovado",
+    "total": 259.90,
+    "freight_value": 15.00,
+    "merchant_total": 234.00,
+    "merchant_affiliate_total": 0,
+    "discount": 0,
+    "interest": 0,
+    "upsell_order_id": null,
+    "payment_link_id": null,
+    "paid_at": "2025-03-15 14:30:00",
+    "integrated_at": null,
+    "refund_at": null,
+    "created_at": "2025-03-15 14:28:00",
+    "products": [
+      {
+        "sku": "PROD-001",
+        "name": "Curso de Marketing Digital",
+        "price": 259.90,
+        "quantity": 1
+      }
+    ],
+    "payment_info": {
+      "credit_card": {
+        "installments": 3,
+        "card_brand": "visa",
+        "nsu": "0012345678",
+        "authorization_code": "AUTH9876",
+        "captured_at": "2025-03-15 14:30:00"
+      }
+    },
+    "client_key": "merchant-key-123",
+    "external_key": "ext-order-456",
+    "cashback_used": null,
+    "cashback_reserved": null,
+    "cashback_status": null,
+    "notification_type": "order_approved"
+  },
+  "partner_merchant": {
+    "merchant_email": "loja@exemplo.com",
+    "merchant_document_number": "12345678000199",
+    "merchant_phone": "11999999999"
+  }
+}
+Exemplo: Pix pago (order_paid_by_pix)
+
+{
+  "event": "order_paid_by_pix",
+  "event_type": "order",
+  "site_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "app_id": "f9e8d7c6-b5a4-3210-fedc-ba0987654321",
+  "client_key": null,
+  "external_key": null,
+  "data": {
+    "order_id": 4201,
+    "status": "aprovado",
+    "total": 99.00,
+    "freight_value": 0,
+    "merchant_total": 89.10,
+    "merchant_affiliate_total": 0,
+    "discount": 0,
+    "interest": 0,
+    "upsell_order_id": null,
+    "payment_link_id": 789,
+    "paid_at": "2025-03-15 15:10:00",
+    "integrated_at": null,
+    "refund_at": null,
+    "created_at": "2025-03-15 15:05:00",
+    "products": [
+      {
+        "sku": "EBOOK-042",
+        "name": "E-book Receitas Fit",
+        "price": 99.00,
+        "quantity": 1
+      }
+    ],
+    "payment_info": {
+      "pix": {
+        "end_to_end_id": "E123456782025031515100001",
+        "pix_creation_date": "2025-03-15 15:05:00",
+        "pix_expiration_date": "2025-03-15 15:35:00",
+        "pix_emv": "00020126580014br.gov.bcb.pix0136a1b2c3d4-e5f6-7890-abcd-ef12345678905204000053039865802BR5925APPMAX PAGAMENTOS LTDA6009SAO PAULO62070503***63041D3D",
+        "pix_ref": "PIX-REF-4201",
+        "pix_qrcode": "https://api.appmax.com.br/pix/qrcode/4201.png",
+        "pix_payment_link": "https://pay.appmax.com.br/pix/4201"
+      }
+    },
+    "client_key": null,
+    "external_key": null,
+    "cashback_used": null,
+    "cashback_reserved": null,
+    "cashback_status": null,
+    "notification_type": "order_paid_by_pix"
+  },
+  "partner_merchant": {
+    "merchant_email": "loja@exemplo.com",
+    "merchant_document_number": "12345678000199",
+    "merchant_phone": "11999999999"
+  }
+}
+Exemplo: Boleto criado (order_billet_created)
+
+{
+  "event": "order_billet_created",
+  "event_type": "order",
+  "site_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "app_id": "f9e8d7c6-b5a4-3210-fedc-ba0987654321",
+  "client_key": "merchant-key-123",
+  "external_key": null,
+  "data": {
+    "order_id": 4305,
+    "status": "aguardando_pagamento",
+    "total": 349.00,
+    "freight_value": 20.00,
+    "merchant_total": 314.10,
+    "merchant_affiliate_total": 0,
+    "discount": 5.00,
+    "interest": 0,
+    "upsell_order_id": null,
+    "payment_link_id": null,
+    "paid_at": null,
+    "integrated_at": null,
+    "refund_at": null,
+    "created_at": "2025-03-16 09:00:00",
+    "products": [
+      {
+        "sku": "KIT-PREMIUM",
+        "name": "Kit Premium de Suplementos",
+        "price": 167.00,
+        "quantity": 2
+      }
+    ],
+    "payment_info": {
+      "boleto": {
+        "boleto_overdue_date": "2025-03-19 23:59:59",
+        "boleto_url": "https://api.appmax.com.br/boleto/4305.pdf",
+        "boleto_digitable_line": "23793.38128 60000.000003 00000.000400 1 84340000034900"
+      }
+    },
+    "client_key": "merchant-key-123",
+    "external_key": null,
+    "cashback_used": 5.00,
+    "cashback_reserved": 10.00,
+    "cashback_status": "applied",
+    "notification_type": "order_billet_created"
+  },
+  "partner_merchant": {
+    "merchant_email": "loja@exemplo.com",
+    "merchant_document_number": "98765432000188",
+    "merchant_phone": "21988887777"
+  }
+}
+Customer Events
+O campo data para eventos do tipo customer contém os seguintes campos:
+
+Campo	Tipo	Descrição
+customer_id	int	ID do cliente
+customer_data	object	Dados pessoais do cliente
+customer_data.firstname	string	Primeiro nome
+customer_data.lastname	string	Sobrenome
+customer_data.email	string	E-mail
+customer_data.telephone	string	Telefone
+customer_data.document_number	string	CPF ou CNPJ
+customer_data.custom_txt	string | null	Campo customizado
+customer_address	object	Endereço do cliente
+customer_address.postcode	string	CEP
+customer_address.street	string	Logradouro
+customer_address.street_number	string	Número
+customer_address.street_complement	string | null	Complemento
+customer_address.street_district	string	Bairro
+customer_address.city	string	Cidade
+customer_address.state	string	Estado (UF)
+created_at	string	Data/hora de criação
+updated_at	string	Data/hora de atualização
+client_key	string | null	Chave de identificação externa
+external_key	string | null	Chave externa
+Exemplo: Cliente criado (customer_created)
+
+{
+  "event": "customer_created",
+  "event_type": "customer",
+  "site_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "app_id": "f9e8d7c6-b5a4-3210-fedc-ba0987654321",
+  "client_key": "merchant-key-123",
+  "external_key": null,
+  "data": {
+    "customer_id": 2023,
+    "customer_data": {
+      "firstname": "Junior",
+      "lastname": "Almeida",
+      "email": "junior.almeida@email.com",
+      "telephone": "51983655100",
+      "document_number": "12345678900",
+      "custom_txt": null
+    },
+    "customer_address": {
+      "postcode": "90010-000",
+      "street": "Rua dos Andradas",
+      "street_number": "1234",
+      "street_complement": "Sala 501",
+      "street_district": "Centro Histórico",
+      "city": "Porto Alegre",
+      "state": "RS"
+    },
+    "created_at": "2025-03-15 14:25:00",
+    "updated_at": "2025-03-15 14:25:00",
+    "client_key": "merchant-key-123",
+    "external_key": null
+  },
+  "partner_merchant": {
+    "merchant_email": "loja@exemplo.com",
+    "merchant_document_number": "12345678000199",
+    "merchant_phone": "11999999999"
+  }
+}
+Payment Events
+O campo data para eventos do tipo payment contém os seguintes campos:
+
+Campo	Tipo	Descrição
+customer_id	int	ID do cliente
+order_id	int	ID do pedido
+payment_type	string	Método de pagamento (ex: credit_card, pix, boleto)
+payment_total	float	Valor do pagamento em reais
+cashback_used	float | null	Cashback utilizado em reais
+Exemplo: Pagamento não autorizado (payment_not_authorized)
+
+{
+  "event": "payment_not_authorized",
+  "event_type": "payment",
+  "site_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "app_id": "f9e8d7c6-b5a4-3210-fedc-ba0987654321",
+  "client_key": null,
+  "external_key": null,
+  "data": {
+    "customer_id": 2023,
+    "order_id": 3532,
+    "payment_type": "credit_card",
+    "payment_total": 159.00,
+    "cashback_used": null
+  },
+  "partner_merchant": {
+    "merchant_email": "loja@exemplo.com",
+    "merchant_document_number": "12345678000199",
+    "merchant_phone": "11999999999"
+  }
+}
+Subscription Events
+Eventos de assinatura são produzidos pelo motor de recorrência da Appmax e entregues ao seu app com o mesmo envelope dos demais eventos.
+
+O campo data de todo evento de assinatura é a união de dois blocos:
+
+Campos base — presentes em todos os eventos de assinatura (com null quando não se aplicam ao evento).
+Campos específicos do evento — variam conforme o event, descritos na tabela mais abaixo.
+Campos base
+Campo	Tipo	Descrição
+subscription_id	int	ID da assinatura. É o identificador estável ao longo de todo o ciclo de vida
+order_id	int	ID do pedido de origem da assinatura (na criação) ou da cobrança que gerou o evento
+customer_id	int	ID do cliente dono da assinatura
+total	float	Valor total do pedido em reais (123.00 = R$ 123,00)
+interval	string | null	Unidade da recorrência: week, month ou year
+interval_count	int | null	Quantidade de unidades entre cobranças (interval=month + interval_count=2 = a cada 2 meses)
+status	string | null	Estado da assinatura no momento do evento (ver tabela abaixo)
+cashback_used	float | null	Cashback aplicado no pedido, quando houver
+client_key	string | null	Chave externa do merchant (repetida do envelope)
+external_key	string | null	Mesmo valor de client_key
+INFO
+
+interval, interval_count e status só são preenchidos nos eventos em que fazem sentido. Nos eventos de alteração (produto, ciclo, dia de cobrança) eles chegam como null — a assinatura em si não mudou de estado.
+
+Campos específicos por evento
+event	Campos adicionais em data
+subscription_created	status = active, interval, interval_count, next_charge_at (ISO-8601)
+subscription_cancelation	status = canceled
+subscription_paused	status = paused
+subscription_resumed	status, next_billing_date
+subscription_charge_success	status = success, uuid (UUID da assinatura)
+subscription_charge_failed	status = failed, uuid (UUID da assinatura)
+subscription_product_added	products — lista completa dos produtos após a alteração
+subscription_product_removed	products — lista completa dos produtos após a alteração
+subscription_product_quantity_changed	products — lista completa dos produtos após a alteração
+subscription_frequency_changed	frequency (week/month/year), interval_count, next_charge_at (ISO-8601)
+subscription_cycle_skipped	next_billing_day (ISO-8601)
+subscription_cycle_unskipped	next_billing_day (ISO-8601)
+subscription_billing_day_changed	billing_day
+subscription_next_billing_day_changed	next_billing_day (ISO-8601)
+subscription_payment_method_updated	payment_method (credit_card ou pix)
+subscription_address_updated	Campos do endereço de entrega atualizado
+subscription_delayed	status = late
+WARNING
+
+Os eventos de produto (subscription_product_added, subscription_product_removed, subscription_product_quantity_changed) enviam sempre a lista consolidada completa dos produtos após a alteração — não apenas o item que mudou. Substitua sua cópia local pela lista recebida em vez de aplicar um delta.
+
+Cada item de products tem o formato:
+
+
+{
+  "name": "Produto A - Mensal",
+  "price": 100.0,
+  "quantity": 1,
+  "variant_id": "va-month"
+}
+Exemplo: Assinatura criada (subscription_created)
+
+{
+  "event": "subscription_created",
+  "event_type": "subscription",
+  "site_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "app_id": "f9e8d7c6-b5a4-3210-fedc-ba0987654321",
+  "client_key": "merchant-key-123",
+  "external_key": "merchant-key-123",
+  "data": {
+    "subscription_id": 501,
+    "order_id": 3532,
+    "customer_id": 2023,
+    "total": 49.90,
+    "interval": "month",
+    "interval_count": 1,
+    "status": "active",
+    "next_charge_at": "2025-04-15T14:30:00-03:00",
+    "cashback_used": null,
+    "client_key": "merchant-key-123",
+    "external_key": "merchant-key-123"
+  },
+  "partner_merchant": {
+    "merchant_email": "loja@exemplo.com",
+    "merchant_document_number": "12345678000199",
+    "merchant_phone": "11999999999"
+  }
+}
+Exemplo: Cobrança recorrente aprovada (subscription_charge_success)
+
+{
+  "event": "subscription_charge_success",
+  "event_type": "subscription",
+  "site_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "app_id": "f9e8d7c6-b5a4-3210-fedc-ba0987654321",
+  "client_key": "merchant-key-123",
+  "external_key": "merchant-key-123",
+  "data": {
+    "subscription_id": 501,
+    "order_id": 3987,
+    "customer_id": 2023,
+    "total": 49.90,
+    "interval": null,
+    "interval_count": null,
+    "status": "success",
+    "uuid": "6f1e9a5c-8d24-4a1b-9f30-2c7b5e0a1d44",
+    "cashback_used": null,
+    "client_key": "merchant-key-123",
+    "external_key": "merchant-key-123"
+  },
+  "partner_merchant": {
+    "merchant_email": "loja@exemplo.com",
+    "merchant_document_number": "12345678000199",
+    "merchant_phone": "11999999999"
+  }
+}
+INFO
+
+Cada ciclo de cobrança gera um novo pedido. O order_id muda a cada cobrança; o subscription_id permanece o mesmo. Use subscription_id para relacionar as cobranças a uma assinatura e order_id para conciliar com os eventos de pedido (order_*) daquela cobrança.
+
+Exemplo: Produto adicionado (subscription_product_added)
+
+{
+  "event": "subscription_product_added",
+  "event_type": "subscription",
+  "site_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "app_id": "f9e8d7c6-b5a4-3210-fedc-ba0987654321",
+  "client_key": "merchant-key-123",
+  "external_key": "merchant-key-123",
+  "data": {
+    "subscription_id": 501,
+    "order_id": 3532,
+    "customer_id": 2023,
+    "total": 49.90,
+    "interval": null,
+    "interval_count": null,
+    "status": null,
+    "products": [
+      { "name": "Produto A - Mensal", "price": 100.0, "quantity": 1, "variant_id": "va-month" },
+      { "name": "Produto B - Mensal", "price": 100.0, "quantity": 1, "variant_id": "vb-month" }
+    ],
+    "cashback_used": null,
+    "client_key": "merchant-key-123",
+    "external_key": "merchant-key-123"
+  },
+  "partner_merchant": {
+    "merchant_email": "loja@exemplo.com",
+    "merchant_document_number": "12345678000199",
+    "merchant_phone": "11999999999"
+  }
+}
+Idempotência em eventos de assinatura
+O envelope de assinatura não traz um identificador único de evento. Para deduplicar, use a combinação event + subscription_id + order_id.
+
+Atenção: eventos de cobrança se repetem legitimamente a cada ciclo — o par subscription_charge_success + subscription_id não é único ao longo do tempo. É o order_id, novo a cada cobrança, que distingue um ciclo do outro. Já os eventos de alteração (produto, frequência, ciclo) podem repetir o mesmo order_id; para esses, combine também o conteúdo recebido ou o instante do recebimento.
+
+Withdraw Events
+Eventos de saque notificam a mudança de status de uma solicitação de saque do lojista: aprovada, paga ou recusada. O campo data tem o mesmo formato da consulta GET /v1/withdraw-request/{withdraw_request_id}, sem os campos de origem e com a conta bancária reduzida.
+
+Pontos de atenção:
+
+Permissões. O app precisa das permissões withdraw-request-approved, withdraw-request-paid e withdraw-request-refused para receber cada evento.
+O saque é da conta do lojista, não de uma loja. Cada app recebe o evento uma vez, com o site_id da primeira loja da conta em que o app está instalado. Saques de recebedores de split também notificam os apps instalados na conta responsável pelo split.
+client_key e external_key trazem a external_key registrada na instalação do app naquela loja (null se não houver), já que o saque não tem chave própria.
+Valores em centavos. Diferente dos demais eventos, net_value, gross_value e withdraw_tax são inteiros em centavos (98400 = R$ 984,00).
+Liquidação centralizada. Um saque que vai para liquidação centralizada é notificado como withdraw_request_paid quando a liquidação é concluída.
+Cobertura. Os eventos são emitidos para lojistas no fluxo de saque padrão da Appmax. Lojistas no fluxo de saque legado ou no modelo de antecipação por parcelas liquidadas ainda não geram esses eventos.
+O campo data para eventos do tipo withdraw contém os seguintes campos:
+
+Campo	Tipo	Descrição
+withdraw_request_id	int	ID da solicitação de saque
+status	string	Status notificado: approved, paid ou refused
+net_value	int	Valor líquido em centavos (bruto menos a taxa de saque)
+gross_value	int	Valor bruto solicitado em centavos
+withdraw_tax	int	Taxa de saque em centavos
+currency	string	Moeda (BRL)
+created_at	string | null	Data/hora da solicitação (YYYY-MM-DD HH:MM:SS)
+bank_account	object | null	Conta bancária de destino
+Campos de bank_account:
+
+Campo	Tipo	Descrição
+id	int	ID da conta bancária na Appmax
+bank	string	Código do banco
+agency	string	Agência
+account	string	Conta
+type	string	Tipo da conta (ex.: national_pj)
+pix_key	string | null	Chave Pix cadastrada na conta
+Exemplo: Saque pago (withdraw_request_paid)
+
+{
+  "event": "withdraw_request_paid",
+  "event_type": "withdraw",
+  "site_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "app_id": "f9e8d7c6-b5a4-3210-fedc-ba0987654321",
+  "client_key": "merchant-key-123",
+  "external_key": "merchant-key-123",
+  "data": {
+    "withdraw_request_id": 7731,
+    "status": "paid",
+    "net_value": 149633,
+    "gross_value": 150000,
+    "withdraw_tax": 367,
+    "currency": "BRL",
+    "created_at": "2025-03-17 09:12:40",
+    "bank_account": {
+      "id": 4821,
+      "bank": "341",
+      "agency": "0512",
+      "account": "92603-7",
+      "type": "national_pj",
+      "pix_key": "financeiro@loja.exemplo.com"
+    }
+  },
+  "partner_merchant": {
+    "merchant_email": "loja@exemplo.com",
+    "merchant_document_number": "12345678000199",
+    "merchant_phone": "11999999999"
+  }
+}
+Exemplo: Saque recusado (withdraw_request_refused)
+
+{
+  "event": "withdraw_request_refused",
+  "event_type": "withdraw",
+  "site_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "app_id": "f9e8d7c6-b5a4-3210-fedc-ba0987654321",
+  "client_key": null,
+  "external_key": null,
+  "data": {
+    "withdraw_request_id": 7742,
+    "status": "refused",
+    "net_value": 49633,
+    "gross_value": 50000,
+    "withdraw_tax": 367,
+    "currency": "BRL",
+    "created_at": "2025-03-18 16:40:05",
+    "bank_account": {
+      "id": 4821,
+      "bank": "341",
+      "agency": "0512",
+      "account": "92603-7",
+      "type": "national_pj",
+      "pix_key": "financeiro@loja.exemplo.com"
+    }
+  },
+  "partner_merchant": {
+    "merchant_email": "loja@exemplo.com",
+    "merchant_document_number": "12345678000199",
+    "merchant_phone": "11999999999"
+  }
+}
+Fluxo Temporal dos Eventos
+Os diagramas abaixo ilustram a sequência típica de eventos para cada método de pagamento.
+
+Cartão de Crédito:
+
+
+customer_created → order_authorized → order_approved → order_paid → order_integrated
+Pix:
+
+
+customer_created → order_pix_created → [timeout: order_pix_expired]
+                                     → order_paid_by_pix → order_approved → order_integrated
+Boleto:
+
+
+customer_created → order_billet_created → [vencimento: order_billet_overdue]
+                                        → order_paid → order_approved → order_integrated
+Estorno / Chargeback:
+
+
+[pedido aprovado] → order_refund (total)
+                  → order_partial_refund (parcial)
+                  → order_chargeback_in_treatment
+Assinatura — ciclo de vida:
+
+
+subscription_created → subscription_charge_success   (a cada ciclo, um novo order_id)
+                     → subscription_charge_failed    (cobrança recusada)
+                     → subscription_cancelation      (fim da assinatura)
+
+subscription_paused ⇄ subscription_resumed
+Assinatura — alterações (a qualquer momento, enquanto a assinatura está ativa):
+
+
+produtos   → subscription_product_added / subscription_product_removed
+             subscription_product_quantity_changed
+recorrência → subscription_frequency_changed
+             subscription_billing_day_changed / subscription_next_billing_day_changed
+             subscription_cycle_skipped ⇄ subscription_cycle_unskipped
+cadastro   → subscription_payment_method_updated / subscription_address_updated
+Saque:
+
+
+[saque solicitado] → withdraw_request_approved → withdraw_request_paid
+                   → withdraw_request_refused
+Cada evento de saque sai quando o status notificado muda. withdraw_request_paid é enviado uma única vez, mesmo que o saque passe depois pela liquidação centralizada.
+
+INFO
+
+Uma cobrança recorrente também dispara os eventos de pedido (order_*) do pedido criado para aquele ciclo. Se seu app assina os dois tipos, espere receber subscription_charge_success e order_approved para o mesmo order_id.
+
+WARNING
+
+A ordem dos eventos não é garantida. Atrasos de rede, retries e processamento assíncrono podem alterar a sequência. Sempre verifique o estado atual do recurso antes de tomar decisões baseadas em eventos.
+
+Política de Retry
+Quando o endpoint falha em receber um webhook, a Appmax inicia um ciclo de retentativas:
+
+
+Tentativa 1 (original) — após delay do evento
+        ↓ falha
+Tentativa 2 — +30 minutos
+        ↓ falha
+Tentativa 3 — +2 horas
+        ↓ falha
+Tentativa 4 — +4 horas
+        ↓ falha
+Webhook descartado (sem notificação)
+Timeout HTTP: 5 segundos
+Códigos de sucesso: 200, 201, 202, 203, 204, 205, 206, 207, 208, 226
+Falha: qualquer outro código HTTP ou timeout inicia o retry
+Máximo: 4 tentativas (1 original + 3 retries)
+DANGER
+
+Após 4 tentativas sem sucesso, o webhook é descartado permanentemente. Não há notificação ao desenvolvedor. Monitore seu endpoint ativamente.
+
+Headers HTTP
+Toda requisição de webhook é enviada com os seguintes headers:
+
+Header	Valor
+Content-Type	application/json
+User-Agent	GuzzleHttp/7
+WARNING
+
+A Appmax não envia header de assinatura (HMAC) ou token de autenticação nos webhooks. Recomendamos validar a origem por outros meios (ver Boas Práticas).
+
+Como Receber Webhooks
+Seu endpoint deve:
+
+Aceitar requisições POST com Content-Type: application/json
+Responder com HTTP 200 em até 5 segundos
+Processar o evento de forma assíncrona (não bloqueie a resposta)
+WARNING
+
+Se o endpoint não responder 200 dentro de 5 segundos, a Appmax inicia o ciclo de retry. Processe o evento em background e responda imediatamente.
+
+Exemplos de Código
+Go
+Node.js
+Python
+PHP (Laravel)
+
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"sync"
+
+	"github.com/gin-gonic/gin"
+)
+
+var (
+	processed sync.Map
+)
+
+func main() {
+	r := gin.Default()
+
+	r.POST("/webhooks/appmax", func(c *gin.Context) {
+		var payload struct {
+			Event     string          `json:"event"`
+			EventType string          `json:"event_type"`
+			Data      json.RawMessage `json:"data"`
+		}
+
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(200, gin.H{"received": true}) // responder 200 mesmo com erro
+			return
+		}
+
+		// Responder 200 imediatamente para evitar timeout de 5s
+		c.JSON(200, gin.H{"received": true})
+
+		// Extrair ID para idempotência
+		var data struct {
+			OrderID    int `json:"order_id"`
+			CustomerID int `json:"customer_id"`
+		}
+		json.Unmarshal(payload.Data, &data)
+
+		id := data.OrderID
+		if id == 0 {
+			id = data.CustomerID
+		}
+		key := fmt.Sprintf("%d-%s", id, payload.Event)
+
+		if _, loaded := processed.LoadOrStore(key, true); loaded {
+			return // duplicado
+		}
+
+		// Processar em goroutine — em produção, envie para uma fila
+		go func() {
+			log.Printf("Processando: %s (%s)", payload.Event, payload.EventType)
+			// Sua lógica aqui
+		}()
+	})
+
+	r.Run(":3000")
+}
+Boas Práticas
+Responda 200 antes de processar. O timeout é de 5 segundos. Processamento síncrono causa retry desnecessário. Responda imediatamente e processe em background (fila, thread, job assíncrono).
+
+Implemente idempotência. Use order_id + event (ou customer_id + event; em assinaturas, subscription_id + order_id + event) como chave única. Retries legitimamente reenviam o mesmo evento, e seu sistema precisa tratar duplicatas sem efeitos colaterais.
+
+Armazene o payload cru. Salve o JSON completo em banco de dados ou log antes de processar. Isso facilita debug e permite reprocessamento manual sem depender de reenvio.
+
+Não confie na ordem dos eventos. Atrasos de rede e retries podem alterar a sequência. Sempre verifique o estado atual do recurso (via API, se necessário) antes de tomar decisões baseadas em um evento.
+
+Use HTTPS. Proteja dados em trânsito. A Appmax envia webhooks para URLs HTTP e HTTPS, mas dados de cliente e pagamento transitam no payload.
+
+Trate duplicatas. Retries legitimamente reenviam o mesmo evento. Garanta que processar o mesmo evento duas vezes não cause efeitos colaterais (cobrar duas vezes, enviar dois e-mails, etc.).
+
+Valide a origem. Como não há header HMAC, considere filtrar por IP de origem, validar a estrutura do payload contra o schema esperado, ou confirmar o evento via API da Appmax.
+
+Webhooks: Appstore vs Painel
+Existem dois tipos de webhook na plataforma Appmax. Não confunda:
+
+Aspecto	Webhooks da Appstore	Webhooks do Painel
+Quem configura	Desenvolvedor do app, na criação do aplicativo	Merchant, no painel admin da loja
+Escopo	Todos os merchants que instalam o app	Apenas a loja específica do merchant
+URL destino	URL do host do app (definida na Appstore)	URL definida pelo merchant no painel
+Eventos	42 eventos documentados nesta página	Subconjunto de eventos (varia por configuração)
+Credenciais no payload	app_id, site_id, external_key	Formato diferente, sem app_id
+Quando usar	Integrações via Appstore (este guia)	Integrações diretas do merchant
+WARNING
+
+Se você está integrando via Appstore (criou um app, merchants instalam), use os webhooks documentados nesta página. Os webhooks do painel são para merchants que configuram notificações diretamente, sem app intermediário.
+
+Erros e Troubleshooting
+Cenário	O que acontece	Como resolver
+Endpoint retorna HTTP diferente de 2xx	Retry iniciado (até 4 tentativas)	Retornar 200, 201 ou 202
+Endpoint não responde em 5s	Timeout, retry iniciado	Processar async e responder 200 imediatamente
+Endpoint retorna 502	URL inválida ou servidor fora do ar	Verificar URL cadastrada e disponibilidade do servidor
+Endpoint retorna 401/403	Autenticação falha, retry iniciado	Remover autenticação do endpoint ou adicionar whitelist
+Retry esgotado (4 tentativas)	Webhook descartado permanentemente	Monitorar endpoint ativamente e solicitar reenvio ao suporte
+Webhook demora para chegar	Evento pode estar em fila de retry	Verificar se o endpoint respondeu 200 nas tentativas anteriores
+Webhook não chega (pedido Yampi)	Webhook suprimido	Comportamento intencional para pedidos originados da Yampi
+customer_interested não dispara	Cliente já possui pedido	Evento só dispara para leads sem pedido associado
+Testes e Debug
+webhook.site
+Serviço gratuito para inspecionar webhooks recebidos. Crie uma URL temporária em webhook.site, configure como URL de webhook do app e visualize os payloads recebidos em tempo real.
+
+ngrok
+Para testar webhooks diretamente no seu ambiente local:
+
+
+ngrok http 3000
+Use a URL HTTPS gerada pelo ngrok como URL de webhook do app. As requisições serão redirecionadas para localhost:3000, permitindo debug end-to-end com breakpoints.
+
+Dicas gerais
+Verifique os logs do seu servidor para confirmar que as requisições estão chegando
+Inspecione os headers da requisição para confirmar Content-Type: application/json
+Valide que o JSON recebido está bem formado antes de processar
+Confirme que o app possui as permissões necessárias para receber os eventos desejados

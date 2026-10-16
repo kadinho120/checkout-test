@@ -44,6 +44,10 @@ $product['bumps'] = $bumpStmt->fetchAll(PDO::FETCH_ASSOC);
 $pixelStmt = $db->prepare("SELECT * FROM pixels WHERE product_id = ? AND active = 1");
 $pixelStmt->execute([$product['id']]);
 $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
+
+$productGateway = $product['payment_gateway'] ?? 'woovi';
+$supportsCreditCard = in_array($productGateway, ['appmax', 'appmax_card_woovi_pix']);
+$pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($productGateway === 'appmax') ? 'appmax' : $productGateway);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR" class="<?= $isDarkMode ? 'dark' : '' ?>">
@@ -302,7 +306,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         $reqName = (int) ($product['request_name'] ?? 1) !== 0;
         $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
         $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
-        $hasPersonalData = $reqName || $reqEmail || $reqPhone;
+        $hasPersonalData = $reqName || $reqEmail || $reqPhone || $supportsCreditCard || ($pixGateway === 'appmax');
         $isPhysical = ($product['product_type'] ?? 'digital') === 'physical';
         ?>
 
@@ -405,6 +409,16 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     <?php endif; ?>
 
+                    <!-- CPF (Obrigatório para Cartão e Pix Appmax) -->
+                    <div id="cpf-field-wrapper" class="<?= ($supportsCreditCard || $pixGateway === 'appmax') ? '' : 'hidden' ?>">
+                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">
+                            CPF <span class="text-red-500">*</span>
+                        </label>
+                        <input type="tel" id="cpf" placeholder="000.000.000-00" maxlength="14"
+                            class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500">
+                        <p class="text-[10px] text-gray-400 dark:text-slate-500 mt-1 ml-1">Necessário para processamento seguro na Appmax.</p>
+                    </div>
+
                     <?php if ($isPhysical): ?>
                         <div class="grid grid-cols-6 gap-4 <?= $hasPersonalData ? 'pt-4 border-t border-gray-100 dark:border-slate-800' : '' ?>">
                             <div class="col-span-6">
@@ -469,6 +483,79 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     Pagamento
                 </h2>
 
+                <?php if ($supportsCreditCard): ?>
+                <div class="mb-6 space-y-4">
+                    <!-- Abas de Pagamento -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" id="tab-payment-card" onclick="selectPaymentMethod('card')"
+                            class="p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-blue-600 bg-blue-500/10 text-gray-900 dark:text-white shadow-sm ring-1 ring-blue-500/30">
+                            <i data-lucide="credit-card" class="w-5 h-5 text-blue-500"></i>
+                            <span>Cartão</span>
+                        </button>
+                        
+                        <button type="button" id="tab-payment-pix" onclick="selectPaymentMethod('pix')"
+                            class="p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700">
+                            <div class="bg-white p-0.5 rounded border border-gray-200 shrink-0"><img src="/imagens/icon-pix.png" class="h-4"></div>
+                            <span>PIX</span>
+                        </button>
+                    </div>
+
+                    <!-- Formulário Cartão de Crédito -->
+                    <div id="card-payment-fields" class="space-y-4 bg-gray-50/70 dark:bg-slate-950/40 p-4 rounded-2xl border border-gray-200 dark:border-slate-800">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">NÚMERO DO CARTÃO</label>
+                            <div class="relative">
+                                <input type="tel" id="card_number" placeholder="0000 0000 0000 0000" maxlength="19"
+                                    class="block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-3 pr-16 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500">
+                                <div id="card-brand-icon" class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                                    <i data-lucide="credit-card" class="w-5 h-5 text-gray-400"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">NOME IMPRESSO NO CARTÃO</label>
+                            <input type="text" id="card_holder" placeholder="Como impresso no cartão"
+                                class="block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm uppercase transition-colors focus:border-blue-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">VALIDADE (MM/AA)</label>
+                                <input type="tel" id="card_expiry" placeholder="MM/AA" maxlength="5"
+                                    class="block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">CVV</label>
+                                <input type="tel" id="card_cvv" placeholder="123" maxlength="4"
+                                    class="block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">PARCELAS</label>
+                            <select id="card_installments"
+                                class="block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500 outline-none">
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Informação Pix -->
+                    <div id="pix-payment-info" class="hidden">
+                        <div class="border-2 border-green-500 bg-green-500/10 p-4 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-white p-1 rounded border border-gray-200"><img src="/imagens/icon-pix.png" class="h-6"></div>
+                                <div>
+                                    <span class="font-bold text-gray-900 dark:text-white block">PIX</span>
+                                    <span class="text-xs text-gray-500 dark:text-slate-400">Pague com QR Code ou Copia e Cola</span>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold bg-green-500 text-black px-2 py-0.5 rounded">APROVAÇÃO IMEDIATA</span>
+                        </div>
+                    </div>
+                </div>
+                <?php else: ?>
                 <div class="mb-6">
                     <div
                         class="cursor-pointer border-2 border-green-500 bg-green-500/10 p-4 rounded-xl flex items-center justify-between">
@@ -481,6 +568,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                             IMEDIATA</span>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <!-- ORDER BUMPS -->
                 <?php if (!empty($product['bumps'])): ?>
@@ -666,7 +754,10 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                     purchaseOnPixCopy: <?= (int)($product['track_purchase_on_pix_copy'] ?? 0) !== 0 ? 'true' : 'false' ?>,
                     purchaseOnWhatsAppClick: <?= (int)($product['track_purchase_on_whatsapp_click'] ?? 0) !== 0 ? 'true' : 'false' ?>
                 },
-                gateway: <?= json_encode($product['payment_gateway'] ?? 'woovi') ?>,
+                gateway: <?= json_encode($productGateway) ?>,
+                supportsCreditCard: <?= $supportsCreditCard ? 'true' : 'false' ?>,
+                pixGateway: <?= json_encode($pixGateway) ?>,
+                checkout_cta_text: <?= json_encode($product['checkout_cta_text'] ?? '') ?>,
                 product_type: <?= json_encode($product['product_type'] ?? 'digital') ?>,
                 request_email: <?= (int)($product['request_email'] ?? 1) !== 0 ? 'true' : 'false' ?>,
                 pix_instruction_type: <?= json_encode($product['pix_instruction_type'] ?? 'name') ?>,
@@ -708,10 +799,172 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         let pollingTimer = null;
         const PIXEL_ID = <?= json_encode($product['pixels'][0]['pixel_id'] ?? '') ?>; // safe injection
 
-        // Helpers
-        window.toggleBumpVisual = (input) => { /* Managed by CSS peer-checked mostly, or simple class toggle */
-            // Optional extra logic
+        // Cookie helper
+        const getCookie = (name) => {
+            try {
+                const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                return match ? match[2] : null;
+            } catch (e) {
+                return null;
+            }
         };
+
+        // Validação de CPF Brasileiro
+        const isValidCPF = (cpf) => {
+            cpf = (cpf || '').replace(/\D/g, '');
+            if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+            let sum = 0, rest;
+            for (let i = 1; i <= 9; i++) sum += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+            rest = (sum * 10) % 11;
+            if (rest === 10 || rest === 11) rest = 0;
+            if (rest !== parseInt(cpf.substring(9, 10))) return false;
+            sum = 0;
+            for (let i = 1; i <= 10; i++) sum += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+            rest = (sum * 10) % 11;
+            if (rest === 10 || rest === 11) rest = 0;
+            if (rest !== parseInt(cpf.substring(10, 11))) return false;
+            return true;
+        };
+
+        // Método de Pagamento Selecionado
+        let currentPaymentMethod = PLANOS['main'].supportsCreditCard ? 'card' : 'pix';
+
+        // Taxas de parcelamento lojista Appmax (PP)
+        const merchantRates = {
+            1: 0,
+            2: 5.98,
+            3: 8.97,
+            4: 11.96,
+            5: 14.95,
+            6: 17.94,
+            7: 20.93,
+            8: 23.92,
+            9: 26.91,
+            10: 29.90,
+            11: 32.89,
+            12: 35.88
+        };
+
+        const updateInstallmentsList = (totalCents) => {
+            const select = document.getElementById('card_installments');
+            if (!select) return;
+
+            const baseVal = totalCents / 100;
+            const currentSelected = parseInt(select.value, 10) || 1;
+            let html = '';
+
+            for (let i = 1; i <= 12; i++) {
+                const rate = merchantRates[i] || 0;
+                const totalWithInterest = baseVal * (1 + (rate / 100));
+                const parcelVal = totalWithInterest / i;
+                const selectedAttr = (i === currentSelected) ? 'selected' : '';
+
+                const text = (i === 1)
+                    ? `1x de R$ ${formatPriceJS(parcelVal)} (sem juros)`
+                    : `${i}x de R$ ${formatPriceJS(parcelVal)} (total R$ ${formatPriceJS(totalWithInterest)})`;
+
+                html += `<option value="${i}" ${selectedAttr}>${text}</option>`;
+            }
+
+            select.innerHTML = html;
+        };
+
+        const updatePayButtonLabel = () => {
+            if (!payButton || payButton.disabled) return;
+            const total = calculateCurrentTotal();
+            const formatted = formatCurrency(total);
+            const customCta = PLANOS['main'].checkout_cta_text;
+
+            if (customCta && customCta.trim() !== '') {
+                payButton.innerHTML = `<i data-lucide="lock" class="w-5 h-5"></i> ${escapeHtml(customCta)}`;
+            } else if (currentPaymentMethod === 'card') {
+                payButton.innerHTML = `<i data-lucide="lock" class="w-5 h-5"></i> PAGAR COM CARTÃO ${formatted}`;
+            } else {
+                payButton.innerHTML = `<i data-lucide="lock" class="w-5 h-5"></i> PAGAR VIA PIX ${formatted}`;
+            }
+            if (window.lucide) lucide.createIcons();
+        };
+
+        window.selectPaymentMethod = (method) => {
+            currentPaymentMethod = method;
+            const tabCard = document.getElementById('tab-payment-card');
+            const tabPix = document.getElementById('tab-payment-pix');
+            const cardFields = document.getElementById('card-payment-fields');
+            const pixInfo = document.getElementById('pix-payment-info');
+            const cpfWrapper = document.getElementById('cpf-field-wrapper');
+            const cpfInput = document.getElementById('cpf');
+
+            if (cpfInput) {
+                cpfInput.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+            }
+            if (paymentErrorDiv) {
+                paymentErrorDiv.classList.add('hidden');
+            }
+
+            if (method === 'card') {
+                if (tabCard) {
+                    tabCard.className = 'p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-blue-600 bg-blue-500/10 text-gray-900 dark:text-white shadow-sm ring-1 ring-blue-500/30';
+                }
+                if (tabPix) {
+                    tabPix.className = 'p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700';
+                }
+                if (cardFields) cardFields.classList.remove('hidden');
+                if (pixInfo) pixInfo.classList.add('hidden');
+                if (cpfWrapper) cpfWrapper.classList.remove('hidden');
+                if (cpfInput) cpfInput.required = true;
+            } else {
+                if (tabCard) {
+                    tabCard.className = 'p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700';
+                }
+                if (tabPix) {
+                    tabPix.className = 'p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-green-600 bg-green-500/10 text-gray-900 dark:text-white shadow-sm ring-1 ring-green-500/30';
+                }
+                if (cardFields) cardFields.classList.add('hidden');
+                if (pixInfo) pixInfo.classList.remove('hidden');
+
+                // Para Pix: se for Appmax exige CPF, se for Woovi não exige CPF
+                if (PLANOS['main'].pixGateway === 'appmax') {
+                    if (cpfWrapper) cpfWrapper.classList.remove('hidden');
+                    if (cpfInput) cpfInput.required = true;
+                } else {
+                    if (cpfWrapper) cpfWrapper.classList.add('hidden');
+                    if (cpfInput) cpfInput.required = false;
+                }
+            }
+            updatePayButtonLabel();
+            if (window.lucide) lucide.createIcons();
+        };
+
+        // Detecção de Bandeira do Cartão
+        const detectCardBrand = (number) => {
+            const clean = number.replace(/\D/g, '');
+            if (/^4/.test(clean)) return 'visa';
+            if (/^(5[1-5]|222[1-9]|22[3-9]|2[3-6]|27[01]|2720)/.test(clean)) return 'mastercard';
+            if (/^(4011|4312|4389|4514|4576|5041|5066|5090|6277|6362|6363|6504|6550)/.test(clean)) return 'elo';
+            if (/^3[47]/.test(clean)) return 'amex';
+            if (/^(606282|3841)/.test(clean)) return 'hipercard';
+            return 'generic';
+        };
+
+        const updateCardBrandIcon = (brand) => {
+            const iconContainer = document.getElementById('card-brand-icon');
+            if (!iconContainer) return;
+
+            const brandsMap = {
+                visa: '<span class="font-black text-[11px] bg-blue-600 text-white px-2 py-0.5 rounded tracking-wider shadow-sm">VISA</span>',
+                mastercard: '<span class="font-black text-[11px] bg-red-600 text-white px-2 py-0.5 rounded tracking-wider shadow-sm">MC</span>',
+                elo: '<span class="font-black text-[11px] bg-amber-500 text-black px-2 py-0.5 rounded tracking-wider shadow-sm">ELO</span>',
+                amex: '<span class="font-black text-[11px] bg-sky-700 text-white px-2 py-0.5 rounded tracking-wider shadow-sm">AMEX</span>',
+                hipercard: '<span class="font-black text-[11px] bg-rose-700 text-white px-2 py-0.5 rounded tracking-wider shadow-sm">HIPER</span>',
+                generic: '<i data-lucide="credit-card" class="w-5 h-5 text-gray-400"></i>'
+            };
+
+            iconContainer.innerHTML = brandsMap[brand] || brandsMap.generic;
+            if (window.lucide) lucide.createIcons();
+        };
+
+        // Helpers
+        window.toggleBumpVisual = (input) => {};
 
         // Trigger AddPaymentInfo on first interaction
         let hasTrackedInfo = false;
@@ -730,7 +983,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             }
         };
 
-        ['name', 'email', 'whatsapp'].forEach(id => {
+        ['name', 'email', 'whatsapp', 'cpf', 'card_number'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.addEventListener('input', trackAddPaymentInfo);
         });
@@ -746,7 +999,17 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
         window.updateTotalPrice = () => {
             let total = calculateCurrentTotal();
             checkoutPriceDisplay.textContent = formatCurrency(total);
+            updatePayButtonLabel();
+            updateInstallmentsList(total);
         };
+
+        // Inicialização de preço, parcelas e método ativo no carregamento
+        updateTotalPrice();
+        if (PLANOS['main'].supportsCreditCard) {
+            selectPaymentMethod('card');
+        } else {
+            selectPaymentMethod('pix');
+        }
 
         // Form Validation
         const validateForm = () => {
@@ -757,7 +1020,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
             // 1. Basic Empty Check
             ['name', 'email', 'whatsapp'].forEach(id => {
                 const input = document.getElementById(id);
-                if (!input) return; // Skip if optional/hidden
+                if (!input) return;
 
                 input.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
                 if (!input.value.trim()) {
@@ -775,7 +1038,60 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 errorMessage = 'Por favor, insira um e-mail válido.';
             }
 
-            // 3. Address Validation (If physical)
+            // 3. CPF Validation (obrigatório para Cartão ou Pix Appmax)
+            const needsCpf = (currentPaymentMethod === 'card') || (currentPaymentMethod === 'pix' && PLANOS['main'].pixGateway === 'appmax');
+            const cpfEl = document.getElementById('cpf');
+            if (needsCpf && cpfEl) {
+                cpfEl.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+                if (!isValidCPF(cpfEl.value)) {
+                    cpfEl.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    isValid = false;
+                    errorMessage = 'Por favor, informe um CPF válido (obrigatório para processamento Appmax).';
+                }
+            }
+
+            // 4. Cartão de Crédito Validation
+            if (currentPaymentMethod === 'card') {
+                const numEl = document.getElementById('card_number');
+                const holderEl = document.getElementById('card_holder');
+                const expEl = document.getElementById('card_expiry');
+                const cvvEl = document.getElementById('card_cvv');
+
+                [numEl, holderEl, expEl, cvvEl].forEach(el => {
+                    if (el) el.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+                });
+
+                const cleanNum = (numEl?.value || '').replace(/\D/g, '');
+                if (cleanNum.length < 13 || cleanNum.length > 19) {
+                    numEl?.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    isValid = false;
+                    errorMessage = 'Informe um número de cartão de crédito válido.';
+                }
+
+                if (!holderEl || !holderEl.value.trim()) {
+                    holderEl?.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    isValid = false;
+                    errorMessage = 'Informe o nome impresso no cartão.';
+                }
+
+                const expVal = (expEl?.value || '').trim();
+                const [expM, expY] = expVal.split('/');
+                const monthInt = parseInt(expM, 10);
+                if (!expM || !expY || monthInt < 1 || monthInt > 12) {
+                    expEl?.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    isValid = false;
+                    errorMessage = 'Informe uma data de validade válida (MM/AA).';
+                }
+
+                const cleanCvv = (cvvEl?.value || '').replace(/\D/g, '');
+                if (cleanCvv.length < 3 || cleanCvv.length > 4) {
+                    cvvEl?.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    isValid = false;
+                    errorMessage = 'Informe um código de segurança (CVV) válido.';
+                }
+            }
+
+            // 5. Address Validation (If physical)
             if (PLANOS['main'].product_type === 'physical') {
                 ['cep', 'address', 'address_number', 'neighborhood', 'city', 'state'].forEach(id => {
                     const input = document.getElementById(id);
@@ -805,6 +1121,46 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 if (v.length > 9) v = v.replace(/(\d{5})(\d)/, '$1-$2');
                 else if (v.length > 8) v = v.replace(/(\d{4})(\d)/, '$1-$2');
                 e.target.value = v;
+            });
+        }
+
+        // CPF Mask
+        const cpfInputField = document.getElementById('cpf');
+        if (cpfInputField) {
+            cpfInputField.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '').substring(0, 11);
+                if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+                else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+                else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+                e.target.value = v;
+            });
+        }
+
+        // Card Masks
+        const cardNumberInput = document.getElementById('card_number');
+        if (cardNumberInput) {
+            cardNumberInput.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '').substring(0, 16);
+                const brand = detectCardBrand(v);
+                updateCardBrandIcon(brand);
+                v = v.replace(/(\d{4})(?=\d)/g, '$1 ');
+                e.target.value = v;
+            });
+        }
+
+        const cardExpiryInput = document.getElementById('card_expiry');
+        if (cardExpiryInput) {
+            cardExpiryInput.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '').substring(0, 4);
+                if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2);
+                e.target.value = v;
+            });
+        }
+
+        const cardCvvInput = document.getElementById('card_cvv');
+        if (cardCvvInput) {
+            cardCvvInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '').substring(0, 4);
             });
         }
 
@@ -846,7 +1202,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 name: document.getElementById('name') ? document.getElementById('name').value : '',
                 email: document.getElementById('email') ? document.getElementById('email').value : '',
                 phone: document.getElementById('whatsapp') ? document.getElementById('whatsapp').value : '',
-                document: '',
+                document: document.getElementById('cpf') ? document.getElementById('cpf').value.replace(/\D/g, '') : '',
                 external_id: new URLSearchParams(window.location.search).get('external_id') || '',
                 cep: document.getElementById('cep') ? document.getElementById('cep').value : '',
                 address: document.getElementById('address') ? document.getElementById('address').value : '',
@@ -857,8 +1213,130 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 state: document.getElementById('state') ? document.getElementById('state').value : ''
             };
 
-            await handlePixPayment(customerData);
+            if (currentPaymentMethod === 'card') {
+                await handleCardPayment(customerData);
+            } else {
+                await handlePixPayment(customerData);
+            }
         });
+
+        // Card Payment Handler (Appmax)
+        const handleCardPayment = async (customerData) => {
+            const correlationId = generateCorrelationId();
+            const mainProduct = PLANOS['main'];
+            const allProducts = [{ sku: mainProduct.sku, name: mainProduct.name, price: currentProductPrice, qty: 1 }];
+
+            document.querySelectorAll('input[name="bumps[]"]:checked').forEach(el => {
+                allProducts.push({ sku: el.dataset.sku, name: el.dataset.name, price: parseFloat(el.dataset.price), qty: 1 });
+            });
+
+            const totalValueInCents = calculateCurrentTotal();
+            const totalValue = totalValueInCents / 100;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const trackingParams = {};
+            for (const [key, value] of urlParams) {
+                trackingParams[key] = value;
+            }
+
+            const fbp = getCookie('_fbp') || urlParams.get('parent_fbp') || urlParams.get('fbp') || null;
+            const fbc = getCookie('_fbc') || urlParams.get('parent_fbc') || urlParams.get('fbc') || null;
+            let fbclid = trackingParams.fbclid || '';
+            if (!fbclid && fbc) {
+                const parts = fbc.split('.');
+                if (parts.length >= 4) fbclid = parts.slice(3).join('.');
+            }
+            if (fbclid) trackingParams.fbclid = fbclid;
+            if (fbp) trackingParams.fbp = fbp;
+            if (fbc) trackingParams.fbc = fbc;
+            if (typeof PIXEL_ID !== 'undefined') trackingParams.pixel_id = PIXEL_ID;
+            trackingParams.user_agent = navigator.userAgent;
+
+            if (typeof fbq === 'function' && PLANOS['main'].tracking.addPaymentInfo) {
+                fbq('track', 'AddPaymentInfo', {
+                    content_name: allProducts.map(p => p.name).join(', '),
+                    content_ids: allProducts.map(p => p.sku),
+                    content_type: 'product',
+                    value: totalValue,
+                    currency: 'BRL',
+                    external_id: correlationId,
+                    user_data: {
+                        ph: customerData.phone,
+                        em: customerData.email,
+                        fn: customerData.name.split(' ')[0],
+                        external_id: correlationId
+                    }
+                });
+            }
+
+            const expVal = (document.getElementById('card_expiry')?.value || '').trim();
+            const [expMonth, expYear] = expVal.split('/');
+
+            const cardPayload = {
+                value: totalValueInCents,
+                products: allProducts,
+                customer: customerData,
+                card: {
+                    number: (document.getElementById('card_number')?.value || '').replace(/\D/g, ''),
+                    holder_name: (document.getElementById('card_holder')?.value || '').trim(),
+                    exp_month: expMonth,
+                    exp_year: expYear,
+                    cvv: (document.getElementById('card_cvv')?.value || '').replace(/\D/g, ''),
+                    installments: parseInt(document.getElementById('card_installments')?.value, 10) || 1
+                },
+                correlation_id: correlationId,
+                gateway: 'appmax',
+                tracking: trackingParams
+            };
+
+            try {
+                const response = await fetch(`${BACKEND_BASE_PATH}/process-card.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cardPayload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Disparo do Pixel de Purchase para Cartão Appmax na tela de sucesso/obrigado
+                    if (typeof fbq === 'function') {
+                        fbq('track', 'Purchase', {
+                            content_name: allProducts.map(p => p.name).join(', '),
+                            content_ids: allProducts.map(p => p.sku),
+                            content_type: 'product',
+                            value: totalValue,
+                            currency: 'BRL',
+                            num_items: allProducts.length
+                        }, {
+                            eventID: correlationId
+                        });
+                        console.log('[Meta Pixel] Purchase disparado com sucesso após aprovação do cartão!');
+                    }
+
+                    form.classList.add('hidden');
+                    const downsellModal = document.getElementById('downsell-modal');
+                    if (downsellModal) downsellModal.classList.add('hidden');
+
+                    showSuccessView({
+                        is_card: true,
+                        formattedPrice: formatCurrency(totalValueInCents),
+                        order_id: result.order_id
+                    });
+                } else {
+                    paymentErrorDiv.textContent = result.message || 'Transação não autorizada. Verifique os dados do cartão.';
+                    paymentErrorDiv.classList.remove('hidden');
+                    payButton.disabled = false;
+                    updatePayButtonLabel();
+                }
+            } catch (err) {
+                console.error(err);
+                paymentErrorDiv.textContent = 'Erro ao processar pagamento com cartão: ' + err.message;
+                paymentErrorDiv.classList.remove('hidden');
+                payButton.disabled = false;
+                updatePayButtonLabel();
+            }
+        };
 
         // Pix Logic (Same as before but adapted to view)
         const generateCorrelationId = () => `alpha7_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -916,7 +1394,7 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
                 products: allProducts,
                 customer: customerData,
                 correlation_id: correlationId,
-                gateway: PLANOS['main'].gateway || 'woovi',
+                gateway: PLANOS['main'].pixGateway || PLANOS['main'].gateway || 'woovi',
                 tracking: trackingParams
             };
 
@@ -1347,7 +1825,29 @@ $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
             pixWaitView.classList.add('hidden');
 
-            if (isWhatsAppDelivery) {
+            if (dataToUse.is_card) {
+                successView.innerHTML = `
+                    <div class="flex justify-center mb-4">
+                        <div class="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                            <i data-lucide="check-circle-2" class="w-12 h-12 text-emerald-500"></i>
+                        </div>
+                    </div>
+                    <h2 class="font-display text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">PAGAMENTO APROVADO!</h2>
+                    <p class="text-gray-600 dark:text-slate-300 my-2 text-sm md:text-base">
+                        Seu pagamento no cartão de crédito foi processado e aprovado com sucesso!
+                    </p>
+
+                    <div class="mt-4 mb-4 p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/50 rounded-2xl text-center shadow-sm">
+                        <div class="flex items-center justify-center gap-2 mb-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs uppercase tracking-wide">
+                            <i data-lucide="check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                            <span>Transação Concluída</span>
+                        </div>
+                        <p class="text-xs text-emerald-900 dark:text-slate-200 leading-relaxed">
+                            ${PLANOS['main'].product_type === 'physical' ? 'Seu pedido foi confirmado e o envio será preparado em breve.' : 'Os detalhes de acesso ao seu produto foram enviados para o seu e-mail cadastrado.'}
+                        </p>
+                    </div>
+                `;
+            } else if (isWhatsAppDelivery) {
                 const instructionType = dataToUse.pix_instruction_type || (PLANOS['main'] && PLANOS['main'].pix_instruction_type) || 'name';
                 let instructionStepText = '';
                 let whatsappBtnText = '';
