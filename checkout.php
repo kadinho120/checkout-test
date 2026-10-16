@@ -410,7 +410,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                     <?php endif; ?>
 
                     <!-- CPF (Obrigatório para Cartão e Pix Appmax) -->
-                    <div id="cpf-field-wrapper" class="<?= ($supportsCreditCard || $pixGateway === 'appmax') ? '' : 'hidden' ?>">
+                    <div id="cpf-field-wrapper" class="<?= ($pixGateway === 'appmax') ? '' : 'hidden' ?>">
                         <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">
                             CPF <span class="text-red-500">*</span>
                         </label>
@@ -487,21 +487,40 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 <div class="mb-6 space-y-4">
                     <!-- Abas de Pagamento -->
                     <div class="grid grid-cols-2 gap-3">
-                        <button type="button" id="tab-payment-card" onclick="selectPaymentMethod('card')"
-                            class="p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-blue-600 bg-blue-500/10 text-gray-900 dark:text-white shadow-sm ring-1 ring-blue-500/30">
-                            <i data-lucide="credit-card" class="w-5 h-5 text-blue-500"></i>
-                            <span>Cartão</span>
-                        </button>
-                        
                         <button type="button" id="tab-payment-pix" onclick="selectPaymentMethod('pix')"
-                            class="p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700">
+                            class="p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-green-600 bg-green-500/10 text-gray-900 dark:text-white shadow-sm ring-1 ring-green-500/30">
                             <div class="bg-white p-0.5 rounded border border-gray-200 shrink-0"><img src="/imagens/icon-pix.png" class="h-4"></div>
                             <span>PIX</span>
                         </button>
+
+                        <button type="button" id="tab-payment-card" onclick="selectPaymentMethod('card')"
+                            class="p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700">
+                            <i data-lucide="credit-card" class="w-5 h-5 text-gray-400"></i>
+                            <span>Cartão</span>
+                        </button>
+                    </div>
+
+                    <!-- Informação Pix -->
+                    <div id="pix-payment-info">
+                        <div class="border border-emerald-500/30 bg-emerald-500/[0.08] dark:bg-emerald-500/10 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/20 shrink-0 flex items-center justify-center shadow-xs">
+                                    <img src="/imagens/icon-pix.png" class="h-5 w-5 sm:h-5.5 sm:w-5.5 object-contain" alt="Pix">
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="font-extrabold text-gray-900 dark:text-white text-sm block leading-tight">PIX</span>
+                                    <span class="text-[11px] sm:text-xs text-gray-500 dark:text-slate-400 block leading-tight truncate sm:whitespace-normal">QR Code e Copia e Cola</span>
+                                </div>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap shrink-0">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Aprovação Imediata
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Formulário Cartão de Crédito -->
-                    <div id="card-payment-fields" class="space-y-4 bg-gray-50/70 dark:bg-slate-950/40 p-4 rounded-2xl border border-gray-200 dark:border-slate-800">
+                    <div id="card-payment-fields" class="space-y-4 bg-gray-50/70 dark:bg-slate-950/40 p-4 rounded-2xl border border-gray-200 dark:border-slate-800 hidden">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">NÚMERO DO CARTÃO</label>
                             <div class="relative">
@@ -540,32 +559,23 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                             </select>
                         </div>
                     </div>
-
-                    <!-- Informação Pix -->
-                    <div id="pix-payment-info" class="hidden">
-                        <div class="border-2 border-green-500 bg-green-500/10 p-4 rounded-xl flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-white p-1 rounded border border-gray-200"><img src="/imagens/icon-pix.png" class="h-6"></div>
-                                <div>
-                                    <span class="font-bold text-gray-900 dark:text-white block">PIX</span>
-                                    <span class="text-xs text-gray-500 dark:text-slate-400">Pague com QR Code ou Copia e Cola</span>
-                                </div>
-                            </div>
-                            <span class="text-xs font-bold bg-green-500 text-black px-2 py-0.5 rounded">APROVAÇÃO IMEDIATA</span>
-                        </div>
-                    </div>
                 </div>
                 <?php else: ?>
                 <div class="mb-6">
-                    <div
-                        class="cursor-pointer border-2 border-green-500 bg-green-500/10 p-4 rounded-xl flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-white p-1 rounded border border-gray-200"><img src="/imagens/icon-pix.png"
-                                    class="h-6"></div>
-                            <span class="font-bold text-gray-900 dark:text-white">PIX</span>
+                    <div class="border border-emerald-500/30 bg-emerald-500/[0.08] dark:bg-emerald-500/10 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/20 shrink-0 flex items-center justify-center shadow-xs">
+                                <img src="/imagens/icon-pix.png" class="h-5 w-5 sm:h-5.5 sm:w-5.5 object-contain" alt="Pix">
+                            </div>
+                            <div class="min-w-0">
+                                <span class="font-extrabold text-gray-900 dark:text-white text-sm block leading-tight">PIX</span>
+                                <span class="text-[11px] sm:text-xs text-gray-500 dark:text-slate-400 block leading-tight truncate sm:whitespace-normal">QR Code e Copia e Cola</span>
+                            </div>
                         </div>
-                        <span class="text-xs font-bold bg-green-500 text-black px-2 py-0.5 rounded">APROVAÇÃO
-                            IMEDIATA</span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap shrink-0">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Aprovação Imediata
+                        </span>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -826,8 +836,8 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             return true;
         };
 
-        // Método de Pagamento Selecionado
-        let currentPaymentMethod = PLANOS['main'].supportsCreditCard ? 'card' : 'pix';
+        // Método de Pagamento Selecionado (PIX como padrão)
+        let currentPaymentMethod = 'pix';
 
         // Taxas de parcelamento lojista Appmax (PP)
         const merchantRates = {
@@ -1003,13 +1013,9 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             updateInstallmentsList(total);
         };
 
-        // Inicialização de preço, parcelas e método ativo no carregamento
+        // Inicialização de preço, parcelas e método ativo no carregamento (PIX como padrão)
         updateTotalPrice();
-        if (PLANOS['main'].supportsCreditCard) {
-            selectPaymentMethod('card');
-        } else {
-            selectPaymentMethod('pix');
-        }
+        selectPaymentMethod('pix');
 
         // Form Validation
         const validateForm = () => {
