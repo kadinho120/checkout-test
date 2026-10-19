@@ -190,8 +190,47 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
         }
         .bump-card-active {
             border-color: #10b981 !important;
+            border-style: solid !important;
             background-color: rgba(16, 185, 129, 0.08) !important;
             box-shadow: 0 4px 20px -4px rgba(16, 185, 129, 0.2);
+        }
+        .bump-icon-box {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bump-icon-box svg {
+            opacity: 0;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            transform: scale(0.6);
+        }
+        .bump-card-active .bump-icon-box,
+        input[name="bumps[]"]:checked ~ .bump-box .bump-icon-box {
+            background-color: #10b981 !important;
+            border-color: #10b981 !important;
+            color: #ffffff !important;
+        }
+        .bump-card-active .bump-icon-box svg,
+        input[name="bumps[]"]:checked ~ .bump-box .bump-icon-box svg {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+            stroke: #ffffff !important;
+        }
+        .bump-card-active .bump-tag,
+        input[name="bumps[]"]:checked ~ .bump-box .bump-tag {
+            background-color: rgba(16, 185, 129, 0.2) !important;
+            border-color: rgba(16, 185, 129, 0.4) !important;
+            color: #047857 !important;
+        }
+        .dark .bump-card-active .bump-tag,
+        .dark input[name="bumps[]"]:checked ~ .bump-box .bump-tag {
+            color: #6ee7b7 !important;
+        }
+        .bump-card-active .bump-price,
+        input[name="bumps[]"]:checked ~ .bump-box .bump-price {
+            color: #059669 !important;
+        }
+        .dark .bump-card-active .bump-price,
+        .dark input[name="bumps[]"]:checked ~ .bump-box .bump-price {
+            color: #34d399 !important;
         }
 
         /* DOWNSELL MODAL STYLES */
@@ -815,16 +854,16 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                             <div class="bump-box relative border-2 border-dashed border-amber-400/60 dark:border-amber-500/40 bg-amber-500/[0.04] p-3.5 sm:p-4 rounded-2xl transition-all duration-200 hover:border-amber-500 peer-checked:border-solid peer-checked:border-emerald-500 peer-checked:bg-emerald-500/[0.08] peer-checked:shadow-lg peer-checked:shadow-emerald-500/10">
                                 
                                 <div class="flex items-center justify-between gap-2 mb-2">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 peer-checked:bg-emerald-500/20 peer-checked:text-emerald-800 dark:peer-checked:text-emerald-300 peer-checked:border-emerald-500/40">
+                                    <span class="bump-tag inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 transition-all duration-200">
                                         <i data-lucide="sparkles" class="w-3 h-3"></i> ADICIONAR COM DESCONTO
                                     </span>
-                                    <span class="text-sm font-black text-amber-600 dark:text-amber-400 peer-checked:text-emerald-600 dark:peer-checked:text-emerald-400">
+                                    <span class="bump-price text-sm font-black text-amber-600 dark:text-amber-400 transition-colors duration-200">
                                         + R$ <?= format_price($bump['price']) ?>
                                     </span>
                                 </div>
 
                                 <div class="flex items-start gap-3">
-                                    <div class="bump-icon-box flex h-5 w-5 mt-0.5 shrink-0 items-center justify-center rounded-lg border-2 border-gray-400 dark:border-slate-600 bg-white dark:bg-slate-800 text-transparent transition-all duration-200 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 peer-checked:text-white shadow-xs">
+                                    <div class="bump-icon-box flex h-5 w-5 mt-0.5 shrink-0 items-center justify-center rounded-lg border-2 border-gray-400 dark:border-slate-600 bg-white dark:bg-slate-800 text-white shadow-xs">
                                         <i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>
                                     </div>
 
@@ -1261,6 +1300,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
         };
 
         // Inicialização de preço, parcelas e método ativo no carregamento (PIX como padrão)
+        document.querySelectorAll('input[name="bumps[]"]').forEach(toggleBumpVisual);
         updateTotalPrice();
         selectPaymentMethod('pix');
 
