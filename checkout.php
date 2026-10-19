@@ -1894,10 +1894,10 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                         <i data-lucide="clock" class="w-4 h-4"></i>
                     </div>
                     <div>
-                        <h2 class="font-heading text-base sm:text-lg font-black text-white leading-tight">
+                        <h2 class="font-heading text-base sm:text-lg font-black text-gray-900 dark:text-white leading-tight">
                             Aguardando Pagamento
                         </h2>
-                        <p class="text-[11px] text-emerald-400 font-medium">
+                        <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                             Conclua seu Pix para liberar o acesso imediatamente
                         </p>
                     </div>
@@ -1934,14 +1934,14 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             }
 
             const whatsappSectionHtml = (isManualPix && pixData.whatsapp_url) ? `
-                <div class="mt-4 p-4 bg-emerald-950/40 border border-emerald-500/40 rounded-2xl text-left shadow-sm">
-                    <div class="flex items-center gap-2 mb-2 text-emerald-300 font-heading font-bold text-xs uppercase tracking-wide">
-                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+                <div class="mt-4 p-4 bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/40 rounded-2xl text-left shadow-xs">
+                    <div class="flex items-center gap-2 mb-2 text-emerald-800 dark:text-emerald-300 font-heading font-bold text-xs uppercase tracking-wide">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
                         <span>Instruções para Liberação do Acesso:</span>
                     </div>
-                    <ol class="text-xs text-slate-300 space-y-1.5 list-decimal list-inside pl-0.5 leading-relaxed">
+                    <ol class="text-xs text-slate-700 dark:text-slate-300 space-y-1.5 list-decimal list-inside pl-0.5 leading-relaxed">
                         <li>Copie o código Pix ou escaneie o QR Code no seu banco.</li>
-                        <li>Efetue o pagamento de <strong>${pixData.formattedPrice}</strong>.</li>
+                        <li>Efetue o pagamento de <strong class="text-slate-900 dark:text-white font-bold">${pixData.formattedPrice}</strong>.</li>
                         <li>${whatsappInstructionStep}</li>
                     </ol>
                 </div>
@@ -1959,21 +1959,21 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                     || (pixPaymentState && pixPaymentState.customer && pixPaymentState.customer.email) 
                     || '';
                 const emailDisplay = (currentEmail && !currentEmail.includes('@naoinformado.com'))
-                    ? ` no e-mail <strong class="text-white">${escapeHtml(currentEmail)}</strong>`
+                    ? ` no e-mail <strong class="text-blue-900 dark:text-blue-200 font-bold underline decoration-blue-300/50">${escapeHtml(currentEmail)}</strong>`
                     : ' no seu e-mail cadastrado';
 
                 emailInstructionHtml = `
-                    <div class="w-full mt-4 p-4 bg-blue-950/40 border border-blue-500/30 rounded-2xl text-left shadow-sm">
-                        <div class="flex items-center gap-2 mb-1.5 text-blue-300 font-heading font-bold text-xs uppercase tracking-wide">
-                            <i data-lucide="mail" class="w-4 h-4 text-blue-400 shrink-0"></i>
+                    <div class="w-full mt-4 p-4 bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-500/30 rounded-2xl text-left shadow-xs">
+                        <div class="flex items-center gap-2 mb-1.5 text-blue-800 dark:text-blue-300 font-heading font-bold text-xs uppercase tracking-wide">
+                            <i data-lucide="mail" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
                             <span>Envio Automático por E-mail</span>
                         </div>
-                        <p class="text-xs text-slate-300 leading-relaxed">
+                        <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                             Assim que o pagamento do Pix for confirmado, você receberá seus dados de acesso diretamente${emailDisplay}.
                         </p>
-                        <div class="mt-2 pt-2 border-t border-blue-900/50 flex items-start gap-1.5 text-[11px] text-slate-400">
-                            <i data-lucide="info" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i>
-                            <span>Caso não localize em alguns minutos, verifique sua pasta de <strong>Spam</strong> ou <strong>Lixo Eletrônico</strong>.</span>
+                        <div class="mt-2.5 pt-2.5 border-t border-blue-200/80 dark:border-blue-900/50 flex items-start gap-1.5 text-[11px] text-slate-600 dark:text-slate-400">
+                            <i data-lucide="info" class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"></i>
+                            <span>Caso não localize em alguns minutos, verifique sua pasta de <strong class="text-slate-800 dark:text-slate-200">Spam</strong> ou <strong class="text-slate-800 dark:text-slate-200">Lixo Eletrônico</strong>.</span>
                         </div>
                     </div>
                 `;
@@ -1982,22 +1982,22 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             pixWaitView.innerHTML = `
                 <div class="text-center py-1 sm:py-2">
                     <!-- Status Badge -->
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                         Pedido Gerado com Sucesso
                     </div>
 
-                    <h3 class="font-heading text-xl sm:text-2xl font-black text-white mb-1 tracking-tight">
+                    <h3 class="font-heading text-xl sm:text-2xl font-black text-gray-900 dark:text-white mb-1 tracking-tight">
                         Falta apenas 1 passo!
                     </h3>
-                    <p class="text-xs sm:text-sm text-slate-300 mb-4 max-w-sm mx-auto leading-relaxed">
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-4 max-w-sm mx-auto leading-relaxed">
                         Conclua seu Pix abaixo para liberar seu acesso imediatamente.
                     </p>
 
                     <!-- Urgency Countdown Card -->
-                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 mb-4 max-w-md mx-auto flex items-center justify-center gap-2 text-xs font-bold text-amber-300">
-                        <i data-lucide="clock" class="w-4 h-4 text-amber-400 shrink-0"></i>
-                        <span>Seu código Pix expira em: <strong id="pix-timer-countdown" class="font-mono text-sm font-black text-amber-400">14:59</strong></span>
+                    <div class="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl p-2.5 mb-4 max-w-md mx-auto flex items-center justify-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0"></i>
+                        <span>Seu código Pix expira em: <strong id="pix-timer-countdown" class="font-mono text-sm font-black text-amber-700 dark:text-amber-400">14:59</strong></span>
                     </div>
 
                     <!-- HERO COPY BUTTON (MOBILE FIRST SUPREMACY) -->
@@ -2008,7 +2008,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                             <i data-lucide="copy" class="w-5 h-5 shrink-0"></i>
                             <span>COPIAR CÓDIGO PIX</span>
                         </button>
-                        <p class="text-[11px] text-slate-400">
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">
                             Toque no botão acima para copiar o código e colar no app do seu banco.
                         </p>
                     </div>
@@ -2038,39 +2038,38 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                         <div class="space-y-2.5 text-xs text-gray-600 dark:text-slate-300">
                             <div class="flex items-start gap-2.5">
                                 <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0 border border-emerald-500/30">1</span>
-                                <span>Copie o <strong>Código Pix</strong> no botão acima.</span>
+                                <span>Copie o <strong>Código Pix</strong> no botão acima ou aponte a câmera para o QR Code abaixo.</span>
                             </div>
                             <div class="flex items-start gap-2.5">
                                 <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0 border border-emerald-500/30">2</span>
-                                <span>Abra o app do seu <strong>Banco</strong> e escolha a opção <strong>Pix Copia e Cola</strong>.</span>
+                                <span>Abra o app do seu <strong>Banco</strong> e escolha a opção <strong>Pix Copia e Cola</strong> ou <strong>Ler QR Code</strong>.</span>
                             </div>
                             <div class="flex items-start gap-2.5">
                                 <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0 border border-emerald-500/30">3</span>
-                                <span>Cole o código, confirme o valor e pronto! O acesso é liberado automaticamente.</span>
+                                <span>Confirme o valor e pronto! O acesso é liberado automaticamente.</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- QR Code Opcional (Desktop/PC) -->
-                    <details class="group max-w-md mx-auto mb-4 text-left">
-                        <summary class="cursor-pointer list-none text-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-500 transition py-2 flex items-center justify-center gap-1.5">
-                            <i data-lucide="qr-code" class="w-4 h-4"></i>
-                            <span>Prefere pagar pelo computador? Ver QR Code</span>
-                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition group-open:rotate-180"></i>
-                        </summary>
-                        <div class="mt-3 p-4 bg-gray-50 dark:bg-slate-950 rounded-2xl border border-gray-200 dark:border-slate-800 text-center">
-                            <div class="bg-white p-2.5 rounded-2xl inline-block shadow-md mb-2 border border-gray-200 dark:border-none">
-                                <img src="${pixData.qrCodeImage}" class="w-44 h-44 mx-auto object-contain" alt="QR Code Pix">
-                            </div>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Abra a câmera do app do banco e aponte para o QR Code.</p>
+                    <!-- QR Code Pix (Sempre Visível em Todos os Dispositivos) -->
+                    <div class="bg-gray-50/80 dark:bg-slate-950/50 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-slate-800 mb-4 max-w-md mx-auto text-center shadow-xs">
+                        <div class="flex items-center justify-center gap-2 mb-3 text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-slate-200">
+                            <i data-lucide="qr-code" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                            <span>Pague com QR Code</span>
                         </div>
-                    </details>
+                        <div class="bg-white p-3 rounded-2xl inline-block shadow-md mb-2.5 border border-gray-200/80 dark:border-slate-700">
+                            <img src="${pixData.qrCodeImage}" class="w-44 h-44 sm:w-48 sm:h-48 mx-auto object-contain block" alt="QR Code Pix">
+                        </div>
+                        <p class="text-xs text-gray-600 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
+                            Abra o app do seu banco e aponte a câmera para o QR Code acima.
+                        </p>
+                    </div>
 
                     ${whatsappSectionHtml}
                     ${emailInstructionHtml}
 
                     <!-- LIVE RADAR POLLING INDICATOR -->
-                    <div class="mt-5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 max-w-md mx-auto flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400">
+                    <div class="mt-5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 max-w-md mx-auto flex items-center justify-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                         <span class="relative flex h-2.5 w-2.5">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -2129,10 +2128,10 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                         <i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>
                     </div>
                     <div>
-                        <h2 class="font-heading text-base sm:text-lg font-black text-white leading-tight">
+                        <h2 class="font-heading text-base sm:text-lg font-black text-gray-900 dark:text-white leading-tight">
                             Pagamento Aprovado!
                         </h2>
-                        <p class="text-[11px] text-emerald-400 font-medium">
+                        <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                             Seu pedido foi confirmado com sucesso
                         </p>
                     </div>
