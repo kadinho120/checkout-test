@@ -4,8 +4,6 @@ require_once 'api/functions/format_price.php';
 $database = new Database();
 $db = $database->getConnection();
 
-// Theme determination moved below product fetch
-
 $slug = $_GET['slug'] ?? '';
 $isModal = ($_GET['modal'] ?? '') === 'true';
 $isEmbed = ($_GET['embed'] ?? '') === 'true';
@@ -54,13 +52,40 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finalizar Compra - <?= htmlspecialchars($product['name']) ?></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Checkout Seguro - <?= htmlspecialchars($product['name']) ?></title>
+    
+    <!-- GOOGLE FONTS (Plus Jakarta Sans & Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- TAILWIND CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                        display: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600;700&display=swap"
-        rel="stylesheet">
 
     <!-- TRACKING SCRIPTS -->
     <?php foreach ($product['pixels'] as $pixel): ?>
@@ -91,71 +116,91 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
     <?php endforeach; ?>
 
     <style>
+        :root {
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
-            font-family: 'Open Sans', sans-serif;
-            background-color: #0f172a;
-            color: #e2e8f0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        .font-display {
-            font-family: 'Montserrat', sans-serif;
+        .font-heading {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
         }
 
+        /* Prevenir zoom indesejado no iOS Safari */
+        @media screen and (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+
+        /* BOTÃO CTA DE ALTÍSSIMA CONVERSÃO COM SHIMMER */
         .cta-button {
-            background: linear-gradient(to bottom, #22c55e, #15803d);
-            box-shadow: 0 4px 0 #14532d;
-            transition: all 0.1s;
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4), 0 8px 10px -6px rgba(16, 185, 129, 0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button:hover {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
+            box-shadow: 0 14px 28px -4px rgba(16, 185, 129, 0.5), 0 10px 10px -5px rgba(16, 185, 129, 0.3);
+            transform: translateY(-1px);
         }
 
         .cta-button:active {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 #14532d;
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
-        /* BUMP STYLES */
+        .shimmer-sweep {
+            position: absolute;
+            top: 0;
+            left: -120%;
+            width: 70%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+            transform: skewX(-20deg);
+            animation: shimmer-sweep 3s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer-sweep {
+            0% { left: -120%; }
+            35%, 100% { left: 180%; }
+        }
+
+        /* RADAR LIVE PULSE */
+        @keyframes radar-ping {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .live-radar {
+            animation: radar-ping 2s infinite ease-in-out;
+        }
+
+        /* ORDER BUMP CHECKBOX EFFECTS */
         .bump-box {
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
         }
-
-        .bump-box:hover {
-            background-color: rgba(31, 41, 55, 0.5);
-        }
-
         .bump-card-active {
-            background-color: rgba(212, 175, 55, 0.15) !important;
-            border-color: #D4AF37 !important;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-        }
-
-        .bump-promo-tag {
-            background: #ef4444;
-            color: white;
-            font-size: 0.60rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-left: auto;
-        }
-
-        .bump-icon-box {
-            transition: all 0.3s ease;
-        }
-
-        input:checked+div .bump-icon-box {
-            background-color: #D4AF37;
-            border-color: #D4AF37;
-            color: black;
+            border-color: #10b981 !important;
+            background-color: rgba(16, 185, 129, 0.08) !important;
+            box-shadow: 0 4px 20px -4px rgba(16, 185, 129, 0.2);
         }
 
         /* DOWNSELL MODAL STYLES */
         #downsell-modal {
-            transition: opacity 0.3s ease;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
         }
         .downsell-content {
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
+            transform: scale(0.92);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         #downsell-modal.active .downsell-content {
             transform: scale(1);
@@ -189,514 +234,690 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             animation: pulse-timer 1.8s infinite ease-in-out;
         }
 
-        @supports (background-color: color-mix(in srgb, red, blue)) {
-            #top-bar-timer-countdown {
-                background-color: color-mix(in srgb, currentColor 18%, transparent);
-                border-color: color-mix(in srgb, currentColor 30%, transparent);
-            }
+        @keyframes pulse-timer {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
-        @keyframes pulse-timer {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
+        /* Custom Scrollbar for sleek desktop feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
         }
     </style>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body
-    class="min-h-screen flex flex-col items-center transition-colors duration-300 <?= $isEmbed ? 'p-0 bg-transparent overflow-x-hidden' : ($isModal ? 'py-2 px-2 overflow-x-hidden bg-gray-50 dark:bg-slate-950' : 'py-6 sm:py-12 px-4 bg-gray-50 dark:bg-slate-950') ?>">
+    class="min-h-screen flex flex-col items-center justify-start transition-colors duration-300 <?= $isEmbed ? 'p-0 bg-transparent overflow-x-hidden' : ($isModal ? 'py-2 px-2 overflow-x-hidden bg-slate-50 dark:bg-[#0B0F19] text-gray-900 dark:text-slate-100' : 'py-3 sm:py-8 px-3 sm:px-4 bg-slate-50 dark:bg-[#0B0F19] text-gray-900 dark:text-slate-100') ?>">
 
     <?php if (!$isModal && !$isEmbed): ?>
-    <!-- Header / Security -->
-    <div
-        class="mb-8 text-center opacity-70 flex items-center justify-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-        <i data-lucide="lock" class="w-4 h-4"></i> Pagamento 100% Seguro e Criptografado
-    </div>
+    <!-- TOP TRUST & SECURITY HEADER -->
+    <header class="w-full max-w-5xl mb-4 sm:mb-6 flex items-center justify-between px-2 text-xs text-slate-500 dark:text-slate-400">
+        <div class="flex items-center gap-2 font-semibold">
+            <span class="flex h-2 w-2 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span class="text-gray-700 dark:text-slate-300 flex items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400"></i>
+                Ambiente Criptografado & Seguro
+            </span>
+        </div>
+        <div class="hidden sm:flex items-center gap-4 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+            <span class="flex items-center gap-1"><i data-lucide="lock" class="w-3 h-3 text-slate-400"></i> SSL 256-Bit</span>
+            <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-emerald-500 dark:text-emerald-400"></i> Acesso Imediato</span>
+        </div>
+    </header>
     <?php endif; ?>
 
     <?php 
     $isMinimalist = ($product['checkout_style'] ?? 'default') === 'minimalist';
+    $reqName = (int) ($product['request_name'] ?? 1) !== 0;
+    $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
+    $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
+    $hasPersonalData = $reqName || $reqEmail || $reqPhone || $supportsCreditCard || ($pixGateway === 'appmax');
+    $isPhysical = ($product['product_type'] ?? 'digital') === 'physical';
+    
+    if ($isPhysical) {
+        $accessText = "Receba em até 7 dias";
+    } else {
+        $accessText = "Acesso Imediato";
+        if ($reqEmail && $reqPhone) {
+            $accessText .= " por E-mail e WhatsApp";
+        } elseif ($reqEmail) {
+            $accessText .= " por E-mail";
+        } elseif ($reqPhone) {
+            $accessText .= " por WhatsApp";
+        }
+    }
     ?>
 
-    <div class="w-full <?= $isMinimalist ? 'max-w-md mx-auto' : ($isEmbed ? 'max-w-5xl mx-auto' : ($isModal ? 'max-w-4xl' : 'max-w-5xl')) ?> <?= $isMinimalist ? '' : 'grid grid-cols-1 lg:grid-cols-2 gap-8' ?> items-start">
+    <!-- MAIN CONTAINER -->
+    <div class="w-full <?= $isMinimalist ? 'max-w-md mx-auto' : ($isEmbed ? 'max-w-5xl mx-auto' : ($isModal ? 'max-w-4xl' : 'max-w-5xl')) ?> <?= $isMinimalist ? '' : 'grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8' ?> items-start">
 
-        <!-- COLUMN 1: PRODUCT INFO -->
+        <!-- MOBILE-FIRST ORDER BANNER (VISIBLE ONLY ON MOBILE IN DEFAULT STYLE) -->
         <?php if (!$isMinimalist): ?>
-        <div class="lg:sticky lg:top-8 space-y-6">
-            <div
-                class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl">
-                <div
-                    class="aspect-square w-full bg-slate-800 rounded-lg overflow-hidden mb-6 relative border border-slate-700">
-                    <img src="<?= htmlspecialchars($product['image_url'] ?: 'https://placehold.co/600x400?text=Produto') ?>"
-                        class="w-full h-full object-cover">
-
-                    <!-- Badge -->
-                    <div
-                        class="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                        OFERTA ESPECIAL
+        <div class="lg:hidden col-span-1 w-full">
+            <div class="bg-white dark:bg-slate-900/90 border border-gray-200 dark:border-slate-800 rounded-2xl p-3.5 shadow-lg backdrop-blur-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 border border-gray-200 dark:border-slate-700/80 relative shadow-inner">
+                        <img src="<?= htmlspecialchars($product['image_url'] ?: 'https://placehold.co/600x400?text=Produto') ?>"
+                            class="w-full h-full object-cover" alt="<?= htmlspecialchars($product['name']) ?>">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-[11px] mb-0.5 font-bold">
+                            <span>★★★★★</span>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold ml-0.5">4.9 (2.4k+)</span>
+                        </div>
+                        <h2 class="font-heading font-extrabold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
+                            <?= htmlspecialchars($product['name']) ?>
+                        </h2>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <?php if (!empty($product['compare_at_price']) && (float)$product['compare_at_price'] > 0): ?>
+                                <span class="text-xs text-slate-400 line-through">De R$ <?= format_price($product['compare_at_price']) ?></span>
+                            <?php endif; ?>
+                            <span class="text-base font-black text-emerald-600 dark:text-emerald-400">
+                                R$ <?= format_price($product['price']) ?>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <h1 class="font-display text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <?php if (!empty($product['description'])): ?>
+                <details class="group mt-2.5 pt-2.5 border-t border-gray-100 dark:border-slate-800/80 text-xs">
+                    <summary class="cursor-pointer list-none flex items-center justify-between text-slate-500 dark:text-slate-400 font-medium hover:text-emerald-500 transition">
+                        <span>Ver detalhes da oferta</span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition group-open:rotate-180"></i>
+                    </summary>
+                    <p class="mt-2 text-gray-600 dark:text-slate-300 leading-relaxed text-xs">
+                        <?= htmlspecialchars($product['description']) ?>
+                    </p>
+                </details>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- DESKTOP COLUMN 1: PRODUCT SHOWCASE (STICKY) -->
+        <?php if (!$isMinimalist): ?>
+        <div class="hidden lg:block lg:col-span-5 lg:sticky lg:top-8 space-y-5">
+            <div class="bg-white dark:bg-slate-900/90 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl backdrop-blur-xl">
+                <div class="aspect-square w-full bg-slate-100 dark:bg-slate-950 rounded-2xl overflow-hidden mb-5 relative border border-gray-200 dark:border-slate-800 shadow-lg">
+                    <img src="<?= htmlspecialchars($product['image_url'] ?: 'https://placehold.co/600x400?text=Produto') ?>"
+                        class="w-full h-full object-cover" alt="<?= htmlspecialchars($product['name']) ?>">
+
+                    <!-- Badge Promocional -->
+                    <div class="absolute top-3 right-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 text-[11px] font-black px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5 uppercase tracking-wider">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Oferta Especial
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 text-amber-500 dark:text-amber-400 text-sm mb-2 font-bold">
+                    <span>★★★★★</span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold ml-1">4.9/5 • Mais de 2.400 clientes satisfeitos</span>
+                </div>
+
+                <h1 class="font-heading text-2xl font-black text-gray-900 dark:text-white mb-2 leading-tight">
                     <?= htmlspecialchars($product['name']) ?>
                 </h1>
-                <p class="text-gray-600 dark:text-slate-400 text-sm mb-4 leading-relaxed">
-                    <?= htmlspecialchars($product['description'] ?: 'Acesso imediato ao conteúdo digital.') ?>
+                
+                <p class="text-gray-600 dark:text-slate-300 text-sm mb-5 leading-relaxed">
+                    <?= htmlspecialchars($product['description'] ?: 'Acesso imediato ao conteúdo digital com liberação automática.') ?>
                 </p>
 
-                <div class="flex items-center justify-between border-t border-slate-800 pt-4 mt-4">
-                    <span class="text-slate-500 text-sm">Valor Total:</span>
+                <div class="flex items-center justify-between border-t border-b border-gray-100 dark:border-slate-800/90 py-4 my-4">
+                    <span class="text-slate-500 dark:text-slate-400 text-sm font-semibold">Valor Total:</span>
                     <div class="text-right">
                         <?php if (!empty($product['compare_at_price']) && (float)$product['compare_at_price'] > 0): ?>
-                            <span class="block text-xs text-slate-500 line-through">De R$ <?= format_price($product['compare_at_price']) ?></span>
+                            <span class="block text-xs text-slate-400 line-through font-medium">De R$ <?= format_price($product['compare_at_price']) ?></span>
                         <?php endif; ?>
-                        <span class="text-3xl font-black text-green-400">R$
-                            <?= format_price($product['price']) ?></span>
+                        <span class="text-3xl font-black text-emerald-600 dark:text-emerald-400">R$ <?= format_price($product['price']) ?></span>
                     </div>
                 </div>
 
-                <div class="mt-6 space-y-2 text-xs text-slate-500">
-                    <div class="flex items-center gap-2"><i data-lucide="check-circle"
-                            class="w-4 h-4 text-green-500"></i> Garantia de 7 Dias</div>
-                    <?php
-                    $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
-                    $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
-                    $isPhysical = ($product['product_type'] ?? 'digital') === 'physical';
+                <!-- Box de Garantia & Entrega -->
+                <div class="bg-gray-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-gray-200 dark:border-slate-800 space-y-3 text-xs text-gray-700 dark:text-slate-300">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <strong class="block font-bold text-gray-900 dark:text-white text-xs">Garantia Blindada de 7 Dias</strong>
+                            <span class="text-slate-500 dark:text-slate-400 text-[11px]">Risco zero. Satisfação total ou seu dinheiro de volta.</span>
+                        </div>
+                    </div>
                     
-                    if ($isPhysical) {
-                        $accessText = "Receba em até 7 dias";
-                    } else {
-                        $accessText = "Acesso Imediato";
-                        if ($reqEmail && $reqPhone) {
-                            $accessText .= " por E-mail e WhatsApp";
-                        } elseif ($reqEmail) {
-                            $accessText .= " por E-mail";
-                        } elseif ($reqPhone) {
-                            $accessText .= " por WhatsApp";
-                        }
-                    }
-                    ?>
-                    <div class="flex items-center gap-2"><i data-lucide="check-circle"
-                            class="w-4 h-4 text-green-500"></i> <?= $accessText ?></div>
+                    <div class="flex items-center gap-3 pt-2.5 border-t border-gray-200 dark:border-slate-800/80">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                            <i data-lucide="zap" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <strong class="block font-bold text-gray-900 dark:text-white text-xs"><?= $accessText ?></strong>
+                            <span class="text-slate-500 dark:text-slate-400 text-[11px]">Liberação automática assim que o pagamento for concluído.</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <?php endif; ?>
 
-        <?php
-        $reqName = (int) ($product['request_name'] ?? 1) !== 0;
-        $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
-        $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
-        $hasPersonalData = $reqName || $reqEmail || $reqPhone || $supportsCreditCard || ($pixGateway === 'appmax');
-        $isPhysical = ($product['product_type'] ?? 'digital') === 'physical';
-        ?>
-
-        <!-- COLUMN 2: CHECKOUT FORM -->
-        <div class="<?= $isMinimalist ? 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl overflow-hidden' : 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl' ?>">
+        <!-- CHECKOUT FORM COLUMN (COLUMN 2 OR FULL WIDTH IF MINIMALIST) -->
+        <div class="<?= $isMinimalist ? 'w-full' : 'col-span-1 lg:col-span-7 w-full' ?>">
             
-            <?php if ($isMinimalist): ?>
-            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-slate-800">
-                <h1 class="font-display text-lg font-bold text-gray-900 dark:text-white pr-4 flex-grow text-left">
-                    <?= htmlspecialchars($product['name']) ?>
-                </h1>
-                <div class="text-right shrink-0 ml-auto flex flex-col items-end justify-center">
-                    <?php if (!empty($product['compare_at_price']) && (float)$product['compare_at_price'] > 0): ?>
-                        <span class="block text-xs text-slate-500 line-through">De R$ <?= format_price($product['compare_at_price']) ?></span>
-                    <?php endif; ?>
-                    <span class="text-xl font-black text-green-500">R$ <?= format_price($product['price']) ?></span>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <?php if ($hasPersonalData): ?>
-            <h2 id="checkout-step-header"
-                class="font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2 <?= $isMinimalist ? 'justify-center' : '' ?>">
-                <span
-                    class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm text-white">1</span>
-                Dados Pessoais
-            </h2>
-            <?php else: ?>
-            <h2 id="checkout-step-header"
-                class="hidden font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2 <?= $isMinimalist ? 'justify-center' : '' ?>">
-            </h2>
-            <?php endif; ?>
-
-            <div id="payment-error"
-                class="hidden bg-red-100 border border-red-400 text-red-700 dark:bg-red-900/50 dark:border-red-700 dark:text-red-300 px-4 py-3 rounded-md mb-4 text-sm"
-                role="alert"></div>
-
-            <form id="checkout-form" novalidate>
-
-                <!-- Downsell Modal HTML -->
-                <div id="downsell-modal" class="fixed inset-0 z-[99999] hidden flex items-center justify-center p-4">
-                    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm shadow-2xl" onclick="closeDownsell()"></div>
-                    <div class="downsell-content relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl overflow-y-auto max-h-[95vh] border border-orange-500/30 p-6 sm:p-8 text-center shadow-2xl">
-                        <div class="mb-4 sm:mb-6 inline-flex p-3 sm:p-4 bg-orange-500/10 rounded-full">
-                            <i data-lucide="gift" class="w-10 h-10 sm:w-12 sm:h-12 text-orange-500"></i>
+            <div class="<?= $isMinimalist ? 'bg-white dark:bg-slate-900/95 border border-gray-200 dark:border-slate-800 rounded-3xl p-4 sm:p-7 shadow-xl dark:shadow-2xl backdrop-blur-xl' : 'bg-white dark:bg-slate-900/95 border border-gray-200 dark:border-slate-800 rounded-3xl p-4 sm:p-7 shadow-xl dark:shadow-2xl backdrop-blur-xl' ?>">
+                
+                <!-- MINIMALIST HEADER -->
+                <?php if ($isMinimalist): ?>
+                <div class="flex items-center gap-3.5 mb-5 pb-4 border-b border-gray-100 dark:border-slate-800">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 border border-gray-200 dark:border-slate-700 relative shadow-inner">
+                        <img src="<?= htmlspecialchars($product['image_url'] ?: 'https://placehold.co/600x400?text=Produto') ?>"
+                            class="w-full h-full object-cover" alt="<?= htmlspecialchars($product['name']) ?>">
+                    </div>
+                    <div class="flex-1 min-w-0 text-left">
+                        <div class="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-[11px] mb-0.5 font-bold">
+                            <span>★★★★★</span>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">4.9/5</span>
                         </div>
-                        
-                        <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight">Espera aí! 🛑</h2>
-                        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-4 sm:mb-6 font-medium leading-relaxed">
-                            Notamos que você está prestes a sair. Queremos te dar uma última chance de levar o 
-                            <span class="text-orange-500 font-bold"><?= htmlspecialchars($product['name']) ?></span> 
-                            com um desconto especial de liberação imediata.
-                        </p>
-
-                        <div class="bg-orange-500/5 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-orange-500/20">
-                            <span class="block text-[10px] sm:text-xs text-slate-500 uppercase font-bold mb-1">Preço Atualizado</span>
-                            <div class="flex items-center justify-center gap-2 sm:gap-3">
-                                <span class="text-sm sm:text-lg text-slate-500 line-through">R$ <?= format_price($product['price']) ?></span>
-                                <span class="text-3xl sm:text-4xl font-black text-orange-500">R$ <span id="downsell-new-price">0,00</span></span>
-                            </div>
-                        </div>
-
-                        <div class="space-y-3">
-                            <button type="button" onclick="acceptDownsell()" class="cta-button w-full py-4 sm:py-5 rounded-2xl text-white font-black text-base sm:text-lg uppercase tracking-wider flex items-center justify-center gap-2">
-                                APROVEITAR DESCONTO AGORA
-                            </button>
-                            <button type="button" onclick="closeDownsell()" class="w-full py-2 text-slate-500 hover:text-red-400 text-xs sm:text-sm font-bold transition">
-                                Não, prefiro pagar o valor cheio depois
-                            </button>
+                        <h1 class="font-heading font-extrabold text-sm sm:text-base text-gray-900 dark:text-white truncate">
+                            <?= htmlspecialchars($product['name']) ?>
+                        </h1>
+                        <div class="flex items-baseline gap-2 mt-0.5">
+                            <?php if (!empty($product['compare_at_price']) && (float)$product['compare_at_price'] > 0): ?>
+                                <span class="text-xs text-slate-400 line-through">De R$ <?= format_price($product['compare_at_price']) ?></span>
+                            <?php endif; ?>
+                            <span class="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400">R$ <?= format_price($product['price']) ?></span>
                         </div>
                     </div>
-                </div>
-
-                <?php if ($hasPersonalData || $isPhysical): ?>
-                <div class="space-y-4 mb-8">
-                    <?php if ($reqName): ?>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">NOME</label>
-                        <input type="text" id="name" placeholder="Digite seu nome..."
-                            class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
-                            required>
-                    </div>
-                    <?php endif; ?>
-                    <?php if ($reqEmail): ?>
-                        <div>
-                            <label
-                                class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">E-MAIL</label>
-                            <input type="email" id="email" placeholder="Digite seu melhor @email..."
-                                class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
-                                required>
-                        </div>
-                    <?php endif; ?>
-                    <?php if ($reqPhone): ?>
-                        <div>
-                            <label
-                                class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">WHATSAPP</label>
-                            <input type="tel" id="whatsapp" placeholder="(00) 00000-0000"
-                                class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
-                                required>
-                        </div>
-                    <?php endif; ?>
-
-                    <!-- CPF (Obrigatório para Cartão e Pix Appmax) -->
-                    <div id="cpf-field-wrapper" class="<?= ($pixGateway === 'appmax') ? '' : 'hidden' ?>">
-                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">
-                            CPF <span class="text-red-500">*</span>
-                        </label>
-                        <input type="tel" id="cpf" placeholder="000.000.000-00" maxlength="14"
-                            class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500">
-                        <p class="text-[10px] text-gray-400 dark:text-slate-500 mt-1 ml-1">Necessário para processamento seguro na Appmax.</p>
-                    </div>
-
-                    <?php if ($isPhysical): ?>
-                        <div class="grid grid-cols-6 gap-4 <?= $hasPersonalData ? 'pt-4 border-t border-gray-100 dark:border-slate-800' : '' ?>">
-                            <div class="col-span-6">
-                                <h3 class="text-xs font-black text-blue-500 uppercase tracking-widest mb-4">Dados de Entrega</h3>
-                            </div>
-                            
-                            <div class="col-span-3">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">CEP</label>
-                                <input type="text" id="cep" placeholder="00000-000"
-                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
-                                    required>
-                            </div>
-
-                            <div class="col-span-6">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">ENDEREÇO</label>
-                                <input type="text" id="address" placeholder="Rua, Avenida..."
-                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
-                                    required>
-                            </div>
-
-                            <div class="col-span-2">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">NÚMERO</label>
-                                <input type="text" id="address_number" placeholder="123"
-                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
-                                    required>
-                            </div>
-
-                            <div class="col-span-4">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">COMPLEMENTO</label>
-                                <input type="text" id="complement" placeholder="Apto, Bloco..."
-                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500">
-                            </div>
-
-                            <div class="col-span-6">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">BAIRRO</label>
-                                <input type="text" id="neighborhood" placeholder="Seu bairro..."
-                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
-                                    required>
-                            </div>
-
-                            <div class="col-span-4">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">CIDADE</label>
-                                <input type="text" id="city" placeholder="Sua cidade..."
-                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
-                                    required>
-                            </div>
-
-                            <div class="col-span-2">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">ESTADO</label>
-                                <input type="text" id="state" placeholder="UF"
-                                    class="block w-full bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500"
-                                    required maxlength="2">
-                            </div>
-                        </div>
-                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
-                <h2 class="font-display text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                    <span
-                        class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm text-white"><?= $hasPersonalData ? '2' : '1' ?></span>
-                    Pagamento
-                </h2>
-
-                <?php if ($supportsCreditCard): ?>
-                <div class="mb-6 space-y-4">
-                    <!-- Abas de Pagamento -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <button type="button" id="tab-payment-pix" onclick="selectPaymentMethod('pix')"
-                            class="p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-green-600 bg-green-500/10 text-gray-900 dark:text-white shadow-sm ring-1 ring-green-500/30">
-                            <div class="bg-white p-0.5 rounded border border-gray-200 shrink-0"><img src="/imagens/icon-pix.png" class="h-4"></div>
-                            <span>PIX</span>
-                        </button>
-
-                        <button type="button" id="tab-payment-card" onclick="selectPaymentMethod('card')"
-                            class="p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700">
-                            <i data-lucide="credit-card" class="w-5 h-5 text-gray-400"></i>
-                            <span>Cartão</span>
-                        </button>
+                <!-- STEP 1 HEADER -->
+                <?php if ($hasPersonalData): ?>
+                <div id="checkout-step-header" class="mb-5 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-heading font-black text-sm shrink-0 shadow-xs">
+                        1
                     </div>
-
-                    <!-- Informação Pix -->
-                    <div id="pix-payment-info">
-                        <div class="border border-emerald-500/30 bg-emerald-500/[0.08] dark:bg-emerald-500/10 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
-                            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/20 shrink-0 flex items-center justify-center shadow-xs">
-                                    <img src="/imagens/icon-pix.png" class="h-5 w-5 sm:h-5.5 sm:w-5.5 object-contain" alt="Pix">
-                                </div>
-                                <div class="min-w-0">
-                                    <span class="font-extrabold text-gray-900 dark:text-white text-sm block leading-tight">PIX</span>
-                                    <span class="text-[11px] sm:text-xs text-gray-500 dark:text-slate-400 block leading-tight truncate sm:whitespace-normal">QR Code e Copia e Cola</span>
-                                </div>
-                            </div>
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap shrink-0">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                Aprovação Imediata
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Formulário Cartão de Crédito -->
-                    <div id="card-payment-fields" class="space-y-4 bg-gray-50/70 dark:bg-slate-950/40 p-4 rounded-2xl border border-gray-200 dark:border-slate-800 hidden">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">NÚMERO DO CARTÃO</label>
-                            <div class="relative">
-                                <input type="tel" id="card_number" placeholder="0000 0000 0000 0000" maxlength="19"
-                                    class="block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-3 pr-16 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500">
-                                <div id="card-brand-icon" class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                                    <i data-lucide="credit-card" class="w-5 h-5 text-gray-400"></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">NOME IMPRESSO NO CARTÃO</label>
-                            <input type="text" id="card_holder" placeholder="Como impresso no cartão"
-                                class="block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm uppercase transition-colors focus:border-blue-500">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">VALIDADE (MM/AA)</label>
-                                <input type="tel" id="card_expiry" placeholder="MM/AA" maxlength="5"
-                                    class="block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">CVV</label>
-                                <input type="tel" id="card_cvv" placeholder="123" maxlength="4"
-                                    class="block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 mb-1 ml-1">PARCELAS</label>
-                            <select id="card_installments"
-                                class="block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-gray-900 dark:text-white text-sm transition-colors focus:border-blue-500 outline-none">
-                            </select>
-                        </div>
+                    <div>
+                        <h2 class="font-heading text-base sm:text-lg font-black text-gray-900 dark:text-white leading-tight">
+                            Dados de Acesso
+                        </h2>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                            Informe para onde enviaremos a confirmação e seu acesso
+                        </p>
                     </div>
                 </div>
                 <?php else: ?>
-                <div class="mb-6">
-                    <div class="border border-emerald-500/30 bg-emerald-500/[0.08] dark:bg-emerald-500/10 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
-                        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/20 shrink-0 flex items-center justify-center shadow-xs">
-                                <img src="/imagens/icon-pix.png" class="h-5 w-5 sm:h-5.5 sm:w-5.5 object-contain" alt="Pix">
-                            </div>
-                            <div class="min-w-0">
-                                <span class="font-extrabold text-gray-900 dark:text-white text-sm block leading-tight">PIX</span>
-                                <span class="text-[11px] sm:text-xs text-gray-500 dark:text-slate-400 block leading-tight truncate sm:whitespace-normal">QR Code e Copia e Cola</span>
-                            </div>
-                        </div>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap shrink-0">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Aprovação Imediata
-                        </span>
-                    </div>
-                </div>
+                <div id="checkout-step-header" class="hidden"></div>
                 <?php endif; ?>
 
-                <!-- ORDER BUMPS -->
-                <?php if (!empty($product['bumps'])): ?>
-                    <div
-                        class="space-y-3 mb-8 bg-gray-50 dark:bg-slate-950/50 p-4 rounded-xl border border-gray-200 dark:border-slate-800">
-                        <p class="text-xs text-yellow-500 font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-                            <i data-lucide="zap" class="w-4 h-4"></i>
-                            Turbine sua Compra
+                <!-- ERROR ALERT DIV -->
+                <div id="payment-error"
+                    class="hidden bg-red-50 dark:bg-red-950/60 border border-red-300 dark:border-red-500/50 text-red-700 dark:text-red-300 px-4 py-3 rounded-2xl mb-4 text-xs sm:text-sm font-medium flex items-center gap-2"
+                    role="alert">
+                </div>
+
+                <form id="checkout-form" novalidate>
+
+                    <!-- DOWNSELL MODAL -->
+                    <div id="downsell-modal" class="fixed inset-0 z-[99999] hidden flex items-center justify-center p-3 sm:p-4">
+                        <div class="absolute inset-0 bg-slate-950/85 backdrop-blur-md shadow-2xl transition-opacity" onclick="closeDownsell()"></div>
+                        <div class="downsell-content relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl overflow-y-auto max-h-[92vh] border-2 border-amber-500/40 p-5 sm:p-7 text-center shadow-2xl">
+                            
+                            <div class="mb-3.5 inline-flex p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-amber-500">
+                                <i data-lucide="gift" class="w-8 h-8 sm:w-10 sm:h-10"></i>
+                            </div>
+                            
+                            <div class="inline-block px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[10px] font-black uppercase tracking-wider mb-2">
+                                🛑 Oportunidade Única de Saída
+                            </div>
+
+                            <h2 class="font-heading text-xl sm:text-2xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+                                ESPERA! NÃO VÁ EMBORA
+                            </h2>
+                            
+                            <p class="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mb-4 leading-relaxed">
+                                Notamos que você está prestes a sair. Queremos te dar uma última chance de levar o 
+                                <span class="font-bold text-amber-600 dark:text-amber-400"><?= htmlspecialchars($product['name']) ?></span> 
+                                com um desconto especial de liberação imediata:
+                            </p>
+
+                            <div class="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent rounded-2xl p-4 mb-5 border border-amber-500/30">
+                                <span class="block text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider mb-1">
+                                    Preço Promocional Exclusivo
+                                </span>
+                                <div class="flex items-center justify-center gap-3">
+                                    <span class="text-sm sm:text-base text-slate-400 line-through">R$ <?= format_price($product['price']) ?></span>
+                                    <span class="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400">R$ <span id="downsell-new-price">0,00</span></span>
+                                </div>
+                                <span class="inline-block mt-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                                    Economia aplicada instantaneamente
+                                </span>
+                            </div>
+
+                            <div class="space-y-2.5">
+                                <button type="button" onclick="acceptDownsell()"
+                                    class="cta-button relative overflow-hidden w-full py-3.5 sm:py-4 rounded-2xl text-white font-heading font-black text-sm sm:text-base uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl hover:shadow-emerald-500/30 active:scale-[0.98] transition">
+                                    <span class="shimmer-sweep"></span>
+                                    <i data-lucide="check" class="w-5 h-5"></i>
+                                    <span>APROVEITAR DESCONTO AGORA</span>
+                                </button>
+                                <button type="button" onclick="closeDownsell()"
+                                    class="w-full py-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs font-semibold transition">
+                                    Não, prefiro abrir mão deste desconto e pagar o valor cheio
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PERSONAL DATA FIELDS -->
+                    <?php if ($hasPersonalData || $isPhysical): ?>
+                    <div class="space-y-3.5 mb-7">
+                        <?php if ($reqName): ?>
+                        <div>
+                            <label for="name" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5 ml-1 flex items-center justify-between">
+                                <span>NOME COMPLETO</span>
+                                <span class="text-[10px] text-slate-400 font-normal">Obrigatório</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i data-lucide="user" class="w-4 h-4"></i>
+                                </div>
+                                <input type="text" id="name" placeholder="Digite seu nome completo..."
+                                    class="pl-10 block w-full bg-white dark:bg-slate-950/80 border border-gray-300 dark:border-slate-700/80 rounded-xl py-3 px-4 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    required autocomplete="name">
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($reqEmail): ?>
+                        <div>
+                            <label for="email" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5 ml-1 flex items-center justify-between">
+                                <span>SEU MELHOR E-MAIL</span>
+                                <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Acesso enviado aqui</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i data-lucide="mail" class="w-4 h-4"></i>
+                                </div>
+                                <input type="email" id="email" placeholder="seuemail@exemplo.com"
+                                    class="pl-10 block w-full bg-white dark:bg-slate-950/80 border border-gray-300 dark:border-slate-700/80 rounded-xl py-3 px-4 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    required autocomplete="email" inputmode="email">
+                            </div>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 ml-1 flex items-center gap-1">
+                                <i data-lucide="shield-check" class="w-3 h-3 text-emerald-500 dark:text-emerald-400"></i> Seus dados estão protegidos. Não enviamos spam.
+                            </p>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($reqPhone): ?>
+                        <div>
+                            <label for="whatsapp" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5 ml-1 flex items-center justify-between">
+                                <span>WHATSAPP COM DDD</span>
+                                <span class="text-[10px] text-slate-400 font-normal">Para suporte e avisos</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i data-lucide="phone" class="w-4 h-4"></i>
+                                </div>
+                                <input type="tel" id="whatsapp" placeholder="(00) 00000-0000"
+                                    class="pl-10 block w-full bg-white dark:bg-slate-950/80 border border-gray-300 dark:border-slate-700/80 rounded-xl py-3 px-4 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    required autocomplete="tel" inputmode="numeric">
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- CPF (Obrigatório para Cartão e Pix Appmax) -->
+                        <div id="cpf-field-wrapper" class="<?= ($pixGateway === 'appmax') ? '' : 'hidden' ?>">
+                            <label for="cpf" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5 ml-1 flex items-center justify-between">
+                                <span>CPF DO TITULAR <span class="text-red-500">*</span></span>
+                                <span class="text-[10px] text-slate-400 font-normal">Exigência Bancária</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                                </div>
+                                <input type="tel" id="cpf" placeholder="000.000.000-00" maxlength="14"
+                                    class="pl-10 block w-full bg-white dark:bg-slate-950/80 border border-gray-300 dark:border-slate-700/80 rounded-xl py-3 px-4 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    inputmode="numeric">
+                            </div>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 ml-1 flex items-center gap-1">
+                                <i data-lucide="lock" class="w-3 h-3 text-emerald-500 dark:text-emerald-400"></i> Necessário para emissão e segurança do pagamento.
+                            </p>
+                        </div>
+
+                        <!-- CAMPOS DE ENTREGA FÍSICA -->
+                        <?php if ($isPhysical): ?>
+                        <div class="grid grid-cols-6 gap-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+                            <div class="col-span-6">
+                                <h3 class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                                    <i data-lucide="truck" class="w-4 h-4"></i> Dados de Entrega
+                                </h3>
+                            </div>
+                            
+                            <div class="col-span-6 sm:col-span-3">
+                                <label for="cep" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1 ml-1">CEP</label>
+                                <input type="text" id="cep" placeholder="00000-000" maxlength="9"
+                                    class="block w-full bg-white dark:bg-slate-950/80 border border-gray-300 dark:border-slate-700/80 rounded-xl p-3 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    required inputmode="numeric">
+                            </div>
+
+                            <div class="col-span-6 sm:col-span-6">
+                                <label for="address" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1 ml-1">ENDEREÇO</label>
+                                <input type="text" id="address" placeholder="Rua, Avenida..."
+                                    class="block w-full bg-white dark:bg-slate-950/80 border border-gray-300 dark:border-slate-700/80 rounded-xl p-3 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    required>
+                            </div>
+
+                            <div class="col-span-3 sm:col-span-2">
+                                <label for="address_number" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1 ml-1">NÚMERO</label>
+                                <input type="text" id="address_number" placeholder="123"
+                                    class="block w-full bg-white dark:bg-slate-950/80 border border-gray-300 dark:border-slate-700/80 rounded-xl p-3 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    required>
+                            </div>
+
+                            <div class="col-span-3 sm:col-span-4">
+                                <label for="complement" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1 ml-1">COMPLEMENTO</label>
+                                <input type="text" id="complement" placeholder="Apto, Bloco..."
+                                    class="block w-full bg-white dark:bg-slate-950/80 border border-gray-300 dark:border-slate-700/80 rounded-xl p-3 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                            </div>
+
+                            <div class="col-span-6 sm:col-span-6">
+                                <label for="neighborhood" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1 ml-1">BAIRRO</label>
+                                <input type="text" id="neighborhood" placeholder="Seu bairro..."
+                                    class="block w-full bg-white dark:bg-slate-950/80 border border-gray-300 dark:border-slate-700/80 rounded-xl p-3 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    required>
+                            </div>
+
+                            <div class="col-span-4 sm:col-span-4">
+                                <label for="city" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1 ml-1">CIDADE</label>
+                                <input type="text" id="city" placeholder="Sua cidade..."
+                                    class="block w-full bg-white dark:bg-slate-950/80 border border-gray-300 dark:border-slate-700/80 rounded-xl p-3 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    required>
+                            </div>
+
+                            <div class="col-span-2 sm:col-span-2">
+                                <label for="state" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1 ml-1">ESTADO</label>
+                                <input type="text" id="state" placeholder="UF" maxlength="2"
+                                    class="block w-full bg-white dark:bg-slate-950/80 border border-gray-300 dark:border-slate-700/80 rounded-xl p-3 text-gray-900 dark:text-white text-base sm:text-sm font-medium uppercase transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    required>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- STEP 2 HEADER -->
+                    <div class="mb-5 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-heading font-black text-sm shrink-0 shadow-xs">
+                            <?= $hasPersonalData ? '2' : '1' ?>
+                        </div>
+                        <div>
+                            <h2 class="font-heading text-base sm:text-lg font-black text-gray-900 dark:text-white leading-tight">
+                                Forma de Pagamento
+                            </h2>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                                Escolha como deseja pagar de forma segura
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- PAYMENT METHODS SELECTOR -->
+                    <?php if ($supportsCreditCard): ?>
+                    <div class="mb-6 space-y-3.5">
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" id="tab-payment-pix" onclick="selectPaymentMethod('pix')"
+                                class="p-3.5 rounded-2xl border-2 flex items-center justify-center gap-2.5 font-bold text-sm transition-all duration-200 cursor-pointer border-emerald-500 bg-emerald-500/10 text-gray-900 dark:text-white shadow-md shadow-emerald-500/10 ring-1 ring-emerald-500/30">
+                                <div class="bg-white p-0.5 rounded border border-gray-200 shrink-0"><img src="/imagens/icon-pix.png" class="h-4 w-4 object-contain"></div>
+                                <span class="tracking-wide">PIX</span>
+                            </button>
+
+                            <button type="button" id="tab-payment-card" onclick="selectPaymentMethod('card')"
+                                class="p-3.5 rounded-2xl border-2 flex items-center justify-center gap-2.5 font-bold text-sm transition-all duration-200 cursor-pointer border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700">
+                                <i data-lucide="credit-card" class="w-4 h-4 text-slate-400"></i>
+                                <span class="tracking-wide">Cartão</span>
+                            </button>
+                        </div>
+
+                        <!-- INFORMAÇÃO PIX -->
+                        <div id="pix-payment-info">
+                            <div class="border border-emerald-500/30 bg-emerald-500/[0.08] p-3.5 sm:p-4 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/20 shrink-0 flex items-center justify-center shadow-xs">
+                                        <img src="/imagens/icon-pix.png" class="h-5 w-5 object-contain" alt="Pix">
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="font-heading font-extrabold text-gray-900 dark:text-white text-sm block leading-tight">PIX Oficial</span>
+                                        <span class="text-[11px] text-slate-500 dark:text-slate-400 block leading-tight">Aprovação imediata em menos de 10s</span>
+                                    </div>
+                                </div>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap shrink-0">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Liberação Imediata
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- FORMULÁRIO CARTÃO DE CRÉDITO -->
+                        <div id="card-payment-fields" class="space-y-3.5 bg-gray-50/80 dark:bg-slate-950/60 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-slate-800 hidden">
+                            <div>
+                                <label for="card_number" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5 ml-1">NÚMERO DO CARTÃO</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <i data-lucide="credit-card" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="tel" id="card_number" placeholder="0000 0000 0000 0000" maxlength="19"
+                                        class="pl-10 pr-16 block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700/80 rounded-xl py-3 px-4 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                        inputmode="numeric">
+                                    <div id="card-brand-icon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                                        <i data-lucide="credit-card" class="w-5 h-5 text-slate-400"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="card_holder" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5 ml-1">NOME IMPRESSO NO CARTÃO</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <i data-lucide="user" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="text" id="card_holder" placeholder="COMO IMPRESSO NO CARTÃO"
+                                        class="pl-10 block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700/80 rounded-xl py-3 px-4 text-gray-900 dark:text-white text-base sm:text-sm uppercase font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="card_expiry" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5 ml-1">VALIDADE (MM/AA)</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                                        </div>
+                                        <input type="tel" id="card_expiry" placeholder="MM/AA" maxlength="5"
+                                            class="pl-10 block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700/80 rounded-xl py-3 px-4 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                            inputmode="numeric">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="card_cvv" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5 ml-1">CVV</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <i data-lucide="lock" class="w-4 h-4"></i>
+                                        </div>
+                                        <input type="tel" id="card_cvv" placeholder="123" maxlength="4"
+                                            class="pl-10 block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700/80 rounded-xl py-3 px-4 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                            inputmode="numeric">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="card_installments" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5 ml-1">PARCELAS</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <i data-lucide="layers" class="w-4 h-4"></i>
+                                    </div>
+                                    <select id="card_installments"
+                                        class="pl-10 pr-8 block w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700/80 rounded-xl py-3 px-4 text-gray-900 dark:text-white text-base sm:text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 appearance-none outline-none">
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <div class="mb-6">
+                        <div class="border border-emerald-500/30 bg-emerald-500/[0.08] p-3.5 sm:p-4 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/20 shrink-0 flex items-center justify-center shadow-xs">
+                                    <img src="/imagens/icon-pix.png" class="h-5 w-5 object-contain" alt="Pix">
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="font-heading font-extrabold text-gray-900 dark:text-white text-sm block leading-tight">PIX Oficial</span>
+                                    <span class="text-[11px] text-slate-500 dark:text-slate-400 block leading-tight">Aprovação imediata em menos de 10s</span>
+                                </div>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap shrink-0">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Liberação Imediata
+                            </span>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- ORDER BUMPS -->
+                    <?php if (!empty($product['bumps'])): ?>
+                    <div class="space-y-3 mb-7 bg-gray-50/80 dark:bg-slate-950/60 p-4 rounded-2xl border border-gray-200 dark:border-slate-800/90">
+                        <p class="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i>
+                            Turbine seu Pedido (Oferta Única)
                         </p>
 
                         <?php foreach ($product['bumps'] as $bump): ?>
-                            <label class="relative block cursor-pointer group mb-2">
-                                <input type="checkbox" name="bumps[]" value="<?= $bump['id'] ?>"
-                                    data-sku="BUMP-<?= $bump['id'] ?>" data-name="<?= htmlspecialchars($bump['title']) ?>"
-                                    data-price="<?= $bump['price'] ?>" class="peer sr-only"
-                                    onchange="updateTotalPrice(); toggleBumpVisual(this)">
+                        <label class="relative block cursor-pointer group mb-2.5 select-none">
+                            <input type="checkbox" name="bumps[]" value="<?= $bump['id'] ?>"
+                                data-sku="BUMP-<?= $bump['id'] ?>" data-name="<?= htmlspecialchars($bump['title']) ?>"
+                                data-price="<?= $bump['price'] ?>" class="peer sr-only"
+                                onchange="updateTotalPrice(); toggleBumpVisual(this)">
 
-                                <div
-                                    class="bump-box border border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 p-3 rounded-xl transition-all duration-200 peer-checked:border-yellow-500 peer-checked:bg-yellow-500/10">
-                                    
-                                    <!-- Top Row: Checkbox, Title and Price -->
-                                    <div class="flex items-start gap-3 mb-2">
-                                        <div
-                                            class="bump-icon-box flex h-5 w-5 mt-1 shrink-0 items-center justify-center rounded border border-slate-500 text-transparent bg-transparent peer-checked:bg-yellow-500 peer-checked:border-yellow-500 peer-checked:text-black">
-                                            <i data-lucide="check" class="w-3 h-3"></i>
-                                        </div>
-
-                                        <div class="flex-1 min-w-0">
-                                            <span class="font-bold text-gray-900 dark:text-white text-sm pr-2">
-                                                <?= htmlspecialchars($bump['title']) ?>
-                                            </span>
-                                        </div>
-
-                                        <div class="text-right shrink-0">
-                                            <span class="block text-sm font-black text-yellow-500">+R$
-                                                <?= format_price($bump['price']) ?></span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Bottom Row: Full Width Description -->
-                                    <p class="text-xs text-slate-400 leading-relaxed ml-8">
-                                        <?= htmlspecialchars($bump['description']) ?>
-                                    </p>
+                            <div class="bump-box relative border-2 border-dashed border-amber-400/60 dark:border-amber-500/40 bg-amber-500/[0.04] p-3.5 sm:p-4 rounded-2xl transition-all duration-200 hover:border-amber-500 peer-checked:border-solid peer-checked:border-emerald-500 peer-checked:bg-emerald-500/[0.08] peer-checked:shadow-lg peer-checked:shadow-emerald-500/10">
+                                
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 peer-checked:bg-emerald-500/20 peer-checked:text-emerald-800 dark:peer-checked:text-emerald-300 peer-checked:border-emerald-500/40">
+                                        <i data-lucide="sparkles" class="w-3 h-3"></i> ADICIONAR COM DESCONTO
+                                    </span>
+                                    <span class="text-sm font-black text-amber-600 dark:text-amber-400 peer-checked:text-emerald-600 dark:peer-checked:text-emerald-400">
+                                        + R$ <?= format_price($bump['price']) ?>
+                                    </span>
                                 </div>
 
-                            </label>
+                                <div class="flex items-start gap-3">
+                                    <div class="bump-icon-box flex h-5 w-5 mt-0.5 shrink-0 items-center justify-center rounded-lg border-2 border-gray-400 dark:border-slate-600 bg-white dark:bg-slate-800 text-transparent transition-all duration-200 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 peer-checked:text-white shadow-xs">
+                                        <i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>
+                                    </div>
+
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="font-heading font-bold text-gray-900 dark:text-white text-sm leading-snug">
+                                            <?= htmlspecialchars($bump['title']) ?>
+                                        </h4>
+                                        <p class="text-xs text-gray-600 dark:text-slate-400 leading-relaxed mt-1">
+                                            <?= htmlspecialchars($bump['description']) ?>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
                         <?php endforeach; ?>
                     </div>
-                <?php endif; ?>
+                    <?php endif; ?>
 
-                <!-- SUMMARY & BUTTON -->
-                <div class="border-t border-slate-800 pt-6">
-                    <div class="flex justify-between items-end mb-4">
-                        <span class="text-gray-600 dark:text-slate-400 text-sm">Total a pagar:</span>
-                        <span id="checkout-price-display" class="text-2xl font-black text-gray-900 dark:text-white">R$
-                            <?= format_price($product['price']) ?></span>
+                    <!-- SUMMARY & CTA BUTTON -->
+                    <div class="border-t border-gray-200 dark:border-slate-800 pt-5">
+                        
+                        <!-- RESUMO TRANSPARENTE DE VALORES -->
+                        <div class="bg-gray-50/90 dark:bg-slate-950/70 rounded-2xl p-4 border border-gray-200/90 dark:border-slate-800/80 mb-5 space-y-2 text-xs">
+                            <div class="flex justify-between items-center text-slate-500 dark:text-slate-400">
+                                <span>Produto Principal</span>
+                                <span id="summary-subtotal" class="font-semibold text-gray-800 dark:text-slate-200">R$ <?= format_price($product['price']) ?></span>
+                            </div>
+                            <div id="summary-bumps-row" class="hidden justify-between items-center text-slate-500 dark:text-slate-400">
+                                <span>Ofertas Adicionais</span>
+                                <span id="summary-bumps-total" class="text-emerald-600 dark:text-emerald-400 font-bold">+ R$ 0,00</span>
+                            </div>
+                            <div class="border-t border-gray-200 dark:border-slate-800/80 pt-2 flex justify-between items-baseline">
+                                <span class="text-sm font-bold text-gray-900 dark:text-white">Total a pagar:</span>
+                                <span id="checkout-price-display" class="font-heading text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+                                    R$ <?= format_price($product['price']) ?>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- BOTÃO CTA DE ALTA CONVERSÃO -->
+                        <button type="submit" id="pay-button"
+                            class="cta-button relative overflow-hidden w-full font-heading font-black text-base sm:text-lg py-4 px-6 rounded-2xl uppercase tracking-wider text-white flex items-center justify-center gap-2.5 shadow-2xl active:scale-[0.98] transform transition-all duration-150 cursor-pointer">
+                            <span class="shimmer-sweep"></span>
+                            <i data-lucide="lock" class="w-5 h-5 shrink-0"></i>
+                            <span class="btn-text truncate"><?= htmlspecialchars(!empty($product['checkout_cta_text']) ? $product['checkout_cta_text'] : 'FINALIZAR COMPRA AGORA') ?></span>
+                        </button>
+
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-3 flex items-center justify-center gap-1.5">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i>
+                            Ao clicar no botão, você concorda com nossos Termos de Uso.
+                        </p>
+
+                        <!-- SELOS DE SEGURANÇA E CONFIANÇA -->
+                        <div class="mt-5 pt-4 border-t border-gray-100 dark:border-slate-800/80 flex flex-wrap items-center justify-center gap-y-2.5 gap-x-5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                            <div class="flex items-center gap-1.5">
+                                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                <span>Compra 100% Segura</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                <span>SSL 256-Bit</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                <span>Garantia de 7 Dias</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <i data-lucide="zap" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                <span>Acesso Imediato</span>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <button type="submit" id="pay-button"
-                        class="w-full cta-button font-bold text-lg py-4 px-6 rounded-xl uppercase tracking-wider text-white flex items-center justify-center gap-2 hover:scale-[1.02] transform transition">
-                        <i data-lucide="lock" class="w-5 h-5"></i> <?= htmlspecialchars(!empty($product['checkout_cta_text']) ? $product['checkout_cta_text'] : 'PAGAR AGORA') ?>
-                    </button>
+                </form>
 
-                    <p class="text-[10px] text-slate-500 text-center mt-3">
-                        Ao clicar no botão, você concorda com nossos Termos de Uso.
-                    </p>
+                <!-- PIX WAIT SCREEN (MOBILE FIRST) -->
+                <div id="pix-wait-view" class="hidden text-center p-2 sm:p-4">
+                    <!-- Injected via JS -->
                 </div>
 
-            </form>
-
-            <!-- PIX WAIT SCREEN -->
-            <div id="pix-wait-view" class="hidden text-center p-4 pt-8">
-                <!-- Injected via JS -->
-            </div>
-
-            <!-- SUCCESS SCREEN -->
-            <div id="success-view" class="hidden text-center p-4 pt-8">
-                <div class="flex justify-center mb-4"><i data-lucide="check-circle"
-                        class="w-20 h-20 text-green-500"></i></div>
-                <h2 class="font-display text-3xl font-bold text-white mt-4">PAGAMENTO APROVADO!</h2>
-                <p class="text-slate-300 my-4 text-lg">
-                    <?= ($product['product_type'] ?? 'digital') === 'physical' ? 'Seu pedido foi confirmado e você receberá em até 7 dias.' : 'Seu acesso foi enviado para o seu e-mail.' ?>
-                </p>
-            </div>
-
-            <?php if ($isMinimalist): ?>
-            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-slate-800 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[10px] text-gray-500 dark:text-slate-500 font-bold uppercase tracking-wider">
-                <div class="flex items-center gap-1.5">
-                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-green-500"></i> Pagamento Seguro
+                <!-- SUCCESS SCREEN -->
+                <div id="success-view" class="hidden text-center p-3 sm:p-6">
+                    <!-- Injected via JS -->
                 </div>
-                <?php 
-                $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
-                $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
-                $isPhysical = ($product['product_type'] ?? 'digital') === 'physical';
-                
-                if ($isPhysical) {
-                    $accessText = "Receba em até 7 dias";
-                } else {
-                    $accessText = "Acesso Imediato";
-                    if ($reqEmail && $reqPhone) {
-                        $accessText .= " via E-mail e Whats";
-                    } elseif ($reqEmail) {
-                        $accessText .= " via E-mail";
-                    } elseif ($reqPhone) {
-                        $accessText .= " via Whats";
-                    }
-                }
-                ?>
-                <div class="flex items-center gap-1.5">
-                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-green-500"></i> <?= $accessText ?>
-                </div>
+
             </div>
-            <?php endif; ?>
+
         </div>
 
     </div>
 
-    <!-- JS LOGIC -->
+    <!-- JAVASCRIPT LOGIC -->
     <script>
         lucide.createIcons();
         const BACKEND_BASE_PATH = '/api';
@@ -886,11 +1107,11 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             const customCta = PLANOS['main'].checkout_cta_text;
 
             if (customCta && customCta.trim() !== '') {
-                payButton.innerHTML = `<i data-lucide="lock" class="w-5 h-5"></i> ${escapeHtml(customCta)}`;
+                payButton.innerHTML = `<span class="shimmer-sweep"></span><i data-lucide="lock" class="w-5 h-5 shrink-0"></i> <span class="btn-text truncate">${escapeHtml(customCta)}</span>`;
             } else if (currentPaymentMethod === 'card') {
-                payButton.innerHTML = `<i data-lucide="lock" class="w-5 h-5"></i> PAGAR COM CARTÃO ${formatted}`;
+                payButton.innerHTML = `<span class="shimmer-sweep"></span><i data-lucide="lock" class="w-5 h-5 shrink-0"></i> <span class="btn-text truncate">PAGAR COM CARTÃO ${formatted}</span>`;
             } else {
-                payButton.innerHTML = `<i data-lucide="lock" class="w-5 h-5"></i> PAGAR VIA PIX ${formatted}`;
+                payButton.innerHTML = `<span class="shimmer-sweep"></span><i data-lucide="lock" class="w-5 h-5 shrink-0"></i> <span class="btn-text truncate">PAGAR VIA PIX ${formatted}</span>`;
             }
             if (window.lucide) lucide.createIcons();
         };
@@ -913,10 +1134,10 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
 
             if (method === 'card') {
                 if (tabCard) {
-                    tabCard.className = 'p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-blue-600 bg-blue-500/10 text-gray-900 dark:text-white shadow-sm ring-1 ring-blue-500/30';
+                    tabCard.className = 'p-3.5 rounded-2xl border-2 flex items-center justify-center gap-2.5 font-bold text-sm transition-all duration-200 cursor-pointer border-emerald-500 bg-emerald-500/10 text-gray-900 dark:text-white shadow-md shadow-emerald-500/10 ring-1 ring-emerald-500/30';
                 }
                 if (tabPix) {
-                    tabPix.className = 'p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700';
+                    tabPix.className = 'p-3.5 rounded-2xl border-2 flex items-center justify-center gap-2.5 font-bold text-sm transition-all duration-200 cursor-pointer border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700';
                 }
                 if (cardFields) cardFields.classList.remove('hidden');
                 if (pixInfo) pixInfo.classList.add('hidden');
@@ -924,10 +1145,10 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 if (cpfInput) cpfInput.required = true;
             } else {
                 if (tabCard) {
-                    tabCard.className = 'p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700';
+                    tabCard.className = 'p-3.5 rounded-2xl border-2 flex items-center justify-center gap-2.5 font-bold text-sm transition-all duration-200 cursor-pointer border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700';
                 }
                 if (tabPix) {
-                    tabPix.className = 'p-3.5 rounded-xl border-2 flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer border-green-600 bg-green-500/10 text-gray-900 dark:text-white shadow-sm ring-1 ring-green-500/30';
+                    tabPix.className = 'p-3.5 rounded-2xl border-2 flex items-center justify-center gap-2.5 font-bold text-sm transition-all duration-200 cursor-pointer border-emerald-500 bg-emerald-500/10 text-gray-900 dark:text-white shadow-md shadow-emerald-500/10 ring-1 ring-emerald-500/30';
                 }
                 if (cardFields) cardFields.classList.add('hidden');
                 if (pixInfo) pixInfo.classList.remove('hidden');
@@ -966,7 +1187,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 elo: '<span class="font-black text-[11px] bg-amber-500 text-black px-2 py-0.5 rounded tracking-wider shadow-sm">ELO</span>',
                 amex: '<span class="font-black text-[11px] bg-sky-700 text-white px-2 py-0.5 rounded tracking-wider shadow-sm">AMEX</span>',
                 hipercard: '<span class="font-black text-[11px] bg-rose-700 text-white px-2 py-0.5 rounded tracking-wider shadow-sm">HIPER</span>',
-                generic: '<i data-lucide="credit-card" class="w-5 h-5 text-gray-400"></i>'
+                generic: '<i data-lucide="credit-card" class="w-5 h-5 text-slate-500"></i>'
             };
 
             iconContainer.innerHTML = brandsMap[brand] || brandsMap.generic;
@@ -974,7 +1195,15 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
         };
 
         // Helpers
-        window.toggleBumpVisual = (input) => {};
+        window.toggleBumpVisual = (input) => {
+            const bumpBox = input.closest('label')?.querySelector('.bump-box');
+            if (!bumpBox) return;
+            if (input.checked) {
+                bumpBox.classList.add('bump-card-active');
+            } else {
+                bumpBox.classList.remove('bump-card-active');
+            }
+        };
 
         // Trigger AddPaymentInfo on first interaction
         let hasTrackedInfo = false;
@@ -1008,9 +1237,27 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
 
         window.updateTotalPrice = () => {
             let total = calculateCurrentTotal();
-            checkoutPriceDisplay.textContent = formatCurrency(total);
+            if (checkoutPriceDisplay) checkoutPriceDisplay.textContent = formatCurrency(total);
             updatePayButtonLabel();
             updateInstallmentsList(total);
+
+            // Detalhamento do resumo de valores
+            const bumpsRow = document.getElementById('summary-bumps-row');
+            const bumpsTotalEl = document.getElementById('summary-bumps-total');
+            if (bumpsRow && bumpsTotalEl) {
+                let bumpsTotal = 0;
+                document.querySelectorAll('input[name="bumps[]"]:checked').forEach(el => {
+                    bumpsTotal += Math.round(parseFloat(el.dataset.price) * 100);
+                });
+                if (bumpsTotal > 0) {
+                    bumpsRow.classList.remove('hidden');
+                    bumpsRow.classList.add('flex');
+                    bumpsTotalEl.textContent = '+ ' + formatCurrency(bumpsTotal);
+                } else {
+                    bumpsRow.classList.add('hidden');
+                    bumpsRow.classList.remove('flex');
+                }
+            }
         };
 
         // Inicialização de preço, parcelas e método ativo no carregamento (PIX como padrão)
@@ -1028,9 +1275,9 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 const input = document.getElementById(id);
                 if (!input) return;
 
-                input.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+                input.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
                 if (!input.value.trim()) {
-                    input.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    input.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
                     isValid = false;
                 }
             });
@@ -1039,7 +1286,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             const emailInput = document.getElementById('email');
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (emailInput && emailInput.value.trim() && !emailRegex.test(emailInput.value.trim())) {
-                emailInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                emailInput.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
                 isValid = false;
                 errorMessage = 'Por favor, insira um e-mail válido.';
             }
@@ -1048,11 +1295,11 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             const needsCpf = (currentPaymentMethod === 'card') || (currentPaymentMethod === 'pix' && PLANOS['main'].pixGateway === 'appmax');
             const cpfEl = document.getElementById('cpf');
             if (needsCpf && cpfEl) {
-                cpfEl.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+                cpfEl.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
                 if (!isValidCPF(cpfEl.value)) {
-                    cpfEl.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    cpfEl.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
                     isValid = false;
-                    errorMessage = 'Por favor, informe um CPF válido (obrigatório para processamento Appmax).';
+                    errorMessage = 'Por favor, informe um CPF válido (obrigatório para processamento bancário).';
                 }
             }
 
@@ -1064,18 +1311,18 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 const cvvEl = document.getElementById('card_cvv');
 
                 [numEl, holderEl, expEl, cvvEl].forEach(el => {
-                    if (el) el.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+                    if (el) el.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
                 });
 
                 const cleanNum = (numEl?.value || '').replace(/\D/g, '');
                 if (cleanNum.length < 13 || cleanNum.length > 19) {
-                    numEl?.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    numEl?.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
                     isValid = false;
                     errorMessage = 'Informe um número de cartão de crédito válido.';
                 }
 
                 if (!holderEl || !holderEl.value.trim()) {
-                    holderEl?.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    holderEl?.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
                     isValid = false;
                     errorMessage = 'Informe o nome impresso no cartão.';
                 }
@@ -1084,14 +1331,14 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 const [expM, expY] = expVal.split('/');
                 const monthInt = parseInt(expM, 10);
                 if (!expM || !expY || monthInt < 1 || monthInt > 12) {
-                    expEl?.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    expEl?.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
                     isValid = false;
                     errorMessage = 'Informe uma data de validade válida (MM/AA).';
                 }
 
                 const cleanCvv = (cvvEl?.value || '').replace(/\D/g, '');
                 if (cleanCvv.length < 3 || cleanCvv.length > 4) {
-                    cvvEl?.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    cvvEl?.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
                     isValid = false;
                     errorMessage = 'Informe um código de segurança (CVV) válido.';
                 }
@@ -1102,9 +1349,9 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 ['cep', 'address', 'address_number', 'neighborhood', 'city', 'state'].forEach(id => {
                     const input = document.getElementById(id);
                     if (!input) return;
-                    input.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+                    input.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
                     if (!input.value.trim()) {
-                        input.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                        input.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
                         isValid = false;
                     }
                 });
@@ -1113,6 +1360,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             if (!isValid) {
                 paymentErrorDiv.textContent = errorMessage;
                 paymentErrorDiv.classList.remove('hidden');
+                paymentErrorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
             return isValid;
         };
@@ -1201,7 +1449,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             if (payButton.disabled || !validateForm()) return;
 
             payButton.disabled = true;
-            payButton.innerHTML = '<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> PROCESSANDO...';
+            payButton.innerHTML = '<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> PROCESSANDO COM SEGURANÇA...';
             lucide.createIcons();
 
             const customerData = {
@@ -1305,7 +1553,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    // Disparo do Pixel de Purchase para Cartão Appmax na tela de sucesso/obrigado
                     if (typeof fbq === 'function') {
                         fbq('track', 'Purchase', {
                             content_name: allProducts.map(p => p.name).join(', '),
@@ -1344,7 +1591,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             }
         };
 
-        // Pix Logic (Same as before but adapted to view)
+        // Pix Logic
         const generateCorrelationId = () => `alpha7_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
         const handlePixPayment = async (customerData) => {
@@ -1359,37 +1606,23 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             const totalValueInCents = calculateCurrentTotal();
             const totalValue = totalValueInCents / 100;
 
-            // Capture Tracking Params
             const urlParams = new URLSearchParams(window.location.search);
             const trackingParams = {};
             for (const [key, value] of urlParams) {
                 trackingParams[key] = value;
             }
 
-            // Cookie helper with fallback to parent parameters passed via URL (for iframe/webview compatibility)
-            const getCookie = (name) => {
-                try {
-                    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-                    return match ? match[2] : null;
-                } catch (e) {
-                    return null;
-                }
-            };
-
             const fbp = getCookie('_fbp') || urlParams.get('parent_fbp') || urlParams.get('fbp') || null;
             const fbc = getCookie('_fbc') || urlParams.get('parent_fbc') || urlParams.get('fbc') || null;
 
-            // Extract standalone fbclid
             let fbclid = trackingParams.fbclid || '';
             if (!fbclid && fbc) {
-                // fbc format: "fb.1.{timestamp}.{fbclid}" or "fb.2..."
                 const parts = fbc.split('.');
                 if (parts.length >= 4) {
                     fbclid = parts.slice(3).join('.');
                 }
             }
             if (fbclid) trackingParams.fbclid = fbclid;
-
             if (fbp) trackingParams.fbp = fbp;
             if (fbc) trackingParams.fbc = fbc;
             if (typeof PIXEL_ID !== 'undefined') trackingParams.pixel_id = PIXEL_ID;
@@ -1424,7 +1657,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
 
             // --- META S2S INTELLIGENT TRACKING ---
             try {
-                // Fire & Forget call to save correlation data
                 fetch(BACKEND_BASE_PATH + '/meta-s2s-tracking/save_correlation.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1433,7 +1665,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                         fbc: fbc,
                         fbp: fbp,
                         client_user_agent: navigator.userAgent,
-                        event_source_url: window.location.href, // Includes UTMs, fbclid, etc.
+                        event_source_url: window.location.href,
                         value: totalValue,
                         currency: 'BRL',
                         pixel_id: PIXEL_ID,
@@ -1441,20 +1673,16 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                     })
                 }).catch(err => console.warn('Meta S2S Warning:', err));
             } catch (e) { console.error(e); }
-            // -------------------------------------
 
             try {
-                // Fetch payment request dynamically routed via process-pix.php (Woovi or Appmax)
                 const response = await fetch(`${BACKEND_BASE_PATH}/process-pix.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(pixPayload)
                 });
 
-                // Fallback for demo/testing if backend 404s
                 let result;
                 if (response.status === 404) {
-                    // Simulate success for local testing
                     result = {
                         success: true,
                         correlationId: correlationId,
@@ -1486,14 +1714,13 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             }
         };
 
-        // Disparo centralizado de Purchase (Meta Pixel e CAPI) com deduplicação de 24h
+        // Disparo centralizado de Purchase com deduplicação de 24h
         const firePurchaseTracking = (triggerSource) => {
             const sku = PLANOS['main'].sku || 'default';
             const now = Date.now();
             const twentyFourHoursMs = 24 * 60 * 60 * 1000;
             const correlationId = (pixPaymentState && pixPaymentState.correlationId) ? pixPaymentState.correlationId : ('pix_' + now);
 
-            // Chaves de deduplicação por SKU e por correlationId
             const skuStorageKey = 'pix_purchase_fired_' + sku;
             const corrStorageKey = 'pix_purchase_fired_' + correlationId;
             const legacyKey = 'pix_copy_purchase_' + sku;
@@ -1501,11 +1728,10 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             const lastTimestamp = safeStorage.getItem(skuStorageKey) || safeStorage.getItem(legacyKey) || safeStorage.getItem(corrStorageKey);
 
             if (lastTimestamp && (now - parseInt(lastTimestamp, 10)) < twentyFourHoursMs) {
-                console.log(`[Meta Pixel] Purchase (${triggerSource}) já disparado nas últimas 24h para este usuário/pedido.`);
+                console.log(`[Meta Pixel] Purchase (${triggerSource}) já disparado nas últimas 24h.`);
                 return;
             }
 
-            // Grava o timestamp no localStorage para evitar duplicidade em 24h
             safeStorage.setItem(skuStorageKey, now.toString());
             safeStorage.setItem(corrStorageKey, now.toString());
             safeStorage.setItem(legacyKey, now.toString());
@@ -1519,7 +1745,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 allProducts.push({ sku: el.dataset.sku, name: el.dataset.name, price: parseFloat(el.dataset.price), qty: 1 });
             });
 
-            // 1. Disparo do Pixel no Navegador (Purchase)
             if (typeof fbq === 'function') {
                 fbq('track', 'Purchase', {
                     content_name: allProducts.map(p => p.name).join(', '),
@@ -1534,17 +1759,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 console.log(`[Meta Pixel] Evento Purchase disparado com sucesso (${triggerSource})!`);
             }
 
-            // 2. Disparo Meta S2S (Conversões API)
             try {
-                const getCookie = (name) => {
-                    try {
-                        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-                        return match ? match[2] : null;
-                    } catch (e) {
-                        return null;
-                    }
-                };
-
                 const urlParams = new URLSearchParams(window.location.search);
                 const fbcVal = getCookie('_fbc') || urlParams.get('parent_fbc') || urlParams.get('fbc') || null;
                 const fbpVal = getCookie('_fbp') || urlParams.get('parent_fbp') || urlParams.get('fbp') || null;
@@ -1568,20 +1783,17 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             } catch (e) { console.error(e); }
         };
 
-        // Disparo opcional do Purchase ao copiar o Pix (conforme configuração do produto)
         const trackPixCopyPurchase = () => {
             if (!PLANOS['main'].tracking || !PLANOS['main'].tracking.purchaseOnPixCopy) return;
             firePurchaseTracking('ao copiar Pix');
         };
 
-        // Disparo opcional do Purchase ao clicar no botão de enviar comprovante no WhatsApp
         const trackWhatsAppReceiptPurchase = () => {
             if (!PLANOS['main'].tracking || !PLANOS['main'].tracking.purchaseOnWhatsAppClick) return;
             firePurchaseTracking('ao clicar no WhatsApp');
         };
         window.trackWhatsAppReceiptClick = trackWhatsAppReceiptPurchase;
 
-        // Rastreia evento de cópia do Pix no backend
         const recordPixCopyEvent = () => {
             if (pixPaymentState && pixPaymentState.correlationId) {
                 try {
@@ -1594,7 +1806,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                     }).then(res => res.json()).then(data => {
                         console.log('[Pix Copy] Status registrado no backend:', data);
                     }).catch(err => {
-                        console.warn('[Pix Copy] Aviso ao registrar cópia:', err);
+                        console.warn('[Pix Copy] Aviso:', err);
                     });
                 } catch (e) {
                     console.warn('[Pix Copy] Exceção:', e);
@@ -1603,7 +1815,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
         };
         window.recordPixCopyEvent = recordPixCopyEvent;
 
-        // Copy to clipboard helper
+        // Copy to clipboard helper with haptic feedback
         window.copyToClipboard = (text, element) => {
             recordPixCopyEvent();
 
@@ -1611,27 +1823,37 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 trackPixCopyPurchase();
             }
 
-            const btn = element || document.getElementById('btn-copy-pix');
+            // Haptic vibration feedback on mobile
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                try { navigator.vibrate([40, 30, 40]); } catch (e) {}
+            }
+
+            const btn = element || document.getElementById('btn-copy-pix') || document.getElementById('btn-copy-pix-main');
             if (!btn) return;
             const original = btn.innerHTML;
 
             const updateButton = () => {
-                const hasIcon = btn.querySelector('[data-lucide="copy"]') || btn.querySelector('svg');
-                if (hasIcon) {
-                    btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> PIX COPIADO!';
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                const isMainBtn = btn.id === 'btn-copy-pix-main';
+                if (isMainBtn) {
+                    btn.innerHTML = '<span class="shimmer-sweep"></span><i data-lucide="check-circle-2" class="w-5 h-5 text-white"></i> <span>PIX COPIADO COM SUCESSO!</span>';
+                    btn.classList.add('bg-emerald-600', 'ring-2', 'ring-white/40');
                 } else {
-                    btn.innerHTML = 'COPIADO!';
+                    btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 inline"></i> COPIADO!';
                 }
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+
                 setTimeout(() => {
                     btn.innerHTML = original;
-                    if (hasIcon && typeof lucide !== 'undefined') lucide.createIcons();
-                }, 2000);
+                    if (isMainBtn) {
+                        btn.classList.remove('bg-emerald-600', 'ring-2', 'ring-white/40');
+                    }
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }, 2800);
             };
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(updateButton).catch(err => {
-                    console.error('navigator.clipboard failed, trying fallback', err);
+                    console.error('navigator.clipboard failed, fallback used', err);
                     fallbackCopyToClipboard(text, updateButton);
                 });
             } else {
@@ -1642,8 +1864,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
         function fallbackCopyToClipboard(text, callback) {
             const textArea = document.createElement("textarea");
             textArea.value = text;
-            
-            // Ensure it's not visible and doesn't scroll the page
             textArea.style.position = "fixed";
             textArea.style.left = "-9999px";
             textArea.style.top = "0";
@@ -1655,21 +1875,32 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 const successful = document.execCommand('copy');
                 if (successful && callback) callback();
             } catch (err) {
-                console.error('Fallback: Oops, unable to copy', err);
+                console.error('Fallback error', err);
             }
 
             document.body.removeChild(textArea);
         }
 
+        // REDESIGNED PIX WAIT VIEW (MOBILE-FIRST HIGH CONVERTING)
         const showPixWaitView = (pixData, correlationId, customerData) => {
             form.classList.add('hidden');
-            // Update Header
+            
+            // Header Update
             const header = document.getElementById('checkout-step-header');
             if (header) {
                 header.classList.remove('hidden');
                 header.innerHTML = `
-                    <span class="bg-green-500 w-8 h-8 rounded-full flex items-center justify-center text-sm animate-pulse"><i data-lucide="clock" class="w-4 h-4 text-white"></i></span>
-                    Aguardando Pagamento
+                    <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-heading font-black text-sm shrink-0 shadow-sm animate-pulse">
+                        <i data-lucide="clock" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-heading text-base sm:text-lg font-black text-white leading-tight">
+                            Aguardando Pagamento
+                        </h2>
+                        <p class="text-[11px] text-emerald-400 font-medium">
+                            Conclua seu Pix para liberar o acesso imediatamente
+                        </p>
+                    </div>
                 `;
             }
 
@@ -1703,19 +1934,21 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             }
 
             const whatsappSectionHtml = (isManualPix && pixData.whatsapp_url) ? `
-                <div class="mt-4 p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/50 rounded-xl text-left">
-                    <div class="flex items-center gap-2 mb-1.5 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
-                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                <div class="mt-4 p-4 bg-emerald-950/40 border border-emerald-500/40 rounded-2xl text-left shadow-sm">
+                    <div class="flex items-center gap-2 mb-2 text-emerald-300 font-heading font-bold text-xs uppercase tracking-wide">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
                         <span>Instruções para Liberação do Acesso:</span>
                     </div>
-                    <ol class="text-[11px] text-emerald-900 dark:text-slate-300 space-y-1 list-decimal list-inside pl-0.5">
-                        <li>Copie o código Pix acima ou escaneie o QR Code no seu banco.</li>
+                    <ol class="text-xs text-slate-300 space-y-1.5 list-decimal list-inside pl-0.5 leading-relaxed">
+                        <li>Copie o código Pix ou escaneie o QR Code no seu banco.</li>
                         <li>Efetue o pagamento de <strong>${pixData.formattedPrice}</strong>.</li>
                         <li>${whatsappInstructionStep}</li>
                     </ol>
                 </div>
-                <a href="${pixData.whatsapp_url}" target="_blank" rel="noopener" onclick="window.trackWhatsAppReceiptClick()" class="mt-3 w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold py-3.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-500/20 active:scale-[0.99]">
-                    <i data-lucide="message-circle" class="w-5 h-5"></i> ${whatsappBtnText}
+                <a href="${pixData.whatsapp_url}" target="_blank" rel="noopener" onclick="window.trackWhatsAppReceiptClick()"
+                    class="mt-3.5 w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-heading font-black py-4 px-5 rounded-2xl text-sm sm:text-base transition flex items-center justify-center gap-2.5 shadow-xl hover:shadow-emerald-500/25 active:scale-[0.98]">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                    <span>${whatsappBtnText}</span>
                 </a>
             ` : '';
 
@@ -1726,78 +1959,149 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                     || (pixPaymentState && pixPaymentState.customer && pixPaymentState.customer.email) 
                     || '';
                 const emailDisplay = (currentEmail && !currentEmail.includes('@naoinformado.com'))
-                    ? ` no e-mail <strong>${escapeHtml(currentEmail)}</strong>`
-                    : ' no seu e-mail';
+                    ? ` no e-mail <strong class="text-white">${escapeHtml(currentEmail)}</strong>`
+                    : ' no seu e-mail cadastrado';
 
                 emailInstructionHtml = `
-                    <div class="w-full mt-4 p-3.5 bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl text-left shadow-sm">
-                        <div class="flex items-center gap-2 mb-1.5 text-blue-900 dark:text-blue-300 font-bold text-xs">
-                            <i data-lucide="mail" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
-                            <span>Instruções de Acesso por E-mail:</span>
+                    <div class="w-full mt-4 p-4 bg-blue-950/40 border border-blue-500/30 rounded-2xl text-left shadow-sm">
+                        <div class="flex items-center gap-2 mb-1.5 text-blue-300 font-heading font-bold text-xs uppercase tracking-wide">
+                            <i data-lucide="mail" class="w-4 h-4 text-blue-400 shrink-0"></i>
+                            <span>Envio Automático por E-mail</span>
                         </div>
-                        <p class="text-[11px] text-blue-950 dark:text-slate-300 leading-relaxed">
+                        <p class="text-xs text-slate-300 leading-relaxed">
                             Assim que o pagamento do Pix for confirmado, você receberá seus dados de acesso diretamente${emailDisplay}.
                         </p>
-                        <div class="mt-2 pt-2 border-t border-blue-100 dark:border-blue-900/40 flex items-start gap-1.5 text-[10px] text-blue-900/80 dark:text-slate-400">
-                            <i data-lucide="info" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
-                            <span>Caso não localize a mensagem na sua <strong>Caixa de Entrada</strong> em alguns minutos, verifique também sua pasta de <strong>Spam</strong> ou <strong>Lixo Eletrônico</strong>.</span>
+                        <div class="mt-2 pt-2 border-t border-blue-900/50 flex items-start gap-1.5 text-[11px] text-slate-400">
+                            <i data-lucide="info" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i>
+                            <span>Caso não localize em alguns minutos, verifique sua pasta de <strong>Spam</strong> ou <strong>Lixo Eletrônico</strong>.</span>
                         </div>
                     </div>
                 `;
             }
 
             pixWaitView.innerHTML = `
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Pagamento via PIX</h3>
-                <p class="text-sm text-gray-600 dark:text-slate-400 mb-6">Escaneie o QR Code abaixo para finalizar.</p>
-                <div class="bg-white p-2 rounded-lg inline-block mb-4 shadow-sm border border-gray-200 dark:border-none">
-                    <img src="${pixData.qrCodeImage}" class="w-48 h-48">
-                </div>
-                <div class="mb-4">
-                    <p class="text-gray-500 dark:text-slate-400 text-xs uppercase font-bold">Valor a Pagar</p>
-                    <p class="text-2xl font-black text-gray-900 dark:text-white">${pixData.formattedPrice}</p>
-                </div>
-                <div class="bg-gray-100 dark:bg-slate-950 p-3 rounded border border-gray-200 dark:border-slate-800 flex items-center gap-2 mb-4">
-                    <input readonly value="${pixData.brCode}" oncopy="window.recordPixCopyEvent()" onclick="this.select()" class="bg-transparent text-xs text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate cursor-pointer" title="Clique para selecionar ou copiar">
-                    <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 dark:hover:text-white transition">COPIAR</button>
-                </div>
-                <button onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg mb-2">
-                    <i data-lucide="copy" class="w-4 h-4"></i> COPIAR PIX
-                </button>
-                ${whatsappSectionHtml}
-                ${emailInstructionHtml}
-                <div class="mt-4 animate-pulse text-green-600 dark:text-green-500 text-sm font-bold flex items-center justify-center gap-2">
-                    <i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Aguardando confirmação...
-                </div>
-            `;
+                <div class="text-center py-1 sm:py-2">
+                    <!-- Status Badge -->
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        Pedido Gerado com Sucesso
+                    </div>
 
-            if (PLANOS.main.style === 'minimalist') {
-                pixWaitView.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-2">
-                        <div class="bg-white p-2 rounded-xl inline-block mb-4 shadow-lg">
-                            <img src="${pixData.qrCodeImage}" class="w-48 h-48">
+                    <h3 class="font-heading text-xl sm:text-2xl font-black text-white mb-1 tracking-tight">
+                        Falta apenas 1 passo!
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-300 mb-4 max-w-sm mx-auto leading-relaxed">
+                        Conclua seu Pix abaixo para liberar seu acesso imediatamente.
+                    </p>
+
+                    <!-- Urgency Countdown Card -->
+                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 mb-4 max-w-md mx-auto flex items-center justify-center gap-2 text-xs font-bold text-amber-300">
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                        <span>Seu código Pix expira em: <strong id="pix-timer-countdown" class="font-mono text-sm font-black text-amber-400">14:59</strong></span>
+                    </div>
+
+                    <!-- HERO COPY BUTTON (MOBILE FIRST SUPREMACY) -->
+                    <div class="space-y-2 mb-4 max-w-md mx-auto">
+                        <button id="btn-copy-pix-main" onclick="copyToClipboard('${pixData.brCode}', this)"
+                            class="cta-button relative overflow-hidden w-full py-4 px-5 rounded-2xl text-white font-heading font-black text-base uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-2xl active:scale-[0.98] transition">
+                            <span class="shimmer-sweep"></span>
+                            <i data-lucide="copy" class="w-5 h-5 shrink-0"></i>
+                            <span>COPIAR CÓDIGO PIX</span>
+                        </button>
+                        <p class="text-[11px] text-slate-400">
+                            Toque no botão acima para copiar o código e colar no app do seu banco.
+                        </p>
+                    </div>
+
+                    <!-- Valor & Campo de Código Reduzido -->
+                    <div class="bg-white dark:bg-slate-950/80 rounded-2xl p-4 border border-gray-200 dark:border-slate-800 mb-4 max-w-md mx-auto text-left shadow-sm">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Valor a Pagar</span>
+                            <span class="font-heading text-xl font-black text-emerald-600 dark:text-emerald-400">${pixData.formattedPrice}</span>
                         </div>
-                        <div class="w-full bg-gray-100 dark:bg-slate-950 p-3 rounded-2xl border border-gray-200 dark:border-slate-800 flex flex-col gap-3 mb-2">
-                            <div class="flex items-center gap-2 px-1">
-                                <input readonly value="${pixData.brCode}" oncopy="window.recordPixCopyEvent()" onclick="this.select()" class="bg-transparent text-[10px] text-gray-600 dark:text-slate-500 w-full outline-none font-mono truncate cursor-pointer" title="Clique para selecionar ou copiar">
-                                <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)" class="text-blue-600 dark:text-blue-500 font-bold text-xs hover:text-blue-800 transition uppercase shrink-0">Copiar</button>
-                            </div>
-                            <button onclick="copyToClipboard('${pixData.brCode}', this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg">
-                                <i data-lucide="copy" class="w-4 h-4"></i> COPIAR PIX
+                        <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-900 p-2.5 rounded-xl border border-gray-200 dark:border-slate-800">
+                            <input readonly value="${pixData.brCode}" oncopy="window.recordPixCopyEvent()" onclick="this.select()"
+                                class="bg-transparent text-xs text-gray-700 dark:text-slate-300 w-full outline-none font-mono truncate cursor-pointer"
+                                title="Clique para selecionar">
+                            <button id="btn-copy-pix" onclick="copyToClipboard('${pixData.brCode}', this)"
+                                class="px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold text-xs hover:bg-emerald-500/25 transition uppercase shrink-0">
+                                Copiar
                             </button>
                         </div>
-                        ${whatsappSectionHtml}
-                        ${emailInstructionHtml}
-                        <div class="mt-3 animate-pulse text-green-600 dark:text-green-500 text-[10px] font-bold flex items-center gap-2">
-                            <i data-lucide="loader" class="w-3 h-3 animate-spin"></i> AGUARDANDO PAGAMENTO...
+                    </div>
+
+                    <!-- Passo a Passo 3 Etapas -->
+                    <div class="bg-gray-50/80 dark:bg-slate-950/50 rounded-2xl p-4 border border-gray-200 dark:border-slate-800 mb-4 max-w-md mx-auto text-left">
+                        <h4 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <i data-lucide="help-circle" class="w-4 h-4 text-emerald-500 dark:text-emerald-400"></i> Como pagar com Pix:
+                        </h4>
+                        <div class="space-y-2.5 text-xs text-gray-600 dark:text-slate-300">
+                            <div class="flex items-start gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0 border border-emerald-500/30">1</span>
+                                <span>Copie o <strong>Código Pix</strong> no botão acima.</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0 border border-emerald-500/30">2</span>
+                                <span>Abra o app do seu <strong>Banco</strong> e escolha a opção <strong>Pix Copia e Cola</strong>.</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0 border border-emerald-500/30">3</span>
+                                <span>Cole o código, confirme o valor e pronto! O acesso é liberado automaticamente.</span>
+                            </div>
                         </div>
                     </div>
-                `;
-            }
+
+                    <!-- QR Code Opcional (Desktop/PC) -->
+                    <details class="group max-w-md mx-auto mb-4 text-left">
+                        <summary class="cursor-pointer list-none text-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-500 transition py-2 flex items-center justify-center gap-1.5">
+                            <i data-lucide="qr-code" class="w-4 h-4"></i>
+                            <span>Prefere pagar pelo computador? Ver QR Code</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition group-open:rotate-180"></i>
+                        </summary>
+                        <div class="mt-3 p-4 bg-gray-50 dark:bg-slate-950 rounded-2xl border border-gray-200 dark:border-slate-800 text-center">
+                            <div class="bg-white p-2.5 rounded-2xl inline-block shadow-md mb-2 border border-gray-200 dark:border-none">
+                                <img src="${pixData.qrCodeImage}" class="w-44 h-44 mx-auto object-contain" alt="QR Code Pix">
+                            </div>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Abra a câmera do app do banco e aponte para o QR Code.</p>
+                        </div>
+                    </details>
+
+                    ${whatsappSectionHtml}
+                    ${emailInstructionHtml}
+
+                    <!-- LIVE RADAR POLLING INDICATOR -->
+                    <div class="mt-5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 max-w-md mx-auto flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400">
+                        <span class="relative flex h-2.5 w-2.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </span>
+                        <span>Aguardando identificação do pagamento em tempo real...</span>
+                    </div>
+                </div>
+            `;
 
             pixWaitView.classList.remove('hidden');
             lucide.createIcons();
 
-            // Real Polling
+            // Start 15 min countdown for PIX
+            (function() {
+                let timeLeft = 15 * 60;
+                const timerDisplay = document.getElementById('pix-timer-countdown');
+                if (!timerDisplay) return;
+                const interval = setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft <= 0) {
+                        clearInterval(interval);
+                        timerDisplay.textContent = '00:00';
+                        return;
+                    }
+                    const m = Math.floor(timeLeft / 60);
+                    const s = timeLeft % 60;
+                    timerDisplay.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+                }, 1000);
+            })();
+
+            // Polling Real de Confirmação
             const pollInterval = setInterval(async () => {
                 try {
                     const res = await fetch('api/check_payment_status_ebook.php?correlationId=' + correlationId);
@@ -1809,48 +2113,58 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 } catch (e) {
                     console.error('Polling error', e);
                 }
-            }, 5000); // Check every 5s
+            }, 5000);
         };
 
+        // REDESIGNED SUCCESS VIEW
         const showSuccessView = (currentPixData) => {
             const dataToUse = currentPixData || (pixPaymentState && pixPaymentState.pixData) || {};
             const isWhatsAppDelivery = !!(dataToUse.whatsapp_delivery || (PLANOS['main'] && PLANOS['main'].gateway === 'woovi_whatsapp' && (dataToUse.whatsapp_url || PLANOS['main'].pix_whatsapp_number)));
 
             const header = document.getElementById('checkout-step-header');
             if (header) {
-                if (isWhatsAppDelivery) {
-                    header.classList.remove('hidden');
-                    header.innerHTML = `
-                        <span class="bg-emerald-500 w-8 h-8 rounded-full flex items-center justify-center text-sm"><i data-lucide="check" class="w-4 h-4 text-white"></i></span>
-                        Pagamento Aprovado
-                    `;
-                } else {
-                    header.classList.add('hidden');
-                }
+                header.classList.remove('hidden');
+                header.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-heading font-black text-sm shrink-0">
+                        <i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-heading text-base sm:text-lg font-black text-white leading-tight">
+                            Pagamento Aprovado!
+                        </h2>
+                        <p class="text-[11px] text-emerald-400 font-medium">
+                            Seu pedido foi confirmado com sucesso
+                        </p>
+                    </div>
+                `;
             }
 
             pixWaitView.classList.add('hidden');
 
             if (dataToUse.is_card) {
                 successView.innerHTML = `
-                    <div class="flex justify-center mb-4">
-                        <div class="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/10">
-                            <i data-lucide="check-circle-2" class="w-12 h-12 text-emerald-500"></i>
+                    <div class="text-center py-4 sm:py-6 max-w-md mx-auto">
+                        <div class="flex justify-center mb-4">
+                            <div class="w-20 h-20 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center shadow-xl shadow-emerald-500/20">
+                                <i data-lucide="check-circle-2" class="w-12 h-12 text-emerald-500 dark:text-emerald-400"></i>
+                            </div>
                         </div>
-                    </div>
-                    <h2 class="font-display text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">PAGAMENTO APROVADO!</h2>
-                    <p class="text-gray-600 dark:text-slate-300 my-2 text-sm md:text-base">
-                        Seu pagamento no cartão de crédito foi processado e aprovado com sucesso!
-                    </p>
-
-                    <div class="mt-4 mb-4 p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/50 rounded-2xl text-center shadow-sm">
-                        <div class="flex items-center justify-center gap-2 mb-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs uppercase tracking-wide">
-                            <i data-lucide="check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
-                            <span>Transação Concluída</span>
-                        </div>
-                        <p class="text-xs text-emerald-900 dark:text-slate-200 leading-relaxed">
-                            ${PLANOS['main'].product_type === 'physical' ? 'Seu pedido foi confirmado e o envio será preparado em breve.' : 'Os detalhes de acesso ao seu produto foram enviados para o seu e-mail cadastrado.'}
+                        <h2 class="font-heading text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2">PAGAMENTO APROVADO!</h2>
+                        <p class="text-gray-600 dark:text-slate-300 text-xs sm:text-sm mb-5 leading-relaxed">
+                            Seu pagamento no cartão de crédito foi processado e autorizado com sucesso.
                         </p>
+
+                        <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/40 rounded-2xl text-left shadow-sm mb-4">
+                            <div class="flex items-center gap-2 mb-2 text-emerald-800 dark:text-emerald-300 font-heading font-bold text-xs uppercase tracking-wide">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500 dark:text-emerald-400"></i>
+                                <span>Pedido Concluído:</span>
+                            </div>
+                            <p class="text-xs text-emerald-950 dark:text-slate-200 leading-relaxed">
+                                ${PLANOS['main'].product_type === 'physical' 
+                                    ? 'Seu pedido foi confirmado e a preparação do envio já foi iniciada.' 
+                                    : 'Os detalhes de acesso ao seu produto foram enviados imediatamente para o seu e-mail cadastrado.'}
+                            </p>
+                        </div>
                     </div>
                 `;
             } else if (isWhatsAppDelivery) {
@@ -1862,7 +2176,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                     instructionStepText = 'Clique no botão verde abaixo para <strong>enviar seu comprovante no WhatsApp</strong> e liberar seu produto imediatamente:';
                     whatsappBtnText = 'ENVIAR COMPROVANTE NO WHATSAPP';
                 } else {
-                    instructionStepText = 'Clique no botão verde abaixo para <strong>informar seu nome completo no WhatsApp</strong> e liberar seu acesso imediatamente:';
+                    instructionStepText = 'Clique no botão verde abaixo para <strong>informar seu nome no WhatsApp</strong> e liberar seu acesso imediatamente:';
                     whatsappBtnText = 'RECEBER MEU ACESSO NO WHATSAPP';
                 }
 
@@ -1872,7 +2186,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                     whatsappBtnText = PLANOS['main'].pix_whatsapp_button_text.trim();
                 }
 
-                // Fallback para montar URL do WhatsApp se não veio em dataToUse
                 let targetWhatsappUrl = dataToUse.whatsapp_url || '';
                 if (!targetWhatsappUrl && PLANOS['main'] && PLANOS['main'].pix_whatsapp_number) {
                     const cleanPhone = (PLANOS['main'].pix_whatsapp_number || '').replace(/\D/g, '');
@@ -1884,51 +2197,65 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 }
 
                 successView.innerHTML = `
-                    <div class="flex justify-center mb-4">
-                        <div class="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/10">
-                            <i data-lucide="check-circle-2" class="w-12 h-12 text-emerald-500"></i>
+                    <div class="text-center py-4 sm:py-6 max-w-md mx-auto">
+                        <div class="flex justify-center mb-4">
+                            <div class="w-20 h-20 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center shadow-xl shadow-emerald-500/20">
+                                <i data-lucide="check-circle-2" class="w-12 h-12 text-emerald-500 dark:text-emerald-400"></i>
+                            </div>
                         </div>
-                    </div>
-                    <h2 class="font-display text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">PAGAMENTO APROVADO!</h2>
-                    <p class="text-gray-600 dark:text-slate-300 my-2 text-sm md:text-base">
-                        Identificamos a confirmação do seu pagamento com sucesso.
-                    </p>
-
-                    <div class="mt-4 mb-4 p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/50 rounded-2xl text-left shadow-sm">
-                        <div class="flex items-center gap-2 mb-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs uppercase tracking-wide">
-                            <i data-lucide="gift" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
-                            <span>Liberar meu Acesso / Produto:</span>
-                        </div>
-                        <p class="text-xs text-emerald-900 dark:text-slate-200 mb-2 leading-relaxed">
-                            ${instructionStepText}
+                        <h2 class="font-heading text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2">PAGAMENTO APROVADO!</h2>
+                        <p class="text-gray-600 dark:text-slate-300 text-xs sm:text-sm mb-5 leading-relaxed">
+                            Identificamos a confirmação do seu pagamento com sucesso.
                         </p>
-                        <div class="text-[11px] text-emerald-700 dark:text-slate-400 flex items-center gap-1.5 pt-1.5 border-t border-emerald-200/50 dark:border-emerald-800/40">
-                            <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0"></i>
-                            <span>Nossa equipe está disponível para atender você agora mesmo.</span>
-                        </div>
-                    </div>
 
-                    <a href="${targetWhatsappUrl}" target="_blank" rel="noopener" onclick="window.trackWhatsAppReceiptClick()" class="w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold py-4 px-6 rounded-xl text-base transition flex items-center justify-center gap-2.5 shadow-lg hover:shadow-emerald-500/30 active:scale-[0.99] animate-bounce">
-                        <i data-lucide="message-circle" class="w-6 h-6"></i>
-                        <span>${whatsappBtnText}</span>
-                    </a>
-                    <p class="text-[11px] text-gray-500 dark:text-slate-500 text-center mt-3">
-                        Caso a conversa não abra automaticamente, verifique se o WhatsApp Web ou aplicativo está instalado.
-                    </p>
+                        <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/40 rounded-2xl text-left shadow-sm mb-5">
+                            <div class="flex items-center gap-2 mb-2 text-emerald-800 dark:text-emerald-300 font-heading font-bold text-xs uppercase tracking-wide">
+                                <i data-lucide="gift" class="w-4 h-4 text-emerald-500 dark:text-emerald-400"></i>
+                                <span>Liberar meu Acesso / Produto:</span>
+                            </div>
+                            <p class="text-xs text-emerald-950 dark:text-slate-200 mb-2 leading-relaxed">
+                                ${instructionStepText}
+                            </p>
+                            <div class="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 pt-2 border-t border-emerald-200 dark:border-emerald-800/50">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0"></i>
+                                <span>Nossa equipe está disponível para atender você agora mesmo.</span>
+                            </div>
+                        </div>
+
+                        <a href="${targetWhatsappUrl}" target="_blank" rel="noopener" onclick="window.trackWhatsAppReceiptClick()"
+                            class="w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-heading font-black py-4 px-6 rounded-2xl text-base transition flex items-center justify-center gap-2.5 shadow-2xl hover:shadow-emerald-500/30 active:scale-[0.98]">
+                            <i data-lucide="message-circle" class="w-6 h-6"></i>
+                            <span>${whatsappBtnText}</span>
+                        </a>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-3">
+                            Caso a conversa não abra automaticamente, verifique se o WhatsApp está instalado.
+                        </p>
+                    </div>
+                `;
+            } else {
+                successView.innerHTML = `
+                    <div class="text-center py-4 sm:py-6 max-w-md mx-auto">
+                        <div class="flex justify-center mb-4">
+                            <div class="w-20 h-20 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center shadow-xl shadow-emerald-500/20">
+                                <i data-lucide="check-circle-2" class="w-12 h-12 text-emerald-500 dark:text-emerald-400"></i>
+                            </div>
+                        </div>
+                        <h2 class="font-heading text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2">PAGAMENTO APROVADO!</h2>
+                        <p class="text-gray-600 dark:text-slate-300 text-xs sm:text-sm mb-5 leading-relaxed">
+                            <?= ($product['product_type'] ?? 'digital') === 'physical' ? 'Seu pedido foi confirmado e você receberá em até 7 dias.' : 'Seu acesso foi liberado e enviado para o seu e-mail.' ?>
+                        </p>
+                    </div>
                 `;
             }
 
             successView.classList.remove('hidden');
             lucide.createIcons();
-            // Backend tracking handles Purchase event via N8N/S2S
         };
 
-        // ---- DOWNSELL LOGIC ----
-
+        // DOWNSELL LOGIC
         function showDownsell() {
             if (!downsellEnabled || downsellTriggered || downsellAccepted) return;
             
-            // Calcula o novo preço para exibir no modal
             let newPrice = baseProductPrice;
             if (downsellType === 'fixed') {
                 newPrice = Math.max(0, baseProductPrice - downsellAmount);
@@ -1952,15 +2279,13 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
         function acceptDownsell() {
             downsellAccepted = true;
             
-            // Reaplica o desconto no preço corrente do produto principal
             if (downsellType === 'fixed') {
                 currentProductPrice = Math.max(0, baseProductPrice - downsellAmount);
             } else {
                 currentProductPrice = baseProductPrice * (1 - (downsellAmount / 100));
             }
 
-            // Atualiza a UI do produto principal (o texto do preço na sidebar)
-            const productPriceEls = document.querySelectorAll('.text-green-400');
+            const productPriceEls = document.querySelectorAll('.text-emerald-400, .text-green-400');
             productPriceEls.forEach(el => {
                 if (el.innerText.includes('R$')) {
                     el.innerText = 'R$ ' + formatPriceJS(currentProductPrice);
@@ -1974,9 +2299,8 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
         function closeDownsell(isCancel = true) {
             const modal = document.getElementById('downsell-modal');
             modal.classList.remove('active');
-            setTimeout(() => modal.classList.add('hidden'), 300);
+            setTimeout(() => modal.classList.add('hidden'), 250);
 
-            // Se for cancelamento (fechar sem aceitar) e for modal, avisa o pai para fechar de vez
             if (isCancel && window.self !== window.top) {
                 window.parent.postMessage('close-checkout-modal', '*');
             }
@@ -1992,7 +2316,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
         window.addEventListener('popstate', function () {
             if (downsellEnabled && !downsellTriggered && !downsellAccepted) {
                 showDownsell();
-                // Push denovo para interceptar a próxima tentativa se ele fechar o downsell
                 history.pushState(null, null, window.location.href);
             }
         });
@@ -2006,7 +2329,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                         window.parent.postMessage('downsell-opened', '*');
                     }
                 } else {
-                    // Se não houver downsell ou já foi negado/aceito, avisa o pai para fechar
                     window.parent.postMessage('close-checkout-modal', '*');
                 }
             }
@@ -2021,15 +2343,12 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 }, '*');
             };
             
-            // Watch for changes to the body size
             const resizeObserver = new ResizeObserver(() => sendHeight());
             resizeObserver.observe(document.body);
             
-            // Fallback updates
             window.addEventListener('load', sendHeight);
             window.addEventListener('resize', sendHeight);
             
-            // Trigger height updates when inputs change
             const formElement = document.getElementById('checkout-form');
             if (formElement) {
                 formElement.addEventListener('input', sendHeight);
@@ -2052,7 +2371,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 lastInputTime = Date.now();
             };
 
-            // Monitor input activity
             const formInputs = document.querySelectorAll('#checkout-form input, #checkout-form select, #checkout-form textarea');
             formInputs.forEach(input => {
                 input.addEventListener('input', updateActivity);
@@ -2072,16 +2390,12 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                         product_slug: productSlug
                     }),
                     keepalive: true
-                }).catch(err => {
-                    // Fail silently to not impact user experience
-                });
+                }).catch(err => {});
             };
 
-            // Send initial ping and then every 5 seconds
             sendPing();
             setInterval(sendPing, 5000);
 
-            // Clean up or send viewing status when tab gets hidden
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'hidden') {
                     const payload = JSON.stringify({
@@ -2097,9 +2411,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 }
             });
         })();
-
     </script>
-
 
     <!-- MICROSOFT CLARITY -->
     <script type="text/javascript">
@@ -2115,7 +2427,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
         (function () {
             if (!PLANOS.main.notifications.enabled) return;
 
-            // Updated List: Mix of Capitals and medium-sized/interior cities for realism
             const CIDADES = [
                 'São Paulo - SP', 'Campinas - SP', 'Santos - SP', 'Ribeirão Preto - SP', 'Sorocaba - SP',
                 'Rio de Janeiro - RJ', 'Niterói - RJ', 'Duque de Caxias - RJ', 'Nova Iguaçu - RJ',
@@ -2150,7 +2461,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 processed = processed.replace(/{nome-homem}/g, getRandomItem(HOMENS));
                 processed = processed.replace(/{nome-mulher}/g, getRandomItem(MULHERES));
 
-                // {2horas} -> 2 hours after current time in GMT-3, format "XXH"
                 const now = new Date();
                 const future = new Date(now.getTime() + (2 * 60 * 60 * 1000));
                 const hours2 = new Intl.DateTimeFormat('pt-BR', {
@@ -2168,41 +2478,36 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 const textContent = replaceShortcodes(config.text);
 
                 const notif = document.createElement('div');
-                // Styles: Mobile First, bottom-left, small padding
-                const bgClass = isDark ? 'bg-slate-900 border-slate-700 text-white shadow-blue-900/20' : 'bg-white border-gray-100 text-gray-900 shadow-xl';
+                const bgClass = isDark ? 'bg-slate-900 border-slate-700 text-white shadow-2xl shadow-black/60' : 'bg-white border-gray-100 text-gray-900 shadow-2xl';
 
-                notif.className = `fixed bottom-4 left-4 right-4 sm:right-auto sm:w-80 p-3 rounded-xl border shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-500 z-50 ${bgClass}`;
+                notif.className = `fixed bottom-4 left-4 right-4 sm:right-auto sm:w-80 p-3.5 rounded-2xl border flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-500 z-50 ${bgClass}`;
                 notif.innerHTML = `
-                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
-                    <i data-lucide="check-circle" class="w-6 h-6 text-white"></i>
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shadow-md shadow-emerald-500/20">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-white"></i>
                 </div>
-                <div>
-                    <p class="text-sm font-semibold leading-tight">${textContent}</p>
-                    <p class="text-[10px] opacity-70 mt-0.5">Há ${minutes} minutos</p>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold leading-tight text-white">${textContent}</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Há ${minutes} minutos</p>
                 </div>
-                <button class="absolute top-1 right-1 opacity-50 hover:opacity-100 p-1" onclick="this.parentElement.remove()">
-                    <i data-lucide="x" class="w-3 h-3"></i>
+                <button class="opacity-50 hover:opacity-100 p-1 shrink-0" onclick="this.parentElement.remove()">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
                 </button>
             `;
 
                 document.body.appendChild(notif);
                 lucide.createIcons();
 
-                // Animate In
                 requestAnimationFrame(() => {
                     notif.classList.remove('translate-y-20', 'opacity-0');
                 });
 
-                // Remove after 5s
                 setTimeout(() => {
                     notif.classList.add('translate-y-20', 'opacity-0');
                     setTimeout(() => notif.remove(), 500);
                 }, 5000);
             }
 
-            // Schedule
             function scheduleNext() {
-                // Random Interval: 10 to 30 seconds
                 const delay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
                 setTimeout(() => {
                     createNotification();
@@ -2210,9 +2515,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 }, delay);
             }
 
-            // Initial delay: 5 seconds
             setTimeout(scheduleNext, 5000);
-
         })();
     </script>
 
@@ -2226,22 +2529,13 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             function parseDateShortcodes(text) {
                 const now = new Date();
                 const options = { weekday: 'long', day: 'numeric', month: 'long' };
-                // e.g., "terça-feira, 11 de fevereiro"
                 const dateStr = now.toLocaleDateString('pt-BR', options);
 
-                // {datahoje} -> "terça-feira, 11 de fevereiro"
                 let processed = text.replace(/{datahoje}/gi, dateStr);
-
-                // {datahojemaiusculo} -> "TERÇA-FEIRA, 11 DE FEVEREIRO"
                 processed = processed.replace(/{datahojemaiusculo}/gi, dateStr.toUpperCase());
-
-                // {datahojeminusculo} -> "terça-feira, 11 de fevereiro"
                 processed = processed.replace(/{datahojeminusculo}/gi, dateStr.toLowerCase());
-
-                // {datahojecapitalizado} -> "Terça-Feira, 11 De Fevereiro"
                 processed = processed.replace(/{datahojecapitalizado}/gi, dateStr.replace(/\b\w/g, l => l.toUpperCase()));
 
-                // {2horas} -> 2 hours after current time in GMT-3, format "XXH"
                 const future = new Date(now.getTime() + (2 * 60 * 60 * 1000));
                 const hours2 = new Intl.DateTimeFormat('pt-BR', {
                     hour: '2-digit',
@@ -2249,22 +2543,19 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                     timeZone: 'America/Sao_Paulo'
                 }).format(future);
                 processed = processed.replace(/{2horas}/gi, hours2 + 'H');
-
-                // {timer} -> placeholder span for the timer
                 processed = processed.replace(/{timer}/gi, '<span id="top-bar-timer-countdown"></span>');
 
                 return processed;
             }
 
             const bar = document.createElement('div');
-            bar.className = 'w-full py-2.5 px-4 text-center text-sm font-bold uppercase tracking-wide z-[9999] fixed top-0 left-0 shadow-lg top-bar-container';
+            bar.className = 'w-full py-2.5 px-4 text-center text-xs sm:text-sm font-black uppercase tracking-wide z-[9999] fixed top-0 left-0 shadow-lg top-bar-container';
             bar.style.backgroundColor = config.bgColor;
             bar.style.color = config.textColor;
             bar.innerHTML = parseDateShortcodes(config.text);
 
             document.body.prepend(bar);
 
-            // TIMER INITIALIZATION
             const timerStr = config.timer ? config.timer.trim() : '';
             const timerEl = document.getElementById('top-bar-timer-countdown');
 
@@ -2282,7 +2573,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                         const storedData = safeStorage.getItem(storageKey);
                         if (storedData) {
                             const parsed = JSON.parse(storedData);
-                            // If the timer setting (duration) changed in the DB, restart it
                             if (parsed && parsed.duration === timerStr && typeof parsed.endTime === 'number') {
                                 endTime = parsed.endTime;
                             }
@@ -2300,7 +2590,6 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                         const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
 
                         if (remaining <= 0) {
-                            // Reset the timer to the original duration instead of freezing at 00:00
                             endTime = Date.now() + durationInSeconds * 1000;
                             safeStorage.setItem(storageKey, JSON.stringify({ endTime: endTime, duration: timerStr }));
                         }
@@ -2312,15 +2601,13 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                         timerEl.textContent = formatted;
                     };
 
-                    updateTimer(); // Initial call
-                    const timerInterval = setInterval(updateTimer, 1000);
+                    updateTimer();
+                    setInterval(updateTimer, 1000);
                 }
             } else if (timerEl) {
-                // If {timer} was added but no valid timer is configured, hide or empty it
                 timerEl.textContent = '';
             }
 
-            // Spacer Strategy: Push content down without overwriting body padding
             const spacer = document.createElement('div');
             spacer.style.width = '100%';
             spacer.style.flexShrink = '0';
@@ -2331,19 +2618,16 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 const height = bar.offsetHeight;
                 spacer.style.height = height + 'px';
 
-                // Adjust sticky elements
-                // Base top-8 is 2rem (32px). We add the bar height.
                 document.querySelectorAll('.lg\\:sticky').forEach(el => {
                     el.style.top = (32 + height) + 'px';
                 });
             };
 
-            // Run immediately and on resize
             updateLayout();
             window.addEventListener('resize', updateLayout);
-            setTimeout(updateLayout, 200); // Safety check for font loading
+            setTimeout(updateLayout, 200);
 
-            lucide.createIcons(); // Updates icons inside the bar if any
+            lucide.createIcons();
         })();
     </script>
 </body>
