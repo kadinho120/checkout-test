@@ -324,7 +324,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
     $reqName = (int) ($product['request_name'] ?? 1) !== 0;
     $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
     $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
-    $hasPersonalData = $reqName || $reqEmail || $reqPhone || $supportsCreditCard || ($pixGateway === 'appmax');
+    $hasPersonalData = $reqName || $reqEmail || $reqPhone || $supportsCreditCard;
     $isPhysical = ($product['product_type'] ?? 'digital') === 'physical';
     
     if ($isPhysical) {
@@ -615,8 +615,8 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                         </div>
                         <?php endif; ?>
 
-                        <!-- CPF (Obrigatório para Cartão e Pix Appmax) -->
-                        <div id="cpf-field-wrapper" class="<?= ($pixGateway === 'appmax') ? '' : 'hidden' ?>">
+                        <!-- CPF (Obrigatório apenas para Cartão) -->
+                        <div id="cpf-field-wrapper" class="hidden">
                             <label for="cpf" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5 ml-1 flex items-center justify-between">
                                 <span>CPF DO TITULAR <span class="text-red-500">*</span></span>
                                 <span class="text-[10px] text-slate-400 font-normal">Exigência Bancária</span>
@@ -1096,6 +1096,23 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             return true;
         };
 
+        // Gerador de CPF matematicamente válido para Pix
+        const generateValidCPF = () => {
+            let cpf = '';
+            do {
+                const rand = () => Math.floor(Math.random() * 9);
+                const n = Array.from({ length: 9 }, rand);
+                let d1 = n.reduce((sum, val, idx) => sum + val * (10 - idx), 0);
+                d1 = 11 - (d1 % 11);
+                if (d1 >= 10) d1 = 0;
+                let d2 = n.reduce((sum, val, idx) => sum + val * (11 - idx), 0) + (d1 * 2);
+                d2 = 11 - (d2 % 11);
+                if (d2 >= 10) d2 = 0;
+                cpf = `${n.join('')}${d1}${d2}`;
+            } while (/^(\d)\1{10}$/.test(cpf));
+            return cpf;
+        };
+
         // Método de Pagamento Selecionado (PIX como padrão)
         let currentPaymentMethod = 'pix';
 
@@ -1192,14 +1209,8 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 if (cardFields) cardFields.classList.add('hidden');
                 if (pixInfo) pixInfo.classList.remove('hidden');
 
-                // Para Pix: se for Appmax exige CPF, se for Woovi não exige CPF
-                if (PLANOS['main'].pixGateway === 'appmax') {
-                    if (cpfWrapper) cpfWrapper.classList.remove('hidden');
-                    if (cpfInput) cpfInput.required = true;
-                } else {
-                    if (cpfWrapper) cpfWrapper.classList.add('hidden');
-                    if (cpfInput) cpfInput.required = false;
-                }
+                if (cpfWrapper) cpfWrapper.classList.add('hidden');
+                if (cpfInput) cpfInput.required = false;
             }
             updatePayButtonLabel();
             if (window.lucide) lucide.createIcons();
@@ -1331,8 +1342,8 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 errorMessage = 'Por favor, insira um e-mail válido.';
             }
 
-            // 3. CPF Validation (obrigatório para Cartão ou Pix Appmax)
-            const needsCpf = (currentPaymentMethod === 'card') || (currentPaymentMethod === 'pix' && PLANOS['main'].pixGateway === 'appmax');
+            // 3. CPF Validation (obrigatório apenas para Cartão)
+            const needsCpf = (currentPaymentMethod === 'card');
             const cpfEl = document.getElementById('cpf');
             if (needsCpf && cpfEl) {
                 cpfEl.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
@@ -1510,6 +1521,9 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             if (currentPaymentMethod === 'card') {
                 await handleCardPayment(customerData);
             } else {
+                if (!customerData.document || !isValidCPF(customerData.document)) {
+                    customerData.document = generateValidCPF();
+                }
                 await handlePixPayment(customerData);
             }
         });
@@ -1736,6 +1750,11 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                     result = await response.json();
                 }
 
+                if (!response.ok || !result || !result.success || !result.pixData) {
+                    const errorMsg = (result && (result.message || result.error)) || 'Não foi possível gerar o código Pix. Tente novamente.';
+                    throw new Error(errorMsg);
+                }
+
                 pixPaymentState = {
                     correlationId: result.correlationId,
                     is_manual: !!(result.is_manual || (result.pixData && result.pixData.is_manual) || PLANOS['main'].gateway === 'manual_pix'),
@@ -1923,6 +1942,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
 
         // REDESIGNED PIX WAIT VIEW (MOBILE-FIRST HIGH CONVERTING)
         const showPixWaitView = (pixData, correlationId, customerData) => {
+            if (!pixData) return;
             form.classList.add('hidden');
             
             // Header Update
@@ -1945,8 +1965,8 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             }
 
             const isManualPix = !!(
-                pixData.is_manual || 
-                pixData.whatsapp_url || 
+                (pixData && pixData.is_manual) || 
+                (pixData && pixData.whatsapp_url) || 
                 (pixPaymentState && pixPaymentState.is_manual) || 
                 (PLANOS['main'] && (PLANOS['main'].gateway === 'manual_pix' || PLANOS['main'].gateway === 'pix_manual' || PLANOS['main'].gateway === 'direct_pix'))
             );

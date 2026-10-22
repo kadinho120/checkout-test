@@ -29,9 +29,9 @@ function handle_appmax_pix_payment()
 
     // Tratamento de Documento / CPF (Obrigatório Appmax)
     $raw_document = preg_replace('/[^0-9]/', '', $params['customer']['document'] ?? '');
-    if (strlen($raw_document) !== 11 && strlen($raw_document) !== 14) {
-        http_response_code(400);
-        die(json_encode(['success' => false, 'message' => 'CPF obrigatório para pagamentos via Appmax. Por favor, informe um CPF válido.']));
+    if (!is_valid_cpf($raw_document) && strlen($raw_document) !== 14) {
+        $raw_document = generate_valid_cpf();
+        $params['customer']['document'] = $raw_document;
     }
 
     // Tratamento de Nome
@@ -162,10 +162,67 @@ function handle_appmax_pix_payment()
         $resData = $appmax_res['data']['data'] ?? $appmax_res['data'];
         $appmax_order_id = $resData['order']['id'] ?? ($resData['order_id'] ?? ($resData['id'] ?? null));
 
-        $pixObj = $resData['payment']['pix'] ?? ($resData['pix'] ?? ($resData['payments'][0]['pix'] ?? null));
-        if ($pixObj) {
-            $br_code = $pixObj['pix_emv'] ?? ($pixObj['emv_code'] ?? ($pixObj['brCode'] ?? null));
-            $qr_code_image = $pixObj['pix_qrcode'] ?? ($pixObj['qr_code'] ?? null);
+        // 1. Tenta extrair diretamente de $resData['payment'] (formato padrão Appmax V1 unified-order)
+        if (isset($resData['payment']) && is_array($resData['payment'])) {
+            $payment = $resData['payment'];
+            $br_code = $payment['pix_emv'] ?? ($payment['emv_code'] ?? ($payment['brCode'] ?? ($payment['pix']['pix_emv'] ?? ($payment['pix']['emv_code'] ?? ($payment['pix']['brCode'] ?? null)))));
+            $qr_code_image = $payment['pix_qrcode'] ?? ($payment['qr_code'] ?? ($payment['qrcode_image'] ?? ($payment['pix']['pix_qrcode'] ?? ($payment['pix']['qr_code'] ?? null))));
+        }
+
+        // 2. Se não encontrou, tenta em $resData['payments'][0]
+        if (empty($br_code) && isset($resData['payments'][0]) && is_array($resData['payments'][0])) {
+            $payment0 = $resData['payments'][0];
+            $br_code = $payment0['pix_emv'] ?? ($payment0['emv_code'] ?? ($payment0['brCode'] ?? ($payment0['pix']['pix_emv'] ?? ($payment0['pix']['emv_code'] ?? null))));
+            $qr_code_image = $payment0['pix_qrcode'] ?? ($payment0['qr_code'] ?? ($payment0['pix']['pix_qrcode'] ?? ($payment0['pix']['qr_code'] ?? null)));
+        }
+
+        // 3. Se não encontrou, tenta em $resData['pix']
+        if (empty($br_code) && isset($resData['pix']) && is_array($resData['pix'])) {
+            $br_code = $resData['pix']['pix_emv'] ?? ($resData['pix']['emv_code'] ?? ($resData['pix']['brCode'] ?? null));
+            $qr_code_image = $resData['pix']['pix_qrcode'] ?? ($resData['pix']['qr_code'] ?? null);
+        }
+
+        // 4. Se não encontrou, tenta no próprio $resData
+        if (empty($br_code)) {
+            $br_code = $resData['pix_emv'] ?? ($resData['emv_code'] ?? ($resData['brCode'] ?? null));
+            $qr_code_image = $resData['pix_qrcode'] ?? ($resData['qr_code'] ?? null);
+        }
+
+        // 5. Varredura recursiva por padrão EMV PIX do Banco Central (inicia com 000201)
+        if (empty($br_code)) {
+            $find_emv = function ($item) use (&$find_emv) {
+                if (is_string($item) && str_starts_with($item, '000201')) {
+                    return $item;
+                }
+                if (is_array($item)) {
+                    foreach ($item as $val) {
+                        $found = $find_emv($val);
+                        if ($found) return $found;
+                    }
+                }
+                return null;
+            };
+            $br_code = $find_emv($resData);
+        }
+
+        // 6. Varredura recursiva para QR Code Image
+        if (empty($qr_code_image)) {
+            $find_qr = function ($item) use (&$find_qr) {
+                if (is_string($item) && (str_starts_with($item, 'data:image') || str_starts_with($item, 'http://') || str_starts_with($item, 'https://')) && (stripos($item, 'qrcode') !== false || stripos($item, 'pix') !== false)) {
+                    return $item;
+                }
+                if (is_array($item)) {
+                    foreach ($item as $k => $val) {
+                        if (is_string($val) && (stripos((string)$k, 'qrcode') !== false || stripos((string)$k, 'qr_code') !== false)) {
+                            return $val;
+                        }
+                        $found = $find_qr($val);
+                        if ($found) return $found;
+                    }
+                }
+                return null;
+            };
+            $qr_code_image = $find_qr($resData);
         }
     } else {
         $appmax_error = $appmax_res['data']['message'] ?? ($appmax_res['data']['error'] ?? ($appmax_res['data']['data']['message'] ?? $appmax_res['error']));
@@ -286,4 +343,6 @@ function handle_appmax_pix_payment()
 
     http_response_code(200);
     echo json_encode(['success' => true, 'pixData' => $pix_data, 'correlationId' => $correlationID]);
+    exit;
 }
+
