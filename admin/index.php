@@ -414,8 +414,8 @@ require_once 'auth.php';
                                             <span class="text-sm sm:text-base font-bold text-emerald-400 font-mono tracking-tight" 
                                                   x-text="formatCurrency(order.total_amount)"></span>
 
-                                            <!-- Pix Manual Copy Indicator -->
-                                            <template x-if="order.gateway === 'manual_pix' || order.gateway === 'pix_manual' || order.gateway === 'direct_pix' || order.gateway === 'manual_pix_no_whatsapp'">
+                                            <!-- Pix Copy Indicator -->
+                                            <template x-if="order.payment_method === 'pix' || order.gateway === 'manual_pix' || order.gateway === 'pix_manual' || order.gateway === 'direct_pix' || order.gateway === 'manual_pix_no_whatsapp'">
                                                 <div class="inline-flex">
                                                     <span x-show="order.pix_copied == 1"
                                                           class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase inline-flex items-center gap-1 bg-teal-500/10 text-teal-300 border-teal-500/30"

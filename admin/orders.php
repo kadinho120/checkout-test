@@ -249,11 +249,23 @@ require_once 'auth.php';
 
                                         <!-- Outros Gateways (Woovi, Appmax, etc.) -->
                                         <template x-if="order.gateway !== 'manual_pix' && order.gateway !== 'pix_manual' && order.gateway !== 'direct_pix' && order.gateway !== 'manual_pix_no_whatsapp'">
-                                            <div class="flex items-center justify-center gap-1.5 mb-1.5">
-                                                <span x-show="order.status === 'paid'"
-                                                    class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded text-xs font-bold">PAGO</span>
-                                                <span x-show="order.status === 'pending'"
-                                                    class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded text-xs font-bold">PENDENTE</span>
+                                            <div class="flex flex-col items-center justify-center gap-1 mb-1.5">
+                                                <div class="flex items-center justify-center gap-1.5">
+                                                    <span x-show="order.status === 'paid'"
+                                                        class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded text-xs font-bold">PAGO</span>
+                                                    <span x-show="order.status === 'pending'"
+                                                        class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded text-xs font-bold">PENDENTE</span>
+                                                    <span x-show="order.payment_method === 'pix' && order.pix_copied == 1"
+                                                        class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[11px] font-bold inline-flex items-center gap-1 shadow-sm"
+                                                        title="Cliente copiou o código Pix">
+                                                        <i data-lucide="copy-check" class="w-3 h-3"></i> COPIOU PIX
+                                                    </span>
+                                                    <span x-show="order.payment_method === 'pix' && (!order.pix_copied || order.pix_copied == 0) && order.status === 'pending'"
+                                                        class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded text-[11px] font-bold inline-flex items-center gap-1"
+                                                        title="Cliente ainda não copiou o código Pix">
+                                                        <i data-lucide="copy-x" class="w-3 h-3"></i> NÃO COPIOU
+                                                    </span>
+                                                </div>
                                             </div>
                                         </template>
 
