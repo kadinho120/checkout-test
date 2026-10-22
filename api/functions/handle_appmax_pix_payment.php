@@ -160,7 +160,7 @@ function handle_appmax_pix_payment()
 
     if ($appmax_res['http_code'] >= 200 && $appmax_res['http_code'] < 300 && !empty($appmax_res['data'])) {
         $resData = $appmax_res['data']['data'] ?? $appmax_res['data'];
-        $appmax_order_id = $resData['order']['id'] ?? ($resData['order_id'] ?? ($resData['id'] ?? null));
+        $appmax_order_id = $resData['order_id'] ?? ($resData['order']['id'] ?? ($resData['id'] ?? ($appmax_res['data']['order_id'] ?? ($appmax_res['data']['data']['order_id'] ?? null))));
 
         // 1. Tenta extrair diretamente de $resData['payment'] (formato padrão Appmax V1 unified-order)
         if (isset($resData['payment']) && is_array($resData['payment'])) {
@@ -259,7 +259,7 @@ function handle_appmax_pix_payment()
         $database = new Database();
         $db = $database->getConnection();
 
-        $externalID = $params['customer']['external_id'] ?? ($appmax_order_id ? (string)$appmax_order_id : '');
+        $externalID = !empty($appmax_order_id) ? (string)$appmax_order_id : (!empty($params['customer']['external_id']) ? (string)$params['customer']['external_id'] : '');
 
         $stmt = $db->prepare("INSERT INTO orders (
             product_id, customer_name, customer_email, customer_phone, customer_cpf, 

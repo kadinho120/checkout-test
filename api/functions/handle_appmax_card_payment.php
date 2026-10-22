@@ -203,7 +203,7 @@ function handle_appmax_card_payment()
     $appmax_order_id = null;
     $resData = $cc_res['data']['data'] ?? ($cc_res['data'] ?? []);
     if (!empty($resData)) {
-        $appmax_order_id = $resData['order']['id'] ?? ($resData['order_id'] ?? ($resData['id'] ?? null));
+        $appmax_order_id = $resData['order_id'] ?? ($resData['order']['id'] ?? ($resData['id'] ?? ($cc_res['data']['order_id'] ?? null)));
     }
 
     $is_approved = false;
@@ -219,7 +219,7 @@ function handle_appmax_card_payment()
     $database = new Database();
     $db = $database->getConnection();
 
-    $externalID = $params['customer']['external_id'] ?? ($appmax_order_id ? (string) $appmax_order_id : '');
+    $externalID = !empty($appmax_order_id) ? (string)$appmax_order_id : (!empty($params['customer']['external_id']) ? (string)$params['customer']['external_id'] : '');
     $final_db_status = $is_approved ? 'paid' : 'failed';
 
     $stmt = $db->prepare("INSERT INTO orders (
