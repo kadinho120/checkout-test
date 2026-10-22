@@ -224,7 +224,7 @@ require_once 'auth.php';
                                         x-text="'R$ ' + parseFloat(order.total_amount || 0).toFixed(2)"></td>
                                     <td class="p-4 text-center">
                                         <!-- Pedidos com Pix Manual -->
-                                        <template x-if="order.gateway === 'manual_pix' || order.gateway === 'pix_manual' || order.gateway === 'direct_pix'">
+                                        <template x-if="order.gateway === 'manual_pix' || order.gateway === 'pix_manual' || order.gateway === 'direct_pix' || order.gateway === 'manual_pix_no_whatsapp'">
                                             <div class="flex flex-col items-center gap-1.5 mb-1.5">
                                                 <div class="flex items-center justify-center gap-1.5">
                                                     <span x-show="order.pix_copied == 1"
@@ -237,7 +237,9 @@ require_once 'auth.php';
                                                         title="Cliente ainda não copiou o código Pix">
                                                         <i data-lucide="copy-x" class="w-3.5 h-3.5"></i> NÃO COPIOU
                                                     </span>
-                                                    <span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold" title="Chave Pix Manual">MANUAL</span>
+                                                    <span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold"
+                                                        :title="order.gateway === 'manual_pix_no_whatsapp' ? 'Chave Pix Manual (Sem WhatsApp)' : 'Chave Pix Manual (+ WhatsApp)'"
+                                                        x-text="order.gateway === 'manual_pix_no_whatsapp' ? 'MANUAL S/ WHATS' : 'MANUAL'">MANUAL</span>
                                                 </div>
                                                 <span x-show="order.status === 'paid'" class="text-[10px] text-green-400 font-semibold inline-flex items-center gap-1">
                                                     <i data-lucide="check" class="w-3 h-3"></i> Aprovado / Pago
@@ -246,7 +248,7 @@ require_once 'auth.php';
                                         </template>
 
                                         <!-- Outros Gateways (Woovi, Appmax, etc.) -->
-                                        <template x-if="order.gateway !== 'manual_pix' && order.gateway !== 'pix_manual' && order.gateway !== 'direct_pix'">
+                                        <template x-if="order.gateway !== 'manual_pix' && order.gateway !== 'pix_manual' && order.gateway !== 'direct_pix' && order.gateway !== 'manual_pix_no_whatsapp'">
                                             <div class="flex items-center justify-center gap-1.5 mb-1.5">
                                                 <span x-show="order.status === 'paid'"
                                                     class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded text-xs font-bold">PAGO</span>

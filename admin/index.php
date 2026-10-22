@@ -415,7 +415,7 @@ require_once 'auth.php';
                                                   x-text="formatCurrency(order.total_amount)"></span>
 
                                             <!-- Pix Manual Copy Indicator -->
-                                            <template x-if="order.gateway === 'manual_pix' || order.gateway === 'pix_manual' || order.gateway === 'direct_pix'">
+                                            <template x-if="order.gateway === 'manual_pix' || order.gateway === 'pix_manual' || order.gateway === 'direct_pix' || order.gateway === 'manual_pix_no_whatsapp'">
                                                 <div class="inline-flex">
                                                     <span x-show="order.pix_copied == 1"
                                                           class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase inline-flex items-center gap-1 bg-teal-500/10 text-teal-300 border-teal-500/30"
@@ -431,7 +431,7 @@ require_once 'auth.php';
                                             </template>
 
                                             <!-- Desktop Status Badge (Non-Manual Pix) -->
-                                            <template x-if="order.gateway !== 'manual_pix' && order.gateway !== 'pix_manual' && order.gateway !== 'direct_pix'">
+                                            <template x-if="order.gateway !== 'manual_pix' && order.gateway !== 'pix_manual' && order.gateway !== 'direct_pix' && order.gateway !== 'manual_pix_no_whatsapp'">
                                                 <span class="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider"
                                                       :class="{
                                                           'bg-emerald-500/10 text-emerald-400 border-emerald-500/30': ['paid', 'completed'].includes((order.status || '').toLowerCase()),

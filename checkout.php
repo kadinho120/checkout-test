@@ -44,8 +44,16 @@ $pixelStmt->execute([$product['id']]);
 $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $productGateway = $product['payment_gateway'] ?? 'woovi';
-$supportsCreditCard = in_array($productGateway, ['appmax', 'appmax_card_woovi_pix']);
-$pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($productGateway === 'appmax') ? 'appmax' : $productGateway);
+$supportsCreditCard = in_array($productGateway, ['appmax', 'appmax_card_woovi_pix', 'appmax_card_manual_pix_no_whatsapp', 'appmax_card_manual_pix']);
+if ($productGateway === 'appmax_card_woovi_pix') {
+    $pixGateway = 'woovi';
+} elseif ($productGateway === 'appmax_card_manual_pix_no_whatsapp' || $productGateway === 'appmax_card_manual_pix') {
+    $pixGateway = 'manual_pix_no_whatsapp';
+} elseif ($productGateway === 'appmax') {
+    $pixGateway = 'appmax';
+} else {
+    $pixGateway = $productGateway;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR" class="<?= $isDarkMode ? 'dark' : '' ?>">
@@ -1757,7 +1765,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
 
                 pixPaymentState = {
                     correlationId: result.correlationId,
-                    is_manual: !!(result.is_manual || (result.pixData && result.pixData.is_manual) || PLANOS['main'].gateway === 'manual_pix'),
+                    is_manual: !!(result.is_manual || (result.pixData && result.pixData.is_manual) || PLANOS['main'].gateway === 'manual_pix' || PLANOS['main'].gateway === 'manual_pix_no_whatsapp'),
                     pixData: result.pixData,
                     customer: customerData
                 };
@@ -1964,11 +1972,13 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 `;
             }
 
-            const isManualPix = !!(
-                (pixData && pixData.is_manual) || 
-                (pixData && pixData.whatsapp_url) || 
-                (pixPaymentState && pixPaymentState.is_manual) || 
-                (PLANOS['main'] && (PLANOS['main'].gateway === 'manual_pix' || PLANOS['main'].gateway === 'pix_manual' || PLANOS['main'].gateway === 'direct_pix'))
+            const isManualWithWhatsapp = !!(
+                pixData && 
+                pixData.whatsapp_url && 
+                (pixData.is_manual || (PLANOS['main'] && (PLANOS['main'].gateway === 'manual_pix' || PLANOS['main'].gateway === 'pix_manual' || PLANOS['main'].gateway === 'direct_pix'))) &&
+                PLANOS['main'].gateway !== 'manual_pix_no_whatsapp' &&
+                PLANOS['main'].gateway !== 'appmax_card_manual_pix_no_whatsapp' &&
+                PLANOS['main'].pixGateway !== 'manual_pix_no_whatsapp'
             );
             const isEmailRequired = !!(
                 (PLANOS['main'] && PLANOS['main'].request_email) || 
@@ -1993,7 +2003,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
                 whatsappBtnText = PLANOS['main'].pix_whatsapp_button_text.trim();
             }
 
-            const whatsappSectionHtml = (isManualPix && pixData.whatsapp_url) ? `
+            const whatsappSectionHtml = isManualWithWhatsapp ? `
                 <div class="mt-4 p-4 bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/40 rounded-2xl text-left shadow-xs">
                     <div class="flex items-center gap-2 mb-2 text-emerald-800 dark:text-emerald-300 font-heading font-bold text-xs uppercase tracking-wide">
                         <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
@@ -2013,7 +2023,7 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
             ` : '';
 
             let emailInstructionHtml = '';
-            if (!isManualPix && isEmailRequired) {
+            if (!isManualWithWhatsapp && isEmailRequired) {
                 const currentEmail = (customerData && customerData.email) 
                     || (document.getElementById('email') && document.getElementById('email').value.trim()) 
                     || (pixPaymentState && pixPaymentState.customer && pixPaymentState.customer.email) 
@@ -2178,7 +2188,16 @@ $pixGateway = ($productGateway === 'appmax_card_woovi_pix') ? 'woovi' : (($produ
         // REDESIGNED SUCCESS VIEW
         const showSuccessView = (currentPixData) => {
             const dataToUse = currentPixData || (pixPaymentState && pixPaymentState.pixData) || {};
-            const isWhatsAppDelivery = !!(dataToUse.whatsapp_delivery || (PLANOS['main'] && PLANOS['main'].gateway === 'woovi_whatsapp' && (dataToUse.whatsapp_url || PLANOS['main'].pix_whatsapp_number)));
+            const isWhatsAppDelivery = !!(
+                dataToUse.whatsapp_delivery || 
+                (
+                    (PLANOS['main'] && (PLANOS['main'].gateway === 'woovi_whatsapp' || PLANOS['main'].gateway === 'manual_pix')) && 
+                    (dataToUse.whatsapp_url || PLANOS['main'].pix_whatsapp_number) &&
+                    PLANOS['main'].gateway !== 'manual_pix_no_whatsapp' &&
+                    PLANOS['main'].gateway !== 'appmax_card_manual_pix_no_whatsapp' &&
+                    PLANOS['main'].pixGateway !== 'manual_pix_no_whatsapp'
+                )
+            );
 
             const header = document.getElementById('checkout-step-header');
             if (header) {

@@ -100,42 +100,53 @@ function handle_manual_pix_payment()
     $brCode = generatePixBrcode($pixKey, $receiverName, $receiverCity, $totalValueInReais, $correlationID);
     $qrCodeImage = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($brCode);
 
-    $instructionType = !empty($productConfig['pix_instruction_type']) ? trim($productConfig['pix_instruction_type']) : 'name';
-    $customButtonText = !empty($productConfig['pix_whatsapp_button_text']) ? trim($productConfig['pix_whatsapp_button_text']) : '';
+    $requestedGateway = strtolower(trim($params['gateway'] ?? ($productConfig['payment_gateway'] ?? 'manual_pix')));
+    $isNoWhatsapp = in_array($requestedGateway, ['manual_pix_no_whatsapp', 'appmax_card_manual_pix_no_whatsapp', 'appmax_card_manual_pix']);
 
-    // Formatação da Mensagem do WhatsApp
-    if (empty($whatsappMsgTemplate)) {
-        if ($instructionType === 'comprovante') {
-            $whatsappMsgTemplate = "Olá! Acabei de fazer o pagamento do pedido #{pedido_id} ({produto}) no valor de {valor}.\n\nSegue o comprovante em anexo:";
-        } else {
-            $whatsappMsgTemplate = "Olá! Acabei de fazer o pagamento do pedido #{pedido_id} ({produto}) no valor de {valor}.\n\nMeu nome completo é: {nome}";
+    if ($isNoWhatsapp) {
+        $instructionType = null;
+        $customButtonText = null;
+        $cleanWhatsappNumber = null;
+        $whatsappMessageFinal = null;
+        $whatsappUrl = null;
+    } else {
+        $instructionType = !empty($productConfig['pix_instruction_type']) ? trim($productConfig['pix_instruction_type']) : 'name';
+        $customButtonText = !empty($productConfig['pix_whatsapp_button_text']) ? trim($productConfig['pix_whatsapp_button_text']) : '';
+
+        // Formatação da Mensagem do WhatsApp
+        if (empty($whatsappMsgTemplate)) {
+            if ($instructionType === 'comprovante') {
+                $whatsappMsgTemplate = "Olá! Acabei de fazer o pagamento do pedido #{pedido_id} ({produto}) no valor de {valor}.\n\nSegue o comprovante em anexo:";
+            } else {
+                $whatsappMsgTemplate = "Olá! Acabei de fazer o pagamento do pedido #{pedido_id} ({produto}) no valor de {valor}.\n\nMeu nome completo é: {nome}";
+            }
         }
-    }
 
-    $shortCustomerCode = '#' . strtoupper(substr($correlationID, -4));
+        $shortCustomerCode = '#' . strtoupper(substr($correlationID, -4));
 
-    $whatsappReplacements = [
-        '{nome}' => $customer_name,
-        '{primeiro_nome}' => $firstName,
-        '{produto}' => $product_description,
-        '{valor}' => $formattedPrice,
-        '{pedido_id}' => $correlationID,
-        '{codigo_cliente}' => $shortCustomerCode,
-        '{codigo}' => $shortCustomerCode,
-        '{pix_chave}' => $pixKey
-    ];
+        $whatsappReplacements = [
+            '{nome}' => $customer_name,
+            '{primeiro_nome}' => $firstName,
+            '{produto}' => $product_description,
+            '{valor}' => $formattedPrice,
+            '{pedido_id}' => $correlationID,
+            '{codigo_cliente}' => $shortCustomerCode,
+            '{codigo}' => $shortCustomerCode,
+            '{pix_chave}' => $pixKey
+        ];
 
-    $whatsappMessageFinal = str_replace(array_keys($whatsappReplacements), array_values($whatsappReplacements), $whatsappMsgTemplate);
+        $whatsappMessageFinal = str_replace(array_keys($whatsappReplacements), array_values($whatsappReplacements), $whatsappMsgTemplate);
 
-    // Limpa o número de WhatsApp para link
-    $cleanWhatsappNumber = preg_replace('/\D/', '', $whatsappNumber);
-    if (!empty($cleanWhatsappNumber) && strlen($cleanWhatsappNumber) >= 10 && strlen($cleanWhatsappNumber) <= 11) {
-        $cleanWhatsappNumber = '55' . $cleanWhatsappNumber;
-    }
+        // Limpa o número de WhatsApp para link
+        $cleanWhatsappNumber = preg_replace('/\D/', '', $whatsappNumber);
+        if (!empty($cleanWhatsappNumber) && strlen($cleanWhatsappNumber) >= 10 && strlen($cleanWhatsappNumber) <= 11) {
+            $cleanWhatsappNumber = '55' . $cleanWhatsappNumber;
+        }
 
-    $whatsappUrl = '';
-    if (!empty($cleanWhatsappNumber)) {
-        $whatsappUrl = 'https://wa.me/' . $cleanWhatsappNumber . '?text=' . rawurlencode($whatsappMessageFinal);
+        $whatsappUrl = '';
+        if (!empty($cleanWhatsappNumber)) {
+            $whatsappUrl = 'https://wa.me/' . $cleanWhatsappNumber . '?text=' . rawurlencode($whatsappMessageFinal);
+        }
     }
 
     $pix_data = [
@@ -143,6 +154,8 @@ function handle_manual_pix_payment()
         'qrCodeImage' => $qrCodeImage,
         'formattedPrice' => $formattedPrice,
         'is_manual' => true,
+        'is_manual_no_whatsapp' => $isNoWhatsapp,
+        'has_whatsapp' => !$isNoWhatsapp,
         'pix_key' => $pixKey,
         'receiver_name' => $receiverName,
         'receiver_city' => $receiverCity,
@@ -154,6 +167,7 @@ function handle_manual_pix_payment()
     ];
 
     // --- SALVAMENTO NO BANCO SQLITE ---
+    $orderGateway = $isNoWhatsapp ? 'manual_pix_no_whatsapp' : 'manual_pix';
     try {
         $externalID = $params['customer']['external_id'] ?? '';
 
@@ -162,7 +176,7 @@ function handle_manual_pix_payment()
         $json_data_store = json_encode([
             'correlation_id' => $correlationID,
             'external_id' => $externalID,
-            'gateway' => 'manual_pix',
+            'gateway' => $orderGateway,
             'pix_copied' => 0,
             'pix_data' => $pix_data,
             'products' => $params['products'] ?? [],
@@ -178,7 +192,7 @@ function handle_manual_pix_payment()
             $totalValueInReais,
             'pending',
             'pix',
-            'manual_pix',
+            $orderGateway,
             $correlationID,
             $externalID,
             $params['customer']['cep'] ?? '',
@@ -230,6 +244,8 @@ function handle_manual_pix_payment()
         'pixData' => $pix_data,
         'correlationId' => $correlationID,
         'is_manual' => true,
+        'is_manual_no_whatsapp' => $isNoWhatsapp,
+        'has_whatsapp' => !$isNoWhatsapp,
         'whatsapp_url' => $whatsappUrl,
         'pix_instruction_type' => $instructionType,
         'whatsapp_button_text' => $customButtonText

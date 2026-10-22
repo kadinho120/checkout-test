@@ -81,7 +81,7 @@ try {
     $pendingRevenue = $pendingData['total'] ?? 0;
 
     // 3.2 Pix Manual Stats (Total, Copied, Not Copied, Rate)
-    $manualPixWhere = "gateway IN ('manual_pix', 'pix_manual', 'direct_pix')";
+    $manualPixWhere = "gateway IN ('manual_pix', 'pix_manual', 'direct_pix', 'manual_pix_no_whatsapp')";
     $stmt = $db->prepare("SELECT 
         COUNT(*) as total,
         SUM(CASE WHEN pix_copied = 1 THEN 1 ELSE 0 END) as copied,
