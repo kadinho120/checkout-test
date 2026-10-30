@@ -15,6 +15,7 @@ require_once __DIR__ . '/functions/handle_woovi_pix_payment.php';
 require_once __DIR__ . '/functions/handle_appmax_pix_payment.php';
 require_once __DIR__ . '/functions/handle_manual_pix_payment.php';
 require_once __DIR__ . '/functions/handle_woovi_whatsapp_payment.php';
+require_once __DIR__ . '/functions/handle_infinitepay_payment.php';
 
 header('Content-Type: application/json');
 
@@ -56,21 +57,23 @@ if (isset($params['gateway']) && !empty($params['gateway'])) {
     }
 }
 
-if ($gateway === 'appmax_card_woovi_pix') {
+if ($gateway === 'appmax_card_woovi_pix' || $gateway === 'infinitepay_card_woovi_pix') {
     $gateway = 'woovi';
-} elseif ($gateway === 'appmax_card_manual_pix_no_whatsapp' || $gateway === 'appmax_card_manual_pix') {
+} elseif ($gateway === 'appmax_card_manual_pix_no_whatsapp' || $gateway === 'appmax_card_manual_pix' || $gateway === 'infinitepay_card_manual_pix_no_whatsapp') {
     $gateway = 'manual_pix_no_whatsapp';
 }
 
 // 4. Executa a função do gateway apropriado
 if ($gateway === 'appmax' || $gateway === 'appmax_pix') {
     handle_appmax_pix_payment();
+} elseif ($gateway === 'infinitepay' || $gateway === 'infinitepay_pix') {
+    handle_infinitepay_payment('pix');
 } elseif ($gateway === 'manual_pix' || $gateway === 'pix_manual' || $gateway === 'direct_pix' || $gateway === 'manual_pix_no_whatsapp') {
     handle_manual_pix_payment();
 } elseif ($gateway === 'woovi_whatsapp') {
     handle_woovi_whatsapp_payment();
 } else {
-    // Padrão Woovi (também utilizado quando o gateway do produto for appmax_card_woovi_pix)
+    // Padrão Woovi (também utilizado quando o gateway do produto for appmax_card_woovi_pix ou infinitepay_card_woovi_pix)
     handle_woovi_pix_payment();
 }
 

@@ -94,9 +94,9 @@ require_once 'auth.php';
                                         x-text="'R$ ' + parseFloat(product.price).toFixed(2)"></td>
                                     <td class="p-4 text-center">
                                         <span
-                                            :class="product.payment_gateway === 'appmax' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : (product.payment_gateway === 'appmax_card_woovi_pix' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : (product.payment_gateway === 'appmax_card_manual_pix_no_whatsapp' ? 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20' : (product.payment_gateway === 'manual_pix' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : (product.payment_gateway === 'manual_pix_no_whatsapp' ? 'bg-violet-500/10 text-violet-400 border-violet-500/20' : (product.payment_gateway === 'woovi_whatsapp' ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20')))))"
+                                            :class="product.payment_gateway === 'infinitepay' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' : (product.payment_gateway === 'infinitepay_card_woovi_pix' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : (product.payment_gateway === 'infinitepay_card_manual_pix_no_whatsapp' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : (product.payment_gateway === 'infinitepay_pix' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : (product.payment_gateway === 'appmax' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : (product.payment_gateway === 'appmax_card_woovi_pix' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : (product.payment_gateway === 'appmax_card_manual_pix_no_whatsapp' ? 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20' : (product.payment_gateway === 'manual_pix' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : (product.payment_gateway === 'manual_pix_no_whatsapp' ? 'bg-violet-500/10 text-violet-400 border-violet-500/20' : (product.payment_gateway === 'woovi_whatsapp' ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20')))))))))"
                                             class="px-2 py-1 rounded text-xs font-bold border uppercase">
-                                            <span x-text="product.payment_gateway === 'appmax' ? 'Appmax (Cartão + Pix)' : (product.payment_gateway === 'appmax_card_woovi_pix' ? 'Appmax Cartão + Pix Woovi' : (product.payment_gateway === 'appmax_card_manual_pix_no_whatsapp' ? 'Appmax Cartão + Pix Manual' : (product.payment_gateway === 'manual_pix' ? 'Pix Direto + Whats' : (product.payment_gateway === 'manual_pix_no_whatsapp' ? 'Pix Manual' : (product.payment_gateway === 'woovi_whatsapp' ? 'Woovi + Whats' : 'Woovi (Pix)')))))"></span>
+                                            <span x-text="product.payment_gateway === 'infinitepay' ? 'InfinitePay (Cartão + Pix)' : (product.payment_gateway === 'infinitepay_card_woovi_pix' ? 'InfinitePay Cartão + Pix Woovi' : (product.payment_gateway === 'infinitepay_card_manual_pix_no_whatsapp' ? 'InfinitePay Cartão + Pix Manual' : (product.payment_gateway === 'infinitepay_pix' ? 'InfinitePay (Pix)' : (product.payment_gateway === 'appmax' ? 'Appmax (Cartão + Pix)' : (product.payment_gateway === 'appmax_card_woovi_pix' ? 'Appmax Cartão + Pix Woovi' : (product.payment_gateway === 'appmax_card_manual_pix_no_whatsapp' ? 'Appmax Cartão + Pix Manual' : (product.payment_gateway === 'manual_pix' ? 'Pix Direto + Whats' : (product.payment_gateway === 'manual_pix_no_whatsapp' ? 'Pix Manual' : (product.payment_gateway === 'woovi_whatsapp' ? 'Woovi + Whats' : 'Woovi (Pix)')))))))))"></span>
                                         </span>
                                     </td>
                                     <td class="p-4 text-center">
@@ -255,6 +255,10 @@ require_once 'auth.php';
                                 <label class="block text-sm font-medium text-slate-400 mb-1">Gateway de Pagamento</label>
                                 <select x-model="form.payment_gateway"
                                     class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                                    <option value="infinitepay">InfinitePay (Cartão de Crédito + Pix)</option>
+                                    <option value="infinitepay_card_woovi_pix">InfinitePay Cartão + Pix Woovi</option>
+                                    <option value="infinitepay_card_manual_pix_no_whatsapp">InfinitePay Cartão + Pix Manual (Sem WhatsApp)</option>
+                                    <option value="infinitepay_pix">InfinitePay (Apenas Pix)</option>
                                     <option value="appmax">Appmax (Cartão de Crédito + Pix)</option>
                                     <option value="appmax_card_woovi_pix">Appmax Cartão + Pix Woovi</option>
                                     <option value="appmax_card_manual_pix_no_whatsapp">Appmax Cartão + Pix Manual (Sem WhatsApp)</option>
@@ -263,6 +267,18 @@ require_once 'auth.php';
                                     <option value="manual_pix">Chave Pix Direta (QR Code Próprio + WhatsApp)</option>
                                     <option value="manual_pix_no_whatsapp">Chave Pix Direta (Sem WhatsApp - Confirmação Manual)</option>
                                 </select>
+                                <p class="text-[11px] text-slate-500 mt-1" x-show="form.payment_gateway === 'infinitepay'">
+                                    * Aceita Cartão de Crédito (até 12x) e Pix com taxa zero pela InfinitePay.
+                                </p>
+                                <p class="text-[11px] text-slate-500 mt-1" x-show="form.payment_gateway === 'infinitepay_card_woovi_pix'">
+                                    * Aceita Cartão InfinitePay e Pix Woovi (QR Code na tela sem sair do site).
+                                </p>
+                                <p class="text-[11px] text-slate-500 mt-1" x-show="form.payment_gateway === 'infinitepay_card_manual_pix_no_whatsapp'">
+                                    * Aceita Cartão InfinitePay e Pix Manual com sua chave própria (QR Code idêntico aos modos automáticos, sem WhatsApp).
+                                </p>
+                                <p class="text-[11px] text-slate-500 mt-1" x-show="form.payment_gateway === 'infinitepay_pix'">
+                                    * Aceita apenas Pix através da InfinitePay.
+                                </p>
                                 <p class="text-[11px] text-slate-500 mt-1" x-show="form.payment_gateway === 'appmax'">
                                     * Aceita Cartão de Crédito e Pix pela Appmax (solicita CPF no checkout).
                                 </p>
@@ -278,7 +294,7 @@ require_once 'auth.php';
                             </div>
 
                             <!-- Configurações de Chave Pix Direta e WhatsApp / Woovi + WhatsApp -->
-                            <div x-show="['manual_pix', 'woovi_whatsapp', 'manual_pix_no_whatsapp', 'appmax_card_manual_pix_no_whatsapp'].includes(form.payment_gateway)" x-transition class="bg-gradient-to-r from-emerald-950/30 to-slate-900/50 border border-emerald-500/30 rounded-xl p-4 space-y-3">
+                            <div x-show="['manual_pix', 'woovi_whatsapp', 'manual_pix_no_whatsapp', 'appmax_card_manual_pix_no_whatsapp', 'infinitepay_card_manual_pix_no_whatsapp'].includes(form.payment_gateway)" x-transition class="bg-gradient-to-r from-emerald-950/30 to-slate-900/50 border border-emerald-500/30 rounded-xl p-4 space-y-3">
                                 
                                 <!-- Cabeçalho Chave Pix Manual com WhatsApp -->
                                 <template x-if="form.payment_gateway === 'manual_pix'">
@@ -294,7 +310,7 @@ require_once 'auth.php';
                                 </template>
 
                                 <!-- Cabeçalho Chave Pix Manual Sem WhatsApp -->
-                                <template x-if="form.payment_gateway === 'manual_pix_no_whatsapp' || form.payment_gateway === 'appmax_card_manual_pix_no_whatsapp'">
+                                <template x-if="form.payment_gateway === 'manual_pix_no_whatsapp' || form.payment_gateway === 'appmax_card_manual_pix_no_whatsapp' || form.payment_gateway === 'infinitepay_card_manual_pix_no_whatsapp'">
                                     <div class="space-y-2">
                                         <div class="flex items-center gap-2 border-b border-purple-500/20 pb-2">
                                             <i data-lucide="qr-code" class="w-4 h-4 text-purple-400"></i>
@@ -320,7 +336,7 @@ require_once 'auth.php';
                                 </template>
                                 
                                 <!-- Campos de Chave Pix (apenas para gateways com Pix Manual) -->
-                                <div x-show="['manual_pix', 'manual_pix_no_whatsapp', 'appmax_card_manual_pix_no_whatsapp'].includes(form.payment_gateway)" class="space-y-3">
+                                <div x-show="['manual_pix', 'manual_pix_no_whatsapp', 'appmax_card_manual_pix_no_whatsapp', 'infinitepay_card_manual_pix_no_whatsapp'].includes(form.payment_gateway)" class="space-y-3">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         <div>
                                             <label class="block text-xs font-semibold text-emerald-300 mb-1">Chave Pix *</label>

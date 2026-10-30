@@ -387,6 +387,10 @@ require_once 'auth.php';
                                                       class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 uppercase inline-flex items-center gap-1 sm:hidden">
                                                     PENDENTE
                                                 </span>
+                                                <span x-show="order.gateway === 'infinitepay'"
+                                                      class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/30 uppercase tracking-wide">
+                                                    InfinitePay
+                                                </span>
                                             </div>
 
                                             <p class="text-xs text-slate-300 truncate mt-0.5" x-text="order.product_name || 'Produto'"></p>

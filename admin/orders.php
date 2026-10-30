@@ -255,6 +255,10 @@ require_once 'auth.php';
                                                         class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded text-xs font-bold">PAGO</span>
                                                     <span x-show="order.status === 'pending'"
                                                         class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded text-xs font-bold">PENDENTE</span>
+                                                    <span x-show="order.gateway === 'infinitepay'"
+                                                        class="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded text-[10px] font-bold" title="InfinitePay">INFINITEPAY</span>
+                                                    <span x-show="order.payment_method === 'credit_card'"
+                                                        class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded text-[10px] font-bold" title="Cartão de Crédito">CARTÃO</span>
                                                     <span x-show="order.payment_method === 'pix' && order.pix_copied == 1"
                                                         class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[11px] font-bold inline-flex items-center gap-1 shadow-sm"
                                                         title="Cliente copiou o código Pix">
@@ -366,6 +370,33 @@ require_once 'auth.php';
                                                     Produto Digital: Nenhuma informação de entrega coletada.
                                                 </div>
                                             </template>
+
+                                            <!-- Informações Técnicas e de Gateway -->
+                                            <div class="mt-4 pt-4 border-t border-slate-800 grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
+                                                <div>
+                                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gateway</p>
+                                                    <p class="text-white text-xs font-bold uppercase" x-text="order.gateway || 'woovi'"></p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Forma de Pagamento</p>
+                                                    <p class="text-white text-xs font-bold uppercase" x-text="order.payment_method === 'credit_card' ? 'Cartão de Crédito' : 'PIX'"></p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">NSU / Transação</p>
+                                                    <p class="text-slate-300 text-xs font-mono truncate" :title="order.transaction_id" x-text="order.transaction_id || '---'"></p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comprovante</p>
+                                                    <template x-if="(() => { try { return JSON.parse(order.json_data).receipt_url; } catch(e){ return null; } })()">
+                                                        <a :href="JSON.parse(order.json_data).receipt_url" target="_blank" class="text-xs text-emerald-400 hover:underline font-bold inline-flex items-center gap-1 mt-0.5">
+                                                            <i data-lucide="external-link" class="w-3 h-3"></i> Ver Recibo
+                                                        </a>
+                                                    </template>
+                                                    <template x-if="!(() => { try { return JSON.parse(order.json_data).receipt_url; } catch(e){ return null; } })()">
+                                                        <span class="text-slate-500 text-xs font-mono">---</span>
+                                                    </template>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

@@ -104,11 +104,84 @@ require_once 'auth.php';
                         </table>
                     </div>
                     
+                    <!-- Webhooks dos Gateways de Pagamento (Inbound) -->
+                    <div class="mt-6 bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
+                        <div class="flex items-center gap-2.5 mb-3 border-b border-slate-800 pb-3">
+                            <i data-lucide="radio" class="w-5 h-5 text-sky-400"></i>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">URLs de Webhook dos Gateways (Notificação de Pagamentos)</h3>
+                                <p class="text-xs text-slate-400">Configure estas URLs nos painéis dos respectivos gateways para confirmação instantânea de pagamentos:</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- InfinitePay -->
+                            <div class="bg-slate-950/80 border border-sky-500/30 rounded-xl p-3.5 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                                        InfinitePay (Pix + Cartão)
+                                    </span>
+                                    <span class="text-[9px] bg-sky-500/10 text-sky-300 px-1.5 py-0.5 rounded font-mono border border-sky-500/20">POST JSON</span>
+                                </div>
+                                <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs font-mono text-slate-300 break-all select-all">
+                                    <span class="flex-1 truncate" id="infinitepay-webhook-url"><?= (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'seusite.com') ?>/api/webhook-infinitepay.php</span>
+                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('infinitepay-webhook-url').innerText); alert('URL copiada!');" class="p-1 hover:text-white text-slate-400 transition" title="Copiar URL">
+                                        <i data-lucide="copy" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <p class="text-[10px] text-slate-500">
+                                    Enviado automaticamente pela API nos links gerados e pode ser salvo no painel InfinitePay.
+                                </p>
+                            </div>
+
+                            <!-- Appmax -->
+                            <div class="bg-slate-950/80 border border-orange-500/30 rounded-xl p-3.5 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-orange-400 flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-orange-400"></span>
+                                        Appmax
+                                    </span>
+                                    <span class="text-[9px] bg-orange-500/10 text-orange-300 px-1.5 py-0.5 rounded font-mono border border-orange-500/20">POST JSON</span>
+                                </div>
+                                <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs font-mono text-slate-300 break-all select-all">
+                                    <span class="flex-1 truncate" id="appmax-webhook-url"><?= (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'seusite.com') ?>/api/webhook-appmax.php</span>
+                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('appmax-webhook-url').innerText); alert('URL copiada!');" class="p-1 hover:text-white text-slate-400 transition" title="Copiar URL">
+                                        <i data-lucide="copy" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <p class="text-[10px] text-slate-500">
+                                    Cadastre no painel da Appmax em Configurações > Webhooks (Pedido Pago/Autorizado).
+                                </p>
+                            </div>
+
+                            <!-- Woovi -->
+                            <div class="bg-slate-950/80 border border-teal-500/30 rounded-xl p-3.5 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-teal-400 flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-teal-400"></span>
+                                        Woovi (Pix Dinâmico)
+                                    </span>
+                                    <span class="text-[9px] bg-teal-500/10 text-teal-300 px-1.5 py-0.5 rounded font-mono border border-teal-500/20">POST JSON</span>
+                                </div>
+                                <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs font-mono text-slate-300 break-all select-all">
+                                    <span class="flex-1 truncate" id="woovi-webhook-url"><?= (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'seusite.com') ?>/api/webhook-woovi.php</span>
+                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('woovi-webhook-url').innerText); alert('URL copiada!');" class="p-1 hover:text-white text-slate-400 transition" title="Copiar URL">
+                                        <i data-lucide="copy" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <p class="text-[10px] text-slate-500">
+                                    Cadastre no painel Woovi ou no webhook intermediário do n8n.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Dica -->
                     <div class="mt-6 p-4 bg-blue-600/5 border border-blue-600/10 rounded-xl flex gap-3">
                         <i data-lucide="info" class="w-5 h-5 text-blue-500 shrink-0"></i>
                         <p class="text-sm text-slate-400">
-                            Os webhooks permitem que você integre o checkout com outras ferramentas (n8n, Zapier, Make, etc). Toda vez que um evento selecionado ocorrer, enviaremos um POST JSON com todos os dados do pedido.
+                            Os webhooks customizados acima permitem que você integre o checkout com outras ferramentas (n8n, Zapier, Make, etc). Toda vez que um evento selecionado ocorrer, enviaremos um POST JSON com todos os dados do pedido.
                         </p>
                     </div>
                 </div>

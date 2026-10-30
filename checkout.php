@@ -44,13 +44,22 @@ $pixelStmt->execute([$product['id']]);
 $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $productGateway = $product['payment_gateway'] ?? 'woovi';
-$supportsCreditCard = in_array($productGateway, ['appmax', 'appmax_card_woovi_pix', 'appmax_card_manual_pix_no_whatsapp', 'appmax_card_manual_pix']);
-if ($productGateway === 'appmax_card_woovi_pix') {
+$supportsCreditCard = in_array($productGateway, [
+    'appmax', 'appmax_card_woovi_pix', 'appmax_card_manual_pix_no_whatsapp', 'appmax_card_manual_pix',
+    'infinitepay', 'infinitepay_card', 'infinitepay_card_woovi_pix', 'infinitepay_card_manual_pix_no_whatsapp'
+]);
+$isInfinitePayCard = in_array($productGateway, [
+    'infinitepay', 'infinitepay_card', 'infinitepay_card_woovi_pix', 'infinitepay_card_manual_pix_no_whatsapp'
+]);
+
+if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinitepay_card_woovi_pix') {
     $pixGateway = 'woovi';
-} elseif ($productGateway === 'appmax_card_manual_pix_no_whatsapp' || $productGateway === 'appmax_card_manual_pix') {
+} elseif ($productGateway === 'appmax_card_manual_pix_no_whatsapp' || $productGateway === 'appmax_card_manual_pix' || $productGateway === 'infinitepay_card_manual_pix_no_whatsapp') {
     $pixGateway = 'manual_pix_no_whatsapp';
 } elseif ($productGateway === 'appmax') {
     $pixGateway = 'appmax';
+} elseif ($productGateway === 'infinitepay' || $productGateway === 'infinitepay_pix') {
+    $pixGateway = 'infinitepay';
 } else {
     $pixGateway = $productGateway;
 }
@@ -122,6 +131,11 @@ if ($productGateway === 'appmax_card_woovi_pix') {
             <?= $pixel['script_content'] ?? '' ?>
         <?php endif; ?>
     <?php endforeach; ?>
+
+    <?php if ($supportsCreditCard || $pixGateway === 'appmax'): ?>
+    <!-- APPMAX ANTIFRAUDE & FINGERPRINT -->
+    <script src="https://scripts.appmax.com.br/appmax.min.js" async></script>
+    <?php endif; ?>
 
     <style>
         :root {
@@ -755,6 +769,36 @@ if ($productGateway === 'appmax_card_woovi_pix') {
                         </div>
 
                         <!-- FORMULÁRIO CARTÃO DE CRÉDITO -->
+                        <?php if ($isInfinitePayCard): ?>
+                        <div id="card-payment-fields" class="space-y-3.5 bg-gradient-to-br from-slate-900/90 to-slate-950 p-4 sm:p-5 rounded-2xl border border-emerald-500/30 hidden shadow-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-xs">
+                                    <i data-lucide="shield-check" class="w-5 h-5 text-emerald-500"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="font-heading font-extrabold text-gray-900 dark:text-white text-sm block leading-tight">
+                                        Checkout Seguro InfinitePay
+                                    </span>
+                                    <span class="text-[11px] text-slate-500 dark:text-slate-400 block leading-tight">
+                                        Parcelamento em até 12x no cartão com liberação imediata
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="pt-2 border-t border-gray-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+                                <span class="font-medium text-[11px]">Bandeiras aceitas:</span>
+                                <div class="flex items-center gap-1.5 font-black text-[9px]">
+                                    <span class="bg-blue-600 text-white px-1.5 py-0.5 rounded tracking-wide shadow-xs">VISA</span>
+                                    <span class="bg-red-600 text-white px-1.5 py-0.5 rounded tracking-wide shadow-xs">MASTERCARD</span>
+                                    <span class="bg-amber-500 text-black px-1.5 py-0.5 rounded tracking-wide shadow-xs">ELO</span>
+                                    <span class="bg-rose-700 text-white px-1.5 py-0.5 rounded tracking-wide shadow-xs">HIPER</span>
+                                </div>
+                            </div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400 bg-white/40 dark:bg-slate-900/60 p-2.5 rounded-xl border border-gray-200/40 dark:border-slate-800/60 flex items-center gap-2">
+                                <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-500 shrink-0"></i>
+                                <span>Ambiente oficial 100% criptografado e certificado pela InfinitePay.</span>
+                            </div>
+                        </div>
+                        <?php else: ?>
                         <div id="card-payment-fields" class="space-y-3.5 bg-gray-50/80 dark:bg-slate-950/60 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-slate-800 hidden">
                             <div>
                                 <label for="card_number" class="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5 ml-1">NÚMERO DO CARTÃO</label>
@@ -823,6 +867,7 @@ if ($productGateway === 'appmax_card_woovi_pix') {
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
                     </div>
                     <?php else: ?>
                     <div class="mb-6">
@@ -1034,6 +1079,7 @@ if ($productGateway === 'appmax_card_woovi_pix') {
                 },
                 gateway: <?= json_encode($productGateway) ?>,
                 supportsCreditCard: <?= $supportsCreditCard ? 'true' : 'false' ?>,
+                isInfinitePayCard: <?= $isInfinitePayCard ? 'true' : 'false' ?>,
                 pixGateway: <?= json_encode($pixGateway) ?>,
                 checkout_cta_text: <?= json_encode($product['checkout_cta_text'] ?? '') ?>,
                 product_type: <?= json_encode($product['product_type'] ?? 'digital') ?>,
@@ -1350,8 +1396,9 @@ if ($productGateway === 'appmax_card_woovi_pix') {
                 errorMessage = 'Por favor, insira um e-mail válido.';
             }
 
-            // 3. CPF Validation (obrigatório apenas para Cartão)
-            const needsCpf = (currentPaymentMethod === 'card');
+            // 3. CPF Validation (obrigatório apenas para Cartão local Appmax)
+            const isInfinitePay = !!(PLANOS['main'].isInfinitePayCard || (PLANOS['main'].gateway && PLANOS['main'].gateway.startsWith('infinitepay')));
+            const needsCpf = (currentPaymentMethod === 'card' && !isInfinitePay);
             const cpfEl = document.getElementById('cpf');
             if (needsCpf && cpfEl) {
                 cpfEl.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
@@ -1362,8 +1409,8 @@ if ($productGateway === 'appmax_card_woovi_pix') {
                 }
             }
 
-            // 4. Cartão de Crédito Validation
-            if (currentPaymentMethod === 'card') {
+            // 4. Cartão de Crédito Validation (apenas para checkout transparente local Appmax)
+            if (currentPaymentMethod === 'card' && !isInfinitePay) {
                 const numEl = document.getElementById('card_number');
                 const holderEl = document.getElementById('card_holder');
                 const expEl = document.getElementById('card_expiry');
@@ -1585,25 +1632,39 @@ if ($productGateway === 'appmax_card_woovi_pix') {
                 });
             }
 
-            const expVal = (document.getElementById('card_expiry')?.value || '').trim();
-            const [expMonth, expYear] = expVal.split('/');
+            const isInfinitePay = !!(PLANOS['main'].isInfinitePayCard || (PLANOS['main'].gateway && PLANOS['main'].gateway.startsWith('infinitepay')));
+            let cardPayload;
 
-            const cardPayload = {
-                value: totalValueInCents,
-                products: allProducts,
-                customer: customerData,
-                card: {
-                    number: (document.getElementById('card_number')?.value || '').replace(/\D/g, ''),
-                    holder_name: (document.getElementById('card_holder')?.value || '').trim(),
-                    exp_month: expMonth,
-                    exp_year: expYear,
-                    cvv: (document.getElementById('card_cvv')?.value || '').replace(/\D/g, ''),
-                    installments: parseInt(document.getElementById('card_installments')?.value, 10) || 1
-                },
-                correlation_id: correlationId,
-                gateway: 'appmax',
-                tracking: trackingParams
-            };
+            if (isInfinitePay) {
+                cardPayload = {
+                    value: totalValueInCents,
+                    products: allProducts,
+                    customer: customerData,
+                    correlation_id: correlationId,
+                    gateway: 'infinitepay',
+                    tracking: trackingParams
+                };
+            } else {
+                const expVal = (document.getElementById('card_expiry')?.value || '').trim();
+                const [expMonth, expYear] = expVal.split('/');
+
+                cardPayload = {
+                    value: totalValueInCents,
+                    products: allProducts,
+                    customer: customerData,
+                    card: {
+                        number: (document.getElementById('card_number')?.value || '').replace(/\D/g, ''),
+                        holder_name: (document.getElementById('card_holder')?.value || '').trim(),
+                        exp_month: expMonth,
+                        exp_year: expYear,
+                        cvv: (document.getElementById('card_cvv')?.value || '').replace(/\D/g, ''),
+                        installments: parseInt(document.getElementById('card_installments')?.value, 10) || 1
+                    },
+                    correlation_id: correlationId,
+                    gateway: 'appmax',
+                    tracking: trackingParams
+                };
+            }
 
             try {
                 const response = await fetch(`${BACKEND_BASE_PATH}/process-card.php`, {
@@ -1615,6 +1676,12 @@ if ($productGateway === 'appmax_card_woovi_pix') {
                 const result = await response.json();
 
                 if (response.ok && result.success) {
+                    if (result.checkout_url || result.url) {
+                        payButton.innerHTML = `<span class="shimmer-sweep"></span><i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Redirecionando...`;
+                        window.location.href = result.checkout_url || result.url;
+                        return;
+                    }
+
                     if (typeof fbq === 'function') {
                         fbq('track', 'Purchase', {
                             content_name: allProducts.map(p => p.name).join(', '),
@@ -1756,6 +1823,13 @@ if ($productGateway === 'appmax_card_woovi_pix') {
                     };
                 } else {
                     result = await response.json();
+                }
+
+                if (result && (result.checkout_url || result.redirect_url || result.url)) {
+                    const targetUrl = result.checkout_url || result.redirect_url || result.url;
+                    payButton.innerHTML = `<span class="shimmer-sweep"></span><i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Redirecionando para Pix...`;
+                    window.location.href = targetUrl;
+                    return;
                 }
 
                 if (!response.ok || !result || !result.success || !result.pixData) {
@@ -2318,10 +2392,13 @@ if ($productGateway === 'appmax_card_woovi_pix') {
                                 <i data-lucide="check-circle-2" class="w-12 h-12 text-emerald-500 dark:text-emerald-400"></i>
                             </div>
                         </div>
-                        <h2 class="font-heading text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2">PAGAMENTO APROVADO!</h2>
-                        <p class="text-gray-600 dark:text-slate-300 text-xs sm:text-sm mb-5 leading-relaxed">
-                            <?= ($product['product_type'] ?? 'digital') === 'physical' ? 'Seu pedido foi confirmado e você receberá em até 7 dias.' : 'Seu acesso foi liberado e enviado para o seu e-mail.' ?>
-                        </p>
+                        ${dataToUse.receipt_url ? `
+                            <div class="mt-4 pt-3 border-t border-emerald-500/20 text-center">
+                                <a href="${dataToUse.receipt_url}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline">
+                                    <i data-lucide="receipt" class="w-4 h-4"></i> Ver Comprovante Oficial InfinitePay
+                                </a>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             }
@@ -2329,6 +2406,41 @@ if ($productGateway === 'appmax_card_woovi_pix') {
             successView.classList.remove('hidden');
             lucide.createIcons();
         };
+
+        // DETECÇÃO AUTOMÁTICA DE RETORNO DA INFINITEPAY
+        (function checkInfinitePayReturn() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderNsu = urlParams.get('order_nsu') || urlParams.get('correlation_id');
+            const receiptUrl = urlParams.get('receipt_url');
+            const transactionNsu = urlParams.get('transaction_nsu');
+            const slug = urlParams.get('slug');
+            const isSuccess = urlParams.get('status') === 'success' || !!receiptUrl || !!transactionNsu || !!slug;
+
+            if (orderNsu && isSuccess) {
+                if (form) form.classList.add('hidden');
+                const downsellModal = document.getElementById('downsell-modal');
+                if (downsellModal) downsellModal.classList.add('hidden');
+
+                const captureMethod = urlParams.get('capture_method') || 'pix';
+                const isCard = (captureMethod === 'credit_card' || captureMethod === 'card');
+
+                showSuccessView({
+                    is_card: isCard,
+                    receipt_url: receiptUrl,
+                    order_nsu: orderNsu
+                });
+
+                if (typeof fbq === 'function') {
+                    firePurchaseTracking('infinitepay_return');
+                }
+
+                // Confirma status no backend de forma transparente
+                fetch(`${BACKEND_BASE_PATH}/check-order-status.php?correlationId=${encodeURIComponent(orderNsu)}&transaction_nsu=${encodeURIComponent(transactionNsu || '')}&slug=${encodeURIComponent(slug || '')}`)
+                    .then(res => res.json())
+                    .then(data => console.log('[InfinitePay] Verificação pós-pagamento:', data))
+                    .catch(err => console.warn(err));
+            }
+        })();
 
         // DOWNSELL LOGIC
         function showDownsell() {

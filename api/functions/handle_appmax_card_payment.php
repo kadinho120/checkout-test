@@ -126,7 +126,9 @@ function handle_appmax_card_payment()
                 'amount' => $p_price_cents,
                 'description' => !empty($p['name']) ? $p['name'] : ('Item ' . ($idx + 1)),
                 'quantity' => (int) ($p['qty'] ?? 1),
-                'code' => !empty($p['sku']) ? $p['sku'] : ('SKU-' . ($idx + 1))
+                'code' => !empty($p['sku']) ? $p['sku'] : ('SKU-' . ($idx + 1)),
+                'type' => 'digital',
+                'digital_product' => 1
             ];
         }
     }
@@ -136,7 +138,9 @@ function handle_appmax_card_payment()
             'amount' => $value_in_cents,
             'description' => 'Acesso ao Produto',
             'quantity' => 1,
-            'code' => 'PROD-' . substr($correlationID, -6)
+            'code' => 'PROD-' . substr($correlationID, -6),
+            'type' => 'digital',
+            'digital_product' => 1
         ];
     } else {
         $sum_cents = 0;
@@ -148,19 +152,27 @@ function handle_appmax_card_payment()
         }
     }
 
+    // Tratamento de IP (garantindo que não envie 127.0.0.1 ou IPs privados que disparam recusa automática no antifraude)
+    if (empty($client_ip) || in_array($client_ip, ['127.0.0.1', '::1', 'UNKNOWN']) || str_starts_with($client_ip, '172.') || str_starts_with($client_ip, '10.') || str_starts_with($client_ip, '192.168.')) {
+        if (!empty($params['tracking']['client_ip']) && filter_var($params['tracking']['client_ip'], FILTER_VALIDATE_IP)) {
+            $client_ip = $params['tracking']['client_ip'];
+        }
+    }
+
     $address_postcode = preg_replace('/[^0-9]/', '', $params['customer']['cep'] ?? '');
-    $address_street = !empty($params['customer']['address']) ? $params['customer']['address'] : '';
-    $address_number = !empty($params['customer']['address_number']) ? $params['customer']['address_number'] : '';
+    $address_street = !empty($params['customer']['address']) ? trim($params['customer']['address']) : '';
+    $address_number = !empty($params['customer']['address_number']) ? trim($params['customer']['address_number']) : '';
     $address_complement = $params['customer']['complement'] ?? '';
-    $address_neighborhood = !empty($params['customer']['neighborhood']) ? $params['customer']['neighborhood'] : '';
-    $address_city = !empty($params['customer']['city']) ? $params['customer']['city'] : '';
-    $address_state = !empty($params['customer']['state']) ? strtoupper($params['customer']['state']) : '';
+    $address_neighborhood = !empty($params['customer']['neighborhood']) ? trim($params['customer']['neighborhood']) : '';
+    $address_city = !empty($params['customer']['city']) ? trim($params['customer']['city']) : '';
+    $address_state = !empty($params['customer']['state']) ? strtoupper(trim($params['customer']['state'])) : '';
 
     // 3. UNIFIED-ORDER COM O TOKEN DE CARTÃO
     $unified_payload = [
         'customer' => [
             'name' => $customer_name,
             'email' => $customer_email,
+            'document_number' => $raw_document,
             'phones' => [
                 'mobile_phone' => [
                     'area_code' => $area_code,
@@ -176,15 +188,20 @@ function handle_appmax_card_payment()
                 'credit_card' => [
                     'token' => $card_token,
                     'holder_name' => $holder_name,
-                    'holder_document' => $raw_document,
+                    'holder_document_number' => $raw_document, // Nome oficial do campo no schema CreditCardData Appmax
+                    'holder_document' => $raw_document,        // Compatibilidade adicional
+                    'document_number' => $raw_document,        // Compatibilidade adicional
                     'installments' => $installments
                 ]
             ]
         ],
         'client_key' => $correlationID,
-        'external_key' => $correlationID
+        'external_key' => $correlationID,
+        'digital_product' => 1,
+        'is_digital' => true
     ];
 
+    // Envia endereço apenas se for produto físico preenchido pelo cliente
     if (!empty($address_street) && !empty($address_postcode)) {
         $unified_payload['shipping'] = [
             'amount' => 0,
@@ -196,6 +213,7 @@ function handle_appmax_card_payment()
                 'state' => $address_state
             ]
         ];
+        unset($unified_payload['digital_product'], $unified_payload['is_digital']);
     }
 
     $cc_res = appmax_request('https://api.appmax.com.br/v1/orders/unified-order', 'POST', $unified_payload);
@@ -215,60 +233,65 @@ function handle_appmax_card_payment()
         }
     }
 
-    // Banco de Dados SQLite
-    $database = new Database();
-    $db = $database->getConnection();
-
+    // Banco de Dados SQLite com tratamento de exceção seguro
+    $order_id = null;
     $externalID = !empty($appmax_order_id) ? (string)$appmax_order_id : (!empty($params['customer']['external_id']) ? (string)$params['customer']['external_id'] : '');
     $final_db_status = $is_approved ? 'paid' : 'failed';
 
-    $stmt = $db->prepare("INSERT INTO orders (
-        product_id, customer_name, customer_email, customer_phone, customer_cpf, 
-        total_amount, status, payment_method, gateway, transaction_id, external_id, 
-        cep, address, address_number, complement, neighborhood, city, state, 
-        json_data, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-03:00'))");
+    try {
+        $database = new Database();
+        $db = $database->getConnection();
 
-    $json_data_store = json_encode([
-        'correlation_id' => $correlationID,
-        'external_id' => $externalID,
-        'gateway' => 'appmax',
-        'payment_method' => 'credit_card',
-        'installments' => $installments,
-        'appmax_order_id' => $appmax_order_id,
-        'products' => $params['products'] ?? [],
-        'tracking' => array_merge($params['tracking'] ?? [], ['client_ip' => $client_ip]),
-        'appmax_response' => $cc_res['data'] ?? null
-    ]);
+        $stmt = $db->prepare("INSERT INTO orders (
+            product_id, customer_name, customer_email, customer_phone, customer_cpf, 
+            total_amount, status, payment_method, gateway, transaction_id, external_id, 
+            cep, address, address_number, complement, neighborhood, city, state, 
+            json_data, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-03:00'))");
 
-    $mainProductId = 0;
-    if (isset($params['products'][0]['id'])) {
-        $mainProductId = (int) $params['products'][0]['id'];
+        $json_data_store = json_encode([
+            'correlation_id' => $correlationID,
+            'external_id' => $externalID,
+            'gateway' => 'appmax',
+            'payment_method' => 'credit_card',
+            'installments' => $installments,
+            'appmax_order_id' => $appmax_order_id,
+            'products' => $params['products'] ?? [],
+            'tracking' => array_merge($params['tracking'] ?? [], ['client_ip' => $client_ip]),
+            'appmax_response' => $cc_res['data'] ?? null
+        ]);
+
+        $mainProductId = 0;
+        if (isset($params['products'][0]['id'])) {
+            $mainProductId = (int) $params['products'][0]['id'];
+        }
+
+        $stmt->execute([
+            $mainProductId,
+            $customer_name,
+            $customer_email,
+            $whatsapp_formatted,
+            $raw_document,
+            $value_in_cents / 100,
+            $final_db_status,
+            'credit_card',
+            'appmax',
+            $correlationID,
+            $externalID,
+            $params['customer']['cep'] ?? '',
+            $params['customer']['address'] ?? '',
+            $params['customer']['address_number'] ?? '',
+            $params['customer']['complement'] ?? '',
+            $params['customer']['neighborhood'] ?? '',
+            $params['customer']['city'] ?? '',
+            $params['customer']['state'] ?? '',
+            $json_data_store
+        ]);
+
+        $order_id = $db->lastInsertId();
+    } catch (Exception $e) {
+        log_activity("Erro ao gravar pedido de cartão no SQLite: " . $e->getMessage(), 'appmax_errors.log');
     }
-
-    $stmt->execute([
-        $mainProductId,
-        $customer_name,
-        $customer_email,
-        $whatsapp_formatted,
-        $raw_document,
-        $value_in_cents / 100,
-        $final_db_status,
-        'credit_card',
-        'appmax',
-        $correlationID,
-        $externalID,
-        $params['customer']['cep'] ?? '',
-        $params['customer']['address'] ?? '',
-        $params['customer']['address_number'] ?? '',
-        $params['customer']['complement'] ?? '',
-        $params['customer']['neighborhood'] ?? '',
-        $params['customer']['city'] ?? '',
-        $params['customer']['state'] ?? '',
-        $json_data_store
-    ]);
-
-    $order_id = $db->lastInsertId();
 
     if ($is_approved) {
         // Disparos de pós-venda
@@ -331,7 +354,7 @@ function handle_appmax_card_payment()
             ?? ($cc_res['data']['error'] 
             ?? 'Transação não autorizada pelo emissor do cartão. Revise os dados e tente novamente.'));
 
-        log_activity("Appmax Cartão Recusado: {$err_msg} | Pedido ID {$order_id}", 'appmax_errors.log', __DIR__ . '/..');
+        log_activity("Appmax Cartão Recusado: {$err_msg} | Pedido ID {$order_id} | Retorno Appmax: " . json_encode($cc_res['data'] ?? []), 'appmax_errors.log');
 
         http_response_code(400);
         echo json_encode([

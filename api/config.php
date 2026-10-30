@@ -20,6 +20,10 @@ define('APPMAX_EXTERNAL_ID', getenv('APPMAX_EXTERNAL_ID') ?: 'a688709f-01c4-4ff5
 
 define('WOOVI_APP_ID', getenv('WOOVI_APP_ID') ?: '');
 
+define('INFINITEPAY_API_KEY', getenv('INFINITEPAY_API_KEY') ?: 'inchk_ln-zktkUsgHoD6stn8es235Rufn8l9xPhYsN8SCxZlY');
+define('INFINITEPAY_HANDLE', getenv('INFINITEPAY_HANDLE') ?: 'abn-digital');
+define('INFINITEPAY_WEBHOOK_URL', getenv('INFINITEPAY_WEBHOOK_URL') ?: '');
+
 define('ABACATEPAY_API_KEY', getenv('ABACATEPAY_API_KEY') ?: '');
 
 define('N8N_WEBHOOK_SECRET', getenv('N8N_WEBHOOK_SECRET') ?: '');
