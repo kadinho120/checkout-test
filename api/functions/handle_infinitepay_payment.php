@@ -129,7 +129,10 @@ function handle_infinitepay_payment($target_method = 'all')
         : "{$base_url}/api/webhook-infinitepay.php";
 
     // 7. Montagem do Payload para a InfinitePay
+    $handle = defined('INFINITEPAY_HANDLE') && !empty(INFINITEPAY_HANDLE) ? INFINITEPAY_HANDLE : 'abn-digital';
+
     $infinite_payload = [
+        'handle' => $handle,
         'order_nsu' => $correlationID,
         'items' => $items,
         'customer' => [
@@ -141,11 +144,12 @@ function handle_infinitepay_payment($target_method = 'all')
         'webhook_url' => $webhook_url,
         'options' => [
             'single_payment' => true,
+            'require_delivery_address' => false,
             'payment_methods_enabled' => $methods_enabled
         ]
     ];
 
-    // Endereço de Entrega (se preenchido)
+    // Endereço de Entrega (se preenchido no checkout, enviamos pré-preenchido)
     $address_postcode = preg_replace('/[^0-9]/', '', $params['customer']['cep'] ?? '');
     $address_street = trim($params['customer']['address'] ?? '');
     if (!empty($address_postcode) && !empty($address_street)) {
