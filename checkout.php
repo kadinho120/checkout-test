@@ -319,7 +319,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
 </head>
 
 <body
-    class="min-h-screen flex flex-col items-center justify-start transition-colors duration-300 <?= $isEmbed ? 'p-0 bg-transparent overflow-x-hidden' : ($isModal ? 'py-2 px-2 overflow-x-hidden bg-slate-50 dark:bg-[#0B0F19] text-gray-900 dark:text-slate-100' : 'py-3 sm:py-8 px-3 sm:px-4 bg-slate-50 dark:bg-[#0B0F19] text-gray-900 dark:text-slate-100') ?>">
+    class="flex flex-col items-center justify-start transition-colors duration-300 <?= $isEmbed ? 'min-h-0 p-0 bg-transparent overflow-x-hidden text-gray-900 dark:text-slate-100' : 'min-h-screen ' . ($isModal ? 'py-2 px-2 overflow-x-hidden bg-slate-50 dark:bg-[#0B0F19] text-gray-900 dark:text-slate-100' : 'py-3 sm:py-8 px-3 sm:px-4 bg-slate-50 dark:bg-[#0B0F19] text-gray-900 dark:text-slate-100') ?>">
 
     <?php if (!$isModal && !$isEmbed): ?>
     <!-- TOP TRUST & SECURITY HEADER -->
@@ -342,7 +342,8 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
     <?php endif; ?>
 
     <?php 
-    $isMinimalist = ($product['checkout_style'] ?? 'default') === 'minimalist';
+    $styleParam = $_GET['style'] ?? ($product['checkout_style'] ?? 'default');
+    $isMinimalist = $styleParam === 'minimalist';
     $reqName = (int) ($product['request_name'] ?? 1) !== 0;
     $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
     $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
@@ -364,7 +365,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
     ?>
 
     <!-- MAIN CONTAINER -->
-    <div class="w-full <?= $isMinimalist ? 'max-w-md mx-auto' : ($isEmbed ? 'max-w-5xl mx-auto' : ($isModal ? 'max-w-4xl' : 'max-w-5xl')) ?> <?= $isMinimalist ? '' : 'grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8' ?> items-start">
+    <div id="checkout-main-container" class="w-full <?= $isMinimalist ? 'max-w-md mx-auto' : ($isEmbed ? 'max-w-5xl mx-auto' : ($isModal ? 'max-w-4xl' : 'max-w-5xl')) ?> <?= $isMinimalist ? '' : 'grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8' ?> items-start">
 
         <!-- MOBILE-FIRST ORDER BANNER (VISIBLE ONLY ON MOBILE IN DEFAULT STYLE) -->
         <?php if (!$isMinimalist): ?>
@@ -1677,8 +1678,15 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
 
                 if (response.ok && result.success) {
                     if (result.checkout_url || result.url) {
+                        const targetUrl = result.checkout_url || result.url;
                         payButton.innerHTML = `<span class="shimmer-sweep"></span><i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Redirecionando...`;
-                        window.location.href = result.checkout_url || result.url;
+                        try {
+                            if (window.top && window.top !== window.self) {
+                                window.top.location.href = targetUrl;
+                                return;
+                            }
+                        } catch (e) {}
+                        window.location.href = targetUrl;
                         return;
                     }
 
@@ -1794,7 +1802,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
                         fbc: fbc,
                         fbp: fbp,
                         client_user_agent: navigator.userAgent,
-                        event_source_url: window.location.href,
+                        event_source_url: urlParams.get('parent_url') || window.location.href,
                         value: totalValue,
                         currency: 'BRL',
                         pixel_id: PIXEL_ID,
@@ -1828,6 +1836,12 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
                 if (result && (result.checkout_url || result.redirect_url || result.url)) {
                     const targetUrl = result.checkout_url || result.redirect_url || result.url;
                     payButton.innerHTML = `<span class="shimmer-sweep"></span><i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Redirecionando para Pix...`;
+                    try {
+                        if (window.top && window.top !== window.self) {
+                            window.top.location.href = targetUrl;
+                            return;
+                        }
+                    } catch (e) {}
                     window.location.href = targetUrl;
                     return;
                 }
@@ -1914,7 +1928,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
                         fbc: fbcVal,
                         fbp: fbpVal,
                         client_user_agent: navigator.userAgent,
-                        event_source_url: window.location.href,
+                        event_source_url: urlParams.get('parent_url') || window.location.href,
                         value: totalValue,
                         currency: 'BRL',
                         pixel_id: PIXEL_ID,
@@ -2226,6 +2240,14 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
             pixWaitView.classList.remove('hidden');
             lucide.createIcons();
 
+            if (window.self !== window.top) {
+                window.parent.postMessage({ type: 'checkout-scroll-top' }, '*');
+                if (typeof window.sendEmbedHeight === 'function') {
+                    window.sendEmbedHeight();
+                    setTimeout(window.sendEmbedHeight, 100);
+                }
+            }
+
             // Start 15 min countdown for PIX
             (function() {
                 let timeLeft = 15 * 60;
@@ -2405,6 +2427,14 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
 
             successView.classList.remove('hidden');
             lucide.createIcons();
+
+            if (window.self !== window.top) {
+                window.parent.postMessage({ type: 'checkout-scroll-top' }, '*');
+                if (typeof window.sendEmbedHeight === 'function') {
+                    window.sendEmbedHeight();
+                    setTimeout(window.sendEmbedHeight, 100);
+                }
+            }
         };
 
         // DETECÇÃO AUTOMÁTICA DE RETORNO DA INFINITEPAY
@@ -2496,19 +2526,23 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
             }
         }
 
-        // Trigger: Exit Intent (Desktop)
-        document.addEventListener('mouseleave', (e) => {
-            if (e.clientY < 10) showDownsell();
-        });
+        // Trigger: Exit Intent (Desktop) - only for standalone page, not embedded inline
+        if (!<?= $isEmbed ? 'true' : 'false' ?>) {
+            document.addEventListener('mouseleave', (e) => {
+                if (e.clientY < 10) showDownsell();
+            });
+        }
 
-        // Trigger: Back Button (Mobile/Desktop)
-        history.pushState(null, null, window.location.href);
-        window.addEventListener('popstate', function () {
-            if (downsellEnabled && !downsellTriggered && !downsellAccepted) {
-                showDownsell();
-                history.pushState(null, null, window.location.href);
-            }
-        });
+        // Trigger: Back Button (Mobile/Desktop) - only when downsell is enabled
+        if (downsellEnabled && !<?= $isEmbed ? 'true' : 'false' ?>) {
+            history.pushState(null, null, window.location.href);
+            window.addEventListener('popstate', function () {
+                if (downsellEnabled && !downsellTriggered && !downsellAccepted) {
+                    showDownsell();
+                    history.pushState(null, null, window.location.href);
+                }
+            });
+        }
 
         // Trigger: Message from Parent (Modal Close Click)
         window.addEventListener('message', function (event) {
@@ -2525,24 +2559,44 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
         });
 
         // Auto-resize observer for iFrame embeds
-        if (window.self !== window.top) {
-            const sendHeight = () => {
+        window.sendEmbedHeight = () => {
+            if (window.self === window.top) return;
+            const mainContainer = document.getElementById('checkout-main-container');
+            let height = 0;
+            if (mainContainer) {
+                const topBar = document.querySelector('.top-bar-container');
+                const topBarHeight = topBar ? topBar.offsetHeight : 0;
+                height = Math.ceil(mainContainer.offsetHeight + topBarHeight);
+            }
+            if (!height || height <= 0) {
+                height = Math.ceil(document.body.getBoundingClientRect().height);
+            }
+            if (height > 0) {
                 window.parent.postMessage({
                     type: 'checkout-resize',
-                    height: document.documentElement.scrollHeight || document.body.scrollHeight
+                    height: height
                 }, '*');
-            };
-            
-            const resizeObserver = new ResizeObserver(() => sendHeight());
+            }
+        };
+
+        if (window.self !== window.top) {
+            const resizeObserver = new ResizeObserver(() => window.sendEmbedHeight());
             resizeObserver.observe(document.body);
+            const mainContainer = document.getElementById('checkout-main-container');
+            if (mainContainer) {
+                resizeObserver.observe(mainContainer);
+            }
             
-            window.addEventListener('load', sendHeight);
-            window.addEventListener('resize', sendHeight);
+            window.addEventListener('load', () => {
+                window.sendEmbedHeight();
+                setTimeout(window.sendEmbedHeight, 150);
+            });
+            window.addEventListener('resize', window.sendEmbedHeight);
             
             const formElement = document.getElementById('checkout-form');
             if (formElement) {
-                formElement.addEventListener('input', sendHeight);
-                formElement.addEventListener('change', sendHeight);
+                formElement.addEventListener('input', window.sendEmbedHeight);
+                formElement.addEventListener('change', window.sendEmbedHeight);
             }
         }
 

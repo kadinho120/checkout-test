@@ -28,18 +28,28 @@
             const theme = container.getAttribute('data-theme') || '';
             const style = container.getAttribute('data-style') || '';
             
-            // Get host URL from the script tag source to make it dynamic
-            let scriptSrc = '';
+            // Detect Base URL dynamically (supports root domain as well as subfolders)
+            let baseUrl = '';
             const scripts = document.getElementsByTagName('script');
             for (let i = 0; i < scripts.length; i++) {
                 if (scripts[i].src && scripts[i].src.indexOf('checkout-embed.js') !== -1) {
-                    scriptSrc = scripts[i].src;
+                    const src = scripts[i].src;
+                    const idx = src.indexOf('/js/checkout-embed.js');
+                    if (idx !== -1) {
+                        baseUrl = src.substring(0, idx);
+                    } else {
+                        try {
+                            baseUrl = new URL(src).origin;
+                        } catch (e) {}
+                    }
                     break;
                 }
             }
-            const hostUrl = scriptSrc ? new URL(scriptSrc).origin : window.location.origin;
+            if (!baseUrl) {
+                baseUrl = window.location.origin;
+            }
 
-            const url = new URL(hostUrl + '/checkout.php');
+            const url = new URL((baseUrl || window.location.origin) + '/checkout.php');
             if (slug) url.searchParams.set('slug', slug);
             if (theme) url.searchParams.set('theme', theme);
             if (style) url.searchParams.set('style', style);
@@ -52,6 +62,13 @@
                     url.searchParams.set(key, value);
                 });
             } catch (e) {}
+
+            // Forward current parent URL for Meta CAPI / S2S attribution
+            if (!url.searchParams.has('parent_url')) {
+                try {
+                    url.searchParams.set('parent_url', window.location.href);
+                } catch (e) {}
+            }
 
             // Forward first-party Meta cookies (_fbp, _fbc) from parent window
             const fbp = getParentCookie('_fbp');
@@ -70,7 +87,9 @@
             iframe.src = url.toString();
             iframe.className = 'checkout-embed-iframe';
             iframe.setAttribute('allow', 'clipboard-write; clipboard-read; payment; accelerometer; gyroscope; camera');
+            iframe.setAttribute('scrolling', 'no');
             iframe.style.width = '100%';
+            iframe.style.display = 'block';
             iframe.style.border = 'none';
             iframe.style.overflow = 'hidden';
             iframe.style.height = '500px'; // Initial fallback height
@@ -80,9 +99,12 @@
             container.appendChild(iframe);
         });
 
-        // Listen for height updates from the iframe
+        // Listen for messages from the iframe (resize, scroll-top, etc.)
         window.addEventListener('message', function (event) {
-            if (event.data && event.data.type === 'checkout-resize') {
+            if (!event.data) return;
+
+            // Height resize
+            if (event.data.type === 'checkout-resize') {
                 const iframes = document.querySelectorAll('.checkout-embed-iframe');
                 for (let i = 0; i < iframes.length; i++) {
                     if (iframes[i].contentWindow === event.source) {
@@ -94,8 +116,24 @@
                     }
                 }
             }
+
+            // Scroll checkout container into view on step transitions (e.g. PIX generated)
+            if (event.data.type === 'checkout-scroll-top') {
+                const iframes = document.querySelectorAll('.checkout-embed-iframe');
+                for (let i = 0; i < iframes.length; i++) {
+                    if (iframes[i].contentWindow === event.source) {
+                        try {
+                            iframes[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        } catch (e) {}
+                        break;
+                    }
+                }
+            }
         });
     }
+
+    // Expose init globally for dynamic page builders / SPAs
+    window.initCheckoutEmbed = init;
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);

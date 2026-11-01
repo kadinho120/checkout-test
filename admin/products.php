@@ -1269,7 +1269,7 @@ require_once 'auth.php';
                                 <i data-lucide="copy" class="w-4 h-4"></i>
                             </button>
                         </div>
-                        <p class="text-[10px] text-slate-500 mt-2">Dica: Você pode personalizar o tema adicionando o atributo <code class="text-white">data-theme="light"</code> ou <code class="text-white">data-theme="dark"</code> na div.</p>
+                        <p class="text-[10px] text-slate-500 mt-2">Dica: Você pode personalizar o tema adicionando <code class="text-white">data-theme="light"</code> ou <code class="text-white">data-theme="dark"</code>, e o layout com <code class="text-white">data-style="minimalist"</code> (versão compacta).</p>
                     </div>
 
                     <div>
