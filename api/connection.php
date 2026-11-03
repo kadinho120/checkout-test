@@ -144,12 +144,18 @@ class Database
             // Check for active in order_bumps
             $bumpCols2 = $this->conn->query("PRAGMA table_info(order_bumps)")->fetchAll(PDO::FETCH_ASSOC);
             $hasBumpActive = false;
+            $hasBumpImage = false;
             foreach ($bumpCols2 as $col) {
                 if ($col['name'] === 'active')
                     $hasBumpActive = true;
+                if ($col['name'] === 'image_url')
+                    $hasBumpImage = true;
             }
             if (!$hasBumpActive) {
                 $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN active INTEGER DEFAULT 1;");
+            }
+            if (!$hasBumpImage) {
+                $this->conn->exec("ALTER TABLE order_bumps ADD COLUMN image_url TEXT;");
             }
 
 

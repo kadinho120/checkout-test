@@ -236,6 +236,11 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
             transform: scale(1) !important;
             stroke: #ffffff !important;
         }
+        .bump-card-active .bump-thumb-box,
+        input[name="bumps[]"]:checked ~ .bump-box .bump-thumb-box {
+            border-color: rgba(16, 185, 129, 0.6) !important;
+            box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.4);
+        }
         .bump-card-active .bump-tag,
         input[name="bumps[]"]:checked ~ .bump-box .bump-tag {
             background-color: rgba(16, 185, 129, 0.2) !important;
@@ -921,13 +926,35 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
                                         <i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>
                                     </div>
 
+                                    <?php 
+                                    $bumpImgUrl = trim($bump['image_url'] ?? '');
+                                    if (!empty($bumpImgUrl)) {
+                                        if (str_starts_with($bumpImgUrl, '../')) {
+                                            $bumpImgUrl = substr($bumpImgUrl, 3);
+                                        }
+                                        if (!str_starts_with($bumpImgUrl, 'http://') && !str_starts_with($bumpImgUrl, 'https://') && !str_starts_with($bumpImgUrl, '/') && !str_starts_with($bumpImgUrl, 'data:')) {
+                                            $bumpImgUrl = '/' . $bumpImgUrl;
+                                        }
+                                    }
+                                    ?>
+                                    <?php if (!empty($bumpImgUrl)): ?>
+                                    <div class="bump-thumb-box w-14 h-14 sm:w-16 sm:h-16 aspect-square rounded-xl overflow-hidden bg-white dark:bg-slate-800 shrink-0 border border-gray-200 dark:border-slate-700/80 shadow-xs relative transition-all duration-200">
+                                        <img src="<?= htmlspecialchars($bumpImgUrl) ?>" 
+                                             alt="<?= htmlspecialchars($bump['title']) ?>" 
+                                             class="w-full h-full object-cover"
+                                             loading="lazy">
+                                    </div>
+                                    <?php endif; ?>
+
                                     <div class="flex-1 min-w-0">
                                         <h4 class="font-heading font-bold text-gray-900 dark:text-white text-sm leading-snug">
                                             <?= htmlspecialchars($bump['title']) ?>
                                         </h4>
+                                        <?php if (!empty($bump['description'])): ?>
                                         <p class="text-xs text-gray-600 dark:text-slate-400 leading-relaxed mt-1">
                                             <?= htmlspecialchars($bump['description']) ?>
                                         </p>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>

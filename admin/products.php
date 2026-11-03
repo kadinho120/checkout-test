@@ -771,17 +771,17 @@ require_once 'auth.php';
                                             <div class="flex items-center gap-3 mb-2">
                                                 <div class="w-10 h-10 rounded bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
                                                     <template x-if="bump.image_url">
-                                                        <img :src="bump.image_url.startsWith('http') ? bump.image_url : '../' + bump.image_url" class="w-full h-full object-cover">
+                                                        <img :src="bump.image_url.startsWith('http') || bump.image_url.startsWith('../') ? bump.image_url : '../' + bump.image_url" class="w-full h-full object-cover">
                                                     </template>
                                                     <template x-if="!bump.image_url">
                                                         <i data-lucide="image" class="text-slate-800 w-5 h-5"></i>
                                                     </template>
                                                 </div>
-                                                <button @click="$el.nextElementSibling.click()" type="button"
+                                                <button @click="$el.parentElement.querySelector('input[type=file]').click()" type="button"
                                                     class="text-[10px] bg-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded border border-slate-700 flex items-center gap-1 transition">
                                                     <i data-lucide="upload" class="w-3 h-3"></i> Upload
                                                 </button>
-                                                <input type="file" class="hidden" @change="handleFileUpload($event, 'bump', index)" accept="image/*">
+                                                <input type="file" class="hidden" @change="handleFileUpload($event, 'bump', index, bump)" accept="image/*">
                                                 <button x-show="bump.image_url" @click="bump.image_url = ''" type="button" class="text-slate-600 hover:text-red-400 transition">
                                                     <i data-lucide="x" class="w-3 h-3"></i>
                                                 </button>
@@ -1636,19 +1636,21 @@ require_once 'auth.php';
                         });
                 },
 
-                handleFileUpload(event, type, index = null) {
+                handleFileUpload(event, type, index = null, bumpObj = null) {
                     const file = event.target.files[0];
                     if (!file) return;
 
                     // Basic client side validation
                     if (!file.type.match('image.*')) {
                         alert('Por favor, selecione apenas imagens.');
+                        event.target.value = '';
                         return;
                     }
 
                     this.isUploading = true;
                     const formData = new FormData();
                     formData.append('file', file);
+                    event.target.value = '';
 
                     fetch('../api/v1/upload.php', {
                         method: 'POST',
@@ -1660,8 +1662,13 @@ require_once 'auth.php';
                         if (data.success) {
                             if (type === 'main') {
                                 this.form.image_url = data.url;
-                            } else if (type === 'bump' && index !== null) {
-                                this.form.bumps[index].image_url = data.url;
+                            } else if (type === 'bump') {
+                                if (bumpObj) {
+                                    bumpObj.image_url = data.url;
+                                }
+                                if (index !== null && this.form.bumps[index]) {
+                                    this.form.bumps[index].image_url = data.url;
+                                }
                             }
                             this.$nextTick(() => lucide.createIcons());
                         } else {
