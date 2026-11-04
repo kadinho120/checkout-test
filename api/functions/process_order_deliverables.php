@@ -36,7 +36,8 @@ function processOrderDeliverables($productsList, $customerData, $db, $types = ['
                        p.evolution_instance, p.evolution_token, p.evolution_url,
                        p.twilio_account_sid, p.twilio_auth_token, p.twilio_from,
                        p.sms_token,
-                       p.name as product_name
+                       COALESCE(ob.title, p.name) as product_name,
+                       p.name as parent_product_name
                 FROM order_bumps ob
                 JOIN products p ON ob.product_id = p.id
                 WHERE ob.id = ?
@@ -48,6 +49,10 @@ function processOrderDeliverables($productsList, $customerData, $db, $types = ['
             $stmt = $db->prepare("SELECT evolution_instance, evolution_token, evolution_url, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, twilio_account_sid, twilio_auth_token, twilio_from, twilio_content_sid, twilio_content_variables, twilio_message, twilio_media_url, sms_token, sms_message, name as product_name FROM products WHERE slug = ?");
             $stmt->execute([$sku]);
             $deliverableConfig = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        if ($deliverableConfig && !empty($deliverableConfig['product_name'])) {
+            $customerData['product_name'] = $deliverableConfig['product_name'];
         }
 
         // 1. WhatsApp Sending (Evolution API)

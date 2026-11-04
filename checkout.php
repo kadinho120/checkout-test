@@ -5,6 +5,7 @@ $database = new Database();
 $db = $database->getConnection();
 
 $slug = $_GET['slug'] ?? '';
+$bumpParam = $_GET['bump'] ?? ($_GET['bump_id'] ?? '');
 $isModal = ($_GET['modal'] ?? '') === 'true';
 $isEmbed = ($_GET['embed'] ?? '') === 'true';
 
@@ -12,17 +13,64 @@ $isEmbed = ($_GET['embed'] ?? '') === 'true';
 @header_remove('X-Frame-Options');
 header('Content-Security-Policy: frame-ancestors *');
 
-if (!$slug) {
-    $stmt = $db->query("SELECT * FROM products ORDER BY id ASC LIMIT 1");
-    $product = $stmt->fetch(PDO::FETCH_ASSOC);
-} else {
-    $stmt = $db->prepare("SELECT * FROM products WHERE slug = ?");
-    $stmt->execute([$slug]);
-    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+$isBumpCheckout = false;
+$bumpData = null;
+$parentProductId = 0;
+$parentProductSlug = '';
+
+if (!empty($bumpParam)) {
+    $bumpId = (int) $bumpParam;
+    if ($bumpId > 0) {
+        $bumpStmt = $db->prepare("SELECT * FROM order_bumps WHERE id = ?");
+        $bumpStmt->execute([$bumpId]);
+        $bumpData = $bumpStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($bumpData) {
+            $parentStmt = $db->prepare("SELECT * FROM products WHERE id = ?");
+            $parentStmt->execute([$bumpData['product_id']]);
+            $parentProduct = $parentStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($parentProduct) {
+                $isBumpCheckout = true;
+                $product = $parentProduct;
+                $parentProductId = (int) $parentProduct['id'];
+                $parentProductSlug = $parentProduct['slug'];
+
+                // Configura as informações do Order Bump como o produto principal deste checkout
+                $product['name'] = $bumpData['title'];
+                $product['price'] = (float) $bumpData['price'];
+                if (!empty($bumpData['description'])) {
+                    $product['description'] = $bumpData['description'];
+                }
+                if (!empty($bumpData['image_url'])) {
+                    $product['image_url'] = $bumpData['image_url'];
+                }
+                $product['compare_at_price'] = null;
+                $product['downsell_enabled'] = 0; // Desativa downsell no checkout de upsell
+                $product['bumps'] = [];
+            }
+        }
+    }
+}
+
+if (!$isBumpCheckout) {
+    if (!$slug) {
+        $stmt = $db->query("SELECT * FROM products ORDER BY id ASC LIMIT 1");
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+    } else {
+        $stmt = $db->prepare("SELECT * FROM products WHERE slug = ?");
+        $stmt->execute([$slug]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }
 
 if (!$product) {
     die("Product not found. <a href='/admin'>Go to Admin</a>");
+}
+
+if (!$parentProductId) {
+    $parentProductId = (int) $product['id'];
+    $parentProductSlug = $product['slug'];
 }
 
 $themeParam = $_GET['theme'] ?? null;
@@ -33,14 +81,18 @@ if ($themeParam) {
 }
 $isDarkMode = $theme !== 'light';
 
-// Fetch Bumps
-$bumpStmt = $db->prepare("SELECT * FROM order_bumps WHERE product_id = ? AND active = 1");
-$bumpStmt->execute([$product['id']]);
-$product['bumps'] = $bumpStmt->fetchAll(PDO::FETCH_ASSOC);
+// Fetch Bumps (apenas se for checkout normal; checkout de bump não exibe outros bumps)
+if (!$isBumpCheckout) {
+    $bumpStmt = $db->prepare("SELECT * FROM order_bumps WHERE product_id = ? AND active = 1");
+    $bumpStmt->execute([$product['id']]);
+    $product['bumps'] = $bumpStmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $product['bumps'] = [];
+}
 
-// Fetch Pixels
+// Fetch Pixels usando o ID do produto principal
 $pixelStmt = $db->prepare("SELECT * FROM pixels WHERE product_id = ? AND active = 1");
-$pixelStmt->execute([$product['id']]);
+$pixelStmt->execute([$parentProductId]);
 $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $productGateway = $product['payment_gateway'] ?? 'woovi';
@@ -425,7 +477,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
 
                     <!-- Badge Promocional -->
                     <div class="absolute top-3 right-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 text-[11px] font-black px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5 uppercase tracking-wider">
-                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Oferta Especial
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> <?= !empty($isBumpCheckout) ? 'Oferta Exclusiva' : 'Oferta Especial' ?>
                     </div>
                 </div>
 
@@ -969,7 +1021,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
                         <!-- RESUMO TRANSPARENTE DE VALORES -->
                         <div class="bg-gray-50/90 dark:bg-slate-950/70 rounded-2xl p-4 border border-gray-200/90 dark:border-slate-800/80 mb-5 space-y-2 text-xs">
                             <div class="flex justify-between items-center text-slate-500 dark:text-slate-400">
-                                <span>Produto Principal</span>
+                                <span><?= !empty($isBumpCheckout) ? 'Oferta' : 'Produto Principal' ?></span>
                                 <span id="summary-subtotal" class="font-semibold text-gray-800 dark:text-slate-200">R$ <?= format_price($product['price']) ?></span>
                             </div>
                             <div id="summary-bumps-row" class="hidden justify-between items-center text-slate-500 dark:text-slate-400">
@@ -1083,9 +1135,13 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
 
         const PLANOS = {
             'main': {
+                id: <?= (int)$parentProductId ?>,
                 price: <?= $product['price'] * 100 ?>,
                 name: <?= json_encode($product['name']) ?>,
-                sku: <?= json_encode($product['slug']) ?>,
+                sku: <?= json_encode(!empty($isBumpCheckout) ? ('BUMP-' . $bumpData['id']) : $product['slug']) ?>,
+                parent_sku: <?= json_encode($parentProductSlug ?? $product['slug']) ?>,
+                is_bump: <?= !empty($isBumpCheckout) ? 'true' : 'false' ?>,
+                bump_id: <?= !empty($isBumpCheckout) ? (int)$bumpData['id'] : 'null' ?>,
                 style: <?= json_encode($product['checkout_style'] ?? 'default') ?>,
                 showCloseButton: <?= isset($product['show_close_button']) ? ((int)$product['show_close_button'] !== 0 ? 'true' : 'false') : 'true' ?>,
                 notifications: {
@@ -1615,7 +1671,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
         const handleCardPayment = async (customerData) => {
             const correlationId = generateCorrelationId();
             const mainProduct = PLANOS['main'];
-            const allProducts = [{ sku: mainProduct.sku, name: mainProduct.name, price: currentProductPrice, qty: 1 }];
+            const allProducts = [{ sku: mainProduct.sku, id: mainProduct.id, name: mainProduct.name, price: currentProductPrice, qty: 1 }];
 
             document.querySelectorAll('input[name="bumps[]"]:checked').forEach(el => {
                 allProducts.push({ sku: el.dataset.sku, name: el.dataset.name, price: parseFloat(el.dataset.price), qty: 1 });
@@ -1761,7 +1817,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
         const handlePixPayment = async (customerData) => {
             const correlationId = generateCorrelationId();
             const mainProduct = PLANOS['main'];
-            const allProducts = [{ sku: mainProduct.sku, name: mainProduct.name, price: currentProductPrice, qty: 1 }];
+            const allProducts = [{ sku: mainProduct.sku, id: mainProduct.id, name: mainProduct.name, price: currentProductPrice, qty: 1 }];
 
             document.querySelectorAll('input[name="bumps[]"]:checked').forEach(el => {
                 allProducts.push({ sku: el.dataset.sku, name: el.dataset.name, price: parseFloat(el.dataset.price), qty: 1 });
@@ -1921,7 +1977,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
             const totalValueInCents = calculateCurrentTotal();
             const totalValue = totalValueInCents / 100;
             const mainProduct = PLANOS['main'];
-            const allProducts = [{ sku: mainProduct.sku, name: mainProduct.name, price: currentProductPrice, qty: 1 }];
+            const allProducts = [{ sku: mainProduct.sku, id: mainProduct.id, name: mainProduct.name, price: currentProductPrice, qty: 1 }];
 
             document.querySelectorAll('input[name="bumps[]"]:checked').forEach(el => {
                 allProducts.push({ sku: el.dataset.sku, name: el.dataset.name, price: parseFloat(el.dataset.price), qty: 1 });

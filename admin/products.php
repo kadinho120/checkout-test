@@ -740,6 +740,20 @@ require_once 'auth.php';
                             <template x-for="(bump, index) in form.bumps" :key="index">
                                 <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 relative group"
                                     :class="{'opacity-50': bump.active == 0}">
+                                    <template x-if="bump.id">
+                                        <div class="absolute top-2 right-16 flex items-center gap-1">
+                                            <button type="button" @click="copyBumpLink(bump)"
+                                                class="text-slate-400 hover:text-amber-400 transition p-1"
+                                                title="Copiar Link de Checkout Exclusivo (Upsell)">
+                                                <i data-lucide="copy" class="w-4 h-4"></i>
+                                            </button>
+                                            <a :href="getBumpCheckoutUrl(bump)" target="_blank"
+                                                class="text-slate-400 hover:text-amber-400 transition p-1"
+                                                title="Abrir Checkout do Bump">
+                                                <i data-lucide="external-link" class="w-4 h-4"></i>
+                                            </a>
+                                        </div>
+                                    </template>
                                     <button
                                         @click="bump.active = (bump.active == 1 ? 0 : 1); $nextTick(() => lucide.createIcons())"
                                         class="absolute top-2 right-9 text-slate-400 hover:text-white transition"
@@ -903,7 +917,42 @@ require_once 'auth.php';
                                         </div>
                                     </div>
                                 </div>
-                        </div>
+
+                                <!-- Link Exclusivo de Checkout (Upsell para Área de Membros) -->
+                                <div class="mt-3 bg-amber-500/[0.06] border border-amber-500/20 rounded-lg p-3">
+                                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                                        <div class="flex items-center gap-1.5 text-amber-400 font-bold text-xs">
+                                            <i data-lucide="link" class="w-3.5 h-3.5"></i>
+                                            <span>Link Exclusivo de Checkout (Upsell)</span>
+                                        </div>
+                                        <template x-if="bump.id">
+                                            <div class="flex items-center gap-1.5">
+                                                <button type="button" @click="copyBumpLink(bump)"
+                                                    class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold rounded border border-amber-500/30 flex items-center gap-1.5 transition cursor-pointer">
+                                                    <i data-lucide="copy" class="w-3 h-3"></i> Copiar Link
+                                                </button>
+                                                <a :href="getBumpCheckoutUrl(bump)" target="_blank"
+                                                    class="p-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded border border-slate-700 transition"
+                                                    title="Abrir Checkout do Bump">
+                                                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                                </a>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <template x-if="bump.id">
+                                        <div class="bg-slate-900 border border-slate-800 rounded p-1.5 flex items-center gap-2">
+                                            <input type="text" readonly :value="getBumpCheckoutUrl(bump)"
+                                                @click="$el.select()"
+                                                class="w-full bg-transparent text-[11px] font-mono text-amber-300/90 outline-none select-all cursor-pointer">
+                                        </div>
+                                    </template>
+                                    <template x-if="!bump.id">
+                                        <p class="text-[11px] text-slate-500 italic mt-0.5">
+                                            O link exclusivo com ID único será gerado automaticamente após salvar o produto.
+                                        </p>
+                                    </template>
+                                </div>
+                            </div>
                         </template>
                         <template x-if="form.bumps.length === 0">
                             <p class="text-slate-500 text-sm italic">Nenhum order bump configurado.</p>
@@ -1617,6 +1666,29 @@ require_once 'auth.php';
                     this.form.pixels.splice(index, 1);
                 },
 
+                getBumpCheckoutUrl(bump) {
+                    if (!bump || !bump.id) return '';
+                    const slugPart = this.form.slug ? ('slug=' + encodeURIComponent(this.form.slug) + '&') : '';
+                    return window.location.origin + '/checkout.php?' + slugPart + 'bump=' + bump.id;
+                },
+
+                copyBumpLink(bump) {
+                    const url = this.getBumpCheckoutUrl(bump);
+                    if (!url) {
+                        alert('Salve o produto primeiro para gerar o link deste order bump.');
+                        return;
+                    }
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(url).then(() => {
+                            alert('Link exclusivo do Order Bump copiado com sucesso!\n\n' + url);
+                        }).catch(() => {
+                            prompt('Copie o link abaixo:', url);
+                        });
+                    } else {
+                        prompt('Copie o link abaixo:', url);
+                    }
+                },
+
                 saveProduct() {
                     this.isSaving = true;
                     fetch('../api/v1/products.php', {
@@ -1626,6 +1698,9 @@ require_once 'auth.php';
                         .then(res => res.json())
                         .then(data => {
                             this.isSaving = false;
+                            if (data.bumps) {
+                                this.form.bumps = data.bumps;
+                            }
                             // Reload list
                             this.fetchProducts();
                             this.closeModal();

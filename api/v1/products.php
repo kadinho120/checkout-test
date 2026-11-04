@@ -290,33 +290,87 @@ switch ($method) {
                 $productId = $db->lastInsertId();
             }
 
-            // Handle Bumps (Full replace for simplicity)
+            // Handle Bumps (Preserve existing IDs to keep exclusive upsell links stable)
             $bumpsProcessed = 0;
+            $savedBumps = [];
             if (isset($data->bumps) && is_array($data->bumps)) {
-                $db->prepare("DELETE FROM order_bumps WHERE product_id = ?")->execute([$productId]);
-                $bumpStmt = $db->prepare("INSERT INTO order_bumps (product_id, title, description, price, image_url, active, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, twilio_content_sid, twilio_content_variables, twilio_message, twilio_media_url, sms_message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $keptBumpIds = [];
+                $insertBumpStmt = $db->prepare("INSERT INTO order_bumps (product_id, title, description, price, image_url, active, deliverable_type, deliverable_text, deliverable_file, deliverable_email_subject, deliverable_email_body, twilio_content_sid, twilio_content_variables, twilio_message, twilio_media_url, sms_message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $updateBumpStmt = $db->prepare("UPDATE order_bumps SET title = ?, description = ?, price = ?, image_url = ?, active = ?, deliverable_type = ?, deliverable_text = ?, deliverable_file = ?, deliverable_email_subject = ?, deliverable_email_body = ?, twilio_content_sid = ?, twilio_content_variables = ?, twilio_message = ?, twilio_media_url = ?, sms_message = ? WHERE id = ? AND product_id = ?");
+
                 foreach ($data->bumps as $bump) {
-                    $bumpStmt->execute([
-                        $productId,
-                        $bump->title,
-                        $bump->description ?? '',
-                        $bump->price,
-                        $bump->image_url ?? '',
-                        $bump->active ?? 1,
-                        $bump->deliverable_type ?? 'text',
-                        $bump->deliverable_text ?? '',
-                        $bump->deliverable_file ?? '',
-                        $bump->deliverable_email_subject ?? '',
-                        $bump->deliverable_email_body ?? '',
-                        $bump->twilio_content_sid ?? '',
-                        $bump->twilio_content_variables ?? '',
-                        $bump->twilio_message ?? '',
-                        $bump->twilio_media_url ?? '',
-                        $bump->sms_message ?? ''
-                    ]);
+                    $bumpId = isset($bump->id) ? (int)$bump->id : 0;
+                    $isExisting = false;
+
+                    if ($bumpId > 0) {
+                        $checkStmt = $db->prepare("SELECT id FROM order_bumps WHERE id = ? AND product_id = ?");
+                        $checkStmt->execute([$bumpId, $productId]);
+                        if ($checkStmt->fetch()) {
+                            $isExisting = true;
+                        }
+                    }
+
+                    if ($isExisting) {
+                        $updateBumpStmt->execute([
+                            $bump->title,
+                            $bump->description ?? '',
+                            $bump->price,
+                            $bump->image_url ?? '',
+                            $bump->active ?? 1,
+                            $bump->deliverable_type ?? 'text',
+                            $bump->deliverable_text ?? '',
+                            $bump->deliverable_file ?? '',
+                            $bump->deliverable_email_subject ?? '',
+                            $bump->deliverable_email_body ?? '',
+                            $bump->twilio_content_sid ?? '',
+                            $bump->twilio_content_variables ?? '',
+                            $bump->twilio_message ?? '',
+                            $bump->twilio_media_url ?? '',
+                            $bump->sms_message ?? '',
+                            $bumpId,
+                            $productId
+                        ]);
+                        $keptBumpIds[] = $bumpId;
+                    } else {
+                        $insertBumpStmt->execute([
+                            $productId,
+                            $bump->title,
+                            $bump->description ?? '',
+                            $bump->price,
+                            $bump->image_url ?? '',
+                            $bump->active ?? 1,
+                            $bump->deliverable_type ?? 'text',
+                            $bump->deliverable_text ?? '',
+                            $bump->deliverable_file ?? '',
+                            $bump->deliverable_email_subject ?? '',
+                            $bump->deliverable_email_body ?? '',
+                            $bump->twilio_content_sid ?? '',
+                            $bump->twilio_content_variables ?? '',
+                            $bump->twilio_message ?? '',
+                            $bump->twilio_media_url ?? '',
+                            $bump->sms_message ?? ''
+                        ]);
+                        $keptBumpIds[] = (int)$db->lastInsertId();
+                    }
                     $bumpsProcessed++;
                 }
+
+                // Delete only bumps that were removed from the product
+                if (!empty($keptBumpIds)) {
+                    $inPlaceholders = implode(',', array_fill(0, count($keptBumpIds), '?'));
+                    $delStmt = $db->prepare("DELETE FROM order_bumps WHERE product_id = ? AND id NOT IN ($inPlaceholders)");
+                    $delStmt->execute(array_merge([$productId], $keptBumpIds));
+                } else {
+                    $db->prepare("DELETE FROM order_bumps WHERE product_id = ?")->execute([$productId]);
+                }
+            } else {
+                $db->prepare("DELETE FROM order_bumps WHERE product_id = ?")->execute([$productId]);
             }
+
+            // Load saved bumps to return in response
+            $fetchBumps = $db->prepare("SELECT * FROM order_bumps WHERE product_id = ?");
+            $fetchBumps->execute([$productId]);
+            $savedBumps = $fetchBumps->fetchAll();
 
             // Handle Pixels (Full replace)
             if (isset($data->pixels) && is_array($data->pixels)) {
@@ -334,7 +388,7 @@ switch ($method) {
             }
 
             $db->commit();
-            echo json_encode(["message" => "Product saved.", "id" => $productId]);
+            echo json_encode(["message" => "Product saved.", "id" => $productId, "bumps" => $savedBumps]);
 
         } catch (Throwable $e) {
             $db->rollBack();

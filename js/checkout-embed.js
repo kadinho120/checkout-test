@@ -25,6 +25,7 @@
             container.dataset.loaded = "true";
 
             const slug = container.getAttribute('data-slug');
+            const bump = container.getAttribute('data-bump') || container.getAttribute('data-bump-id');
             const theme = container.getAttribute('data-theme') || '';
             const style = container.getAttribute('data-style') || '';
             
@@ -51,6 +52,7 @@
 
             const url = new URL((baseUrl || window.location.origin) + '/checkout.php');
             if (slug) url.searchParams.set('slug', slug);
+            if (bump) url.searchParams.set('bump', bump);
             if (theme) url.searchParams.set('theme', theme);
             if (style) url.searchParams.set('style', style);
             url.searchParams.set('embed', 'true');
