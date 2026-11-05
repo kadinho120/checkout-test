@@ -484,6 +484,10 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN turbo_mode INTEGER NOT NULL DEFAULT 0;");
             }
 
+            if (!in_array('donation_mode', $productColumns, true)) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN donation_mode INTEGER NOT NULL DEFAULT 0;");
+            }
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {

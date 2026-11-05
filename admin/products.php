@@ -300,6 +300,13 @@ require_once 'auth.php';
                                     Modo Turbo
                                 </label>
                                 <p class="text-xs text-slate-400">Na etapa do formulário, exibe apenas capa, avaliações, nome, campos e o botão Continuar. O valor e as instruções aparecem na tela do QR Code. Ofertas adicionais ficam ocultas.</p>
+                                <div x-show="form.turbo_mode && isPixOnlyGateway()" class="pt-3 space-y-2 border-t border-slate-700">
+                                    <label class="flex items-center gap-3 text-sm font-medium text-white">
+                                        <input type="checkbox" x-model="form.donation_mode" class="rounded border-slate-600">
+                                        Modo Doação
+                                    </label>
+                                    <p class="text-xs text-slate-400">Após preencher o formulário, o visitante verá um pedido de colaboração com o valor do produto antes de continuar para o QR Code.</p>
+                                </div>
                                 <p x-show="!isPixOnlyGateway()" class="text-xs text-amber-400">Disponível apenas com um gateway que aceite somente Pix.</p>
                             </div>
 
@@ -1427,6 +1434,7 @@ require_once 'auth.php';
                     checkout_style: 'default',
                     product_type: 'digital',
                     turbo_mode: false,
+                    donation_mode: false,
                     checkout_cta_text: ''
                 },
 
@@ -1537,6 +1545,7 @@ require_once 'auth.php';
                                     product_type: data.product_type || 'digital',
                                     payment_gateway: data.payment_gateway || 'woovi',
                                     turbo_mode: Number(data.turbo_mode) === 1,
+                                    donation_mode: Number(data.donation_mode) === 1,
                                     checkout_cta_text: data.checkout_cta_text || '',
                                     show_close_button: data.show_close_button !== 0
                                 };
@@ -1600,7 +1609,8 @@ require_once 'auth.php';
                             product_type: 'digital',
                             payment_gateway: 'woovi',
                             turbo_mode: false,
-                    checkout_cta_text: '',
+                            donation_mode: false,
+                            checkout_cta_text: '',
                             show_close_button: true
                         };
                         this.isModalOpen = true;

@@ -99,6 +99,7 @@ $productGateway = $product['payment_gateway'] ?? 'woovi';
 $isTurbo = !empty($product['turbo_mode']) && in_array($productGateway, [
     'woovi', 'woovi_whatsapp', 'manual_pix', 'manual_pix_no_whatsapp', 'infinitepay_pix'
 ], true);
+$isDonation = $isTurbo && !empty($product['donation_mode']);
 if ($isTurbo) {
     // No offers or promotional overlays during the simplified form step.
     $product['bumps'] = [];
@@ -1103,6 +1104,20 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
 
     </div>
 
+    <?php if ($isDonation): ?>
+    <dialog id="donation-dialog" style="margin:auto; width:calc(100% - 2rem)" aria-labelledby="donation-title" aria-describedby="donation-description"
+        class="w-[calc(100%-2rem)] max-w-md rounded-3xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-white p-6 sm:p-8 shadow-2xl backdrop:bg-black/70">
+        <h2 id="donation-title" class="font-heading text-xl font-black mb-4">Ajude este projeto a continuar</h2>
+        <p id="donation-description" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            Sua colaboração de <strong id="donation-amount" class="text-emerald-600 dark:text-emerald-400"></strong>
+            ajuda a manter este projeto no ar e a continuar ajudando outras pessoas também.
+            Na próxima tela, você encontrará o QR Code e as instruções para fazer sua doação via Pix.
+        </p>
+        <button type="button" id="donation-continue" class="cta-button w-full mt-6 py-4 px-4 rounded-2xl text-white font-bold">Continuar para o QR Code</button>
+        <button type="button" id="donation-back" class="w-full mt-3 py-2 text-sm text-slate-500 dark:text-slate-400">Voltar ao formulário</button>
+    </dialog>
+    <?php endif; ?>
+
     <!-- JAVASCRIPT LOGIC -->
     <script>
         lucide.createIcons();
@@ -1650,9 +1665,35 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
             });
         }
 
+        // Ask for confirmation before creating any Pix charge.
+        const donationDialog = document.getElementById('donation-dialog');
+        const confirmDonation = () => new Promise(resolve => {
+            document.getElementById('donation-amount').textContent = formatCurrency(calculateCurrentTotal());
+            const continueButton = document.getElementById('donation-continue');
+            const backButton = document.getElementById('donation-back');
+            let confirmed = false;
+            const onContinue = () => {
+                confirmed = true;
+                donationDialog.close();
+            };
+            const onBack = () => donationDialog.close();
+            continueButton.addEventListener('click', onContinue);
+            backButton.addEventListener('click', onBack);
+            donationDialog.addEventListener('close', () => {
+                continueButton.removeEventListener('click', onContinue);
+                backButton.removeEventListener('click', onBack);
+                payButton.focus();
+                resolve(confirmed);
+            }, { once: true });
+            donationDialog.showModal();
+            continueButton.focus();
+        });
+
         // Submit Handler
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (payButton.disabled || (donationDialog && donationDialog.open) || !validateForm()) return;
+            if (donationDialog && !(await confirmDonation())) return;
             if (payButton.disabled || !validateForm()) return;
 
             payButton.disabled = true;
