@@ -96,6 +96,17 @@ $pixelStmt->execute([$parentProductId]);
 $product['pixels'] = $pixelStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $productGateway = $product['payment_gateway'] ?? 'woovi';
+$isTurbo = !empty($product['turbo_mode']) && in_array($productGateway, [
+    'woovi', 'woovi_whatsapp', 'manual_pix', 'manual_pix_no_whatsapp', 'infinitepay_pix'
+], true);
+if ($isTurbo) {
+    // No offers or promotional overlays during the simplified form step.
+    $product['bumps'] = [];
+    $product['downsell_enabled'] = 0;
+    $product['fake_notifications'] = 0;
+    $product['top_bar_enabled'] = 0;
+}
+
 $supportsCreditCard = in_array($productGateway, [
     'appmax', 'appmax_card_woovi_pix', 'appmax_card_manual_pix_no_whatsapp', 'appmax_card_manual_pix',
     'infinitepay', 'infinitepay_card', 'infinitepay_card_woovi_pix', 'infinitepay_card_manual_pix_no_whatsapp'
@@ -378,7 +389,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
 <body
     class="flex flex-col items-center justify-start transition-colors duration-300 <?= $isEmbed ? 'min-h-0 p-0 bg-transparent overflow-x-hidden text-gray-900 dark:text-slate-100' : 'min-h-screen ' . ($isModal ? 'py-2 px-2 overflow-x-hidden bg-slate-50 dark:bg-[#0B0F19] text-gray-900 dark:text-slate-100' : 'py-3 sm:py-8 px-3 sm:px-4 bg-slate-50 dark:bg-[#0B0F19] text-gray-900 dark:text-slate-100') ?>">
 
-    <?php if (!$isModal && !$isEmbed): ?>
+    <?php if (!$isModal && !$isEmbed && !$isTurbo): ?>
     <!-- TOP TRUST & SECURITY HEADER -->
     <header class="w-full max-w-5xl mb-4 sm:mb-6 flex items-center justify-between px-2 text-xs text-slate-500 dark:text-slate-400">
         <div class="flex items-center gap-2 font-semibold">
@@ -400,7 +411,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
 
     <?php 
     $styleParam = $_GET['style'] ?? ($product['checkout_style'] ?? 'default');
-    $isMinimalist = $styleParam === 'minimalist';
+    $isMinimalist = $isTurbo || $styleParam === 'minimalist';
     $reqName = (int) ($product['request_name'] ?? 1) !== 0;
     $reqEmail = (int) ($product['request_email'] ?? 1) !== 0;
     $reqPhone = (int) ($product['request_phone'] ?? 1) !== 0;
@@ -550,7 +561,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
                         <h1 class="font-heading font-extrabold text-sm sm:text-base text-gray-900 dark:text-white truncate">
                             <?= htmlspecialchars($product['name']) ?>
                         </h1>
-                        <div class="flex items-baseline gap-2 mt-0.5">
+                        <div <?= $isTurbo ? 'style="display:none"' : '' ?> class="flex items-baseline gap-2 mt-0.5">
                             <?php if (!empty($product['compare_at_price']) && (float)$product['compare_at_price'] > 0): ?>
                                 <span class="text-xs text-slate-400 line-through">De R$ <?= format_price($product['compare_at_price']) ?></span>
                             <?php endif; ?>
@@ -710,7 +721,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
                                     inputmode="numeric">
                             </div>
                             <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 ml-1 flex items-center gap-1">
-                                <i data-lucide="lock" class="w-3 h-3 text-emerald-500 dark:text-emerald-400"></i> Necessário para emissão e segurança do pagamento.
+                                <i data-lucide="lock" class="w-3 h-3 text-emerald-500 dark:text-emerald-400"></i> <?= $isTurbo ? 'Seus dados serão tratados com segurança.' : 'Necessário para emissão e segurança do pagamento.' ?>
                             </p>
                         </div>
 
@@ -775,6 +786,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
                     </div>
                     <?php endif; ?>
 
+                    <div <?= $isTurbo ? 'style="display:none"' : '' ?>>
                     <!-- STEP 2 HEADER -->
                     <div class="mb-5 flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-heading font-black text-sm shrink-0 shadow-xs">
@@ -947,6 +959,8 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
                     </div>
                     <?php endif; ?>
 
+                    </div>
+
                     <!-- ORDER BUMPS -->
                     <?php if (!empty($product['bumps'])): ?>
                     <div class="space-y-3 mb-7 bg-gray-50/80 dark:bg-slate-950/60 p-4 rounded-2xl border border-gray-200 dark:border-slate-800/90">
@@ -1019,7 +1033,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
                     <div class="border-t border-gray-200 dark:border-slate-800 pt-5">
                         
                         <!-- RESUMO TRANSPARENTE DE VALORES -->
-                        <div class="bg-gray-50/90 dark:bg-slate-950/70 rounded-2xl p-4 border border-gray-200/90 dark:border-slate-800/80 mb-5 space-y-2 text-xs">
+                        <div <?= $isTurbo ? 'style="display:none"' : '' ?> class="bg-gray-50/90 dark:bg-slate-950/70 rounded-2xl p-4 border border-gray-200/90 dark:border-slate-800/80 mb-5 space-y-2 text-xs">
                             <div class="flex justify-between items-center text-slate-500 dark:text-slate-400">
                                 <span><?= !empty($isBumpCheckout) ? 'Oferta' : 'Produto Principal' ?></span>
                                 <span id="summary-subtotal" class="font-semibold text-gray-800 dark:text-slate-200">R$ <?= format_price($product['price']) ?></span>
@@ -1041,16 +1055,16 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
                             class="cta-button relative overflow-hidden w-full font-heading font-black text-base sm:text-lg py-4 px-6 rounded-2xl uppercase tracking-wider text-white flex items-center justify-center gap-2.5 shadow-2xl active:scale-[0.98] transform transition-all duration-150 cursor-pointer">
                             <span class="shimmer-sweep"></span>
                             <i data-lucide="lock" class="w-5 h-5 shrink-0"></i>
-                            <span class="btn-text truncate"><?= htmlspecialchars(!empty($product['checkout_cta_text']) ? $product['checkout_cta_text'] : 'FINALIZAR COMPRA AGORA') ?></span>
+                            <span class="btn-text truncate"><?= htmlspecialchars($isTurbo ? 'CONTINUAR' : (!empty($product['checkout_cta_text']) ? $product['checkout_cta_text'] : 'FINALIZAR COMPRA AGORA')) ?></span>
                         </button>
 
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-3 flex items-center justify-center gap-1.5">
+                        <p <?= $isTurbo ? 'style="display:none"' : '' ?> class="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-3 flex items-center justify-center gap-1.5">
                             <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i>
                             Ao clicar no botão, você concorda com nossos Termos de Uso.
                         </p>
 
                         <!-- SELOS DE SEGURANÇA E CONFIANÇA -->
-                        <div class="mt-5 pt-4 border-t border-gray-100 dark:border-slate-800/80 flex flex-wrap items-center justify-center gap-y-2.5 gap-x-5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        <div <?= $isTurbo ? 'style="display:none"' : '' ?> class="mt-5 pt-4 border-t border-gray-100 dark:border-slate-800/80 flex flex-wrap items-center justify-center gap-y-2.5 gap-x-5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                             <div class="flex items-center gap-1.5">
                                 <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i>
                                 <span>Compra 100% Segura</span>
@@ -1093,6 +1107,7 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
     <script>
         lucide.createIcons();
         const BACKEND_BASE_PATH = '/api';
+        const turboMode = <?= $isTurbo ? 'true' : 'false' ?>;
 
         // Safe Storage Helper to prevent SecurityError in cross-origin WebViews/iFrames
         const safeStorage = {
@@ -1300,7 +1315,9 @@ if ($productGateway === 'appmax_card_woovi_pix' || $productGateway === 'infinite
             const formatted = formatCurrency(total);
             const customCta = PLANOS['main'].checkout_cta_text;
 
-            if (customCta && customCta.trim() !== '') {
+            if (turboMode) {
+                payButton.innerHTML = '<span class="btn-text truncate">CONTINUAR</span>';
+            } else if (customCta && customCta.trim() !== '') {
                 payButton.innerHTML = `<span class="shimmer-sweep"></span><i data-lucide="lock" class="w-5 h-5 shrink-0"></i> <span class="btn-text truncate">${escapeHtml(customCta)}</span>`;
             } else if (currentPaymentMethod === 'card') {
                 payButton.innerHTML = `<span class="shimmer-sweep"></span><i data-lucide="lock" class="w-5 h-5 shrink-0"></i> <span class="btn-text truncate">PAGAR COM CARTÃO ${formatted}</span>`;

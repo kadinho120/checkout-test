@@ -479,6 +479,11 @@ class Database
                 $this->conn->exec("ALTER TABLE products ADD COLUMN pix_whatsapp_button_text TEXT;");
             }
 
+            $productColumns = $this->conn->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_COLUMN, 1);
+            if (!in_array('turbo_mode', $productColumns, true)) {
+                $this->conn->exec("ALTER TABLE products ADD COLUMN turbo_mode INTEGER NOT NULL DEFAULT 0;");
+            }
+
             // -----------------------------------------
 
         } catch (PDOException $exception) {

@@ -253,7 +253,7 @@ require_once 'auth.php';
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-400 mb-1">Gateway de Pagamento</label>
-                                <select x-model="form.payment_gateway"
+                                <select x-model="form.payment_gateway" @change="if (!isPixOnlyGateway()) form.turbo_mode = false"
                                     class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
                                     <option value="infinitepay">InfinitePay (Cartão de Crédito + Pix)</option>
                                     <option value="infinitepay_card_woovi_pix">InfinitePay Cartão + Pix Woovi</option>
@@ -294,6 +294,15 @@ require_once 'auth.php';
                             </div>
 
                             <!-- Configurações de Chave Pix Direta e WhatsApp / Woovi + WhatsApp -->
+                            <div class="rounded-xl border border-slate-700 p-4 space-y-2">
+                                <label class="flex items-center gap-3 text-sm font-medium text-white">
+                                    <input type="checkbox" x-model="form.turbo_mode" :disabled="!isPixOnlyGateway()" class="rounded border-slate-600">
+                                    Modo Turbo
+                                </label>
+                                <p class="text-xs text-slate-400">Na etapa do formulário, exibe apenas capa, avaliações, nome, campos e o botão Continuar. O valor e as instruções aparecem na tela do QR Code. Ofertas adicionais ficam ocultas.</p>
+                                <p x-show="!isPixOnlyGateway()" class="text-xs text-amber-400">Disponível apenas com um gateway que aceite somente Pix.</p>
+                            </div>
+
                             <div x-show="['manual_pix', 'woovi_whatsapp', 'manual_pix_no_whatsapp', 'appmax_card_manual_pix_no_whatsapp', 'infinitepay_card_manual_pix_no_whatsapp'].includes(form.payment_gateway)" x-transition class="bg-gradient-to-r from-emerald-950/30 to-slate-900/50 border border-emerald-500/30 rounded-xl p-4 space-y-3">
                                 
                                 <!-- Cabeçalho Chave Pix Manual com WhatsApp -->
@@ -1417,7 +1426,12 @@ require_once 'auth.php';
                     track_purchase_on_whatsapp_click: false,
                     checkout_style: 'default',
                     product_type: 'digital',
+                    turbo_mode: false,
                     checkout_cta_text: ''
+                },
+
+                isPixOnlyGateway() {
+                    return ['woovi', 'woovi_whatsapp', 'manual_pix', 'manual_pix_no_whatsapp', 'infinitepay_pix'].includes(this.form.payment_gateway || 'woovi');
                 },
 
                 init() {
@@ -1522,6 +1536,7 @@ require_once 'auth.php';
                                     checkout_style: data.checkout_style || 'default',
                                     product_type: data.product_type || 'digital',
                                     payment_gateway: data.payment_gateway || 'woovi',
+                                    turbo_mode: Number(data.turbo_mode) === 1,
                                     checkout_cta_text: data.checkout_cta_text || '',
                                     show_close_button: data.show_close_button !== 0
                                 };
@@ -1584,7 +1599,8 @@ require_once 'auth.php';
                             checkout_style: 'default',
                             product_type: 'digital',
                             payment_gateway: 'woovi',
-                            checkout_cta_text: '',
+                            turbo_mode: false,
+                    checkout_cta_text: '',
                             show_close_button: true
                         };
                         this.isModalOpen = true;

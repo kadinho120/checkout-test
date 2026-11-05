@@ -75,6 +75,14 @@ switch ($method) {
             exit;
         }
 
+        $pixOnlyGateways = ['woovi', 'woovi_whatsapp', 'manual_pix', 'manual_pix_no_whatsapp', 'infinitepay_pix'];
+        $turboMode = !empty($data->turbo_mode);
+        if ($turboMode && !in_array($data->payment_gateway ?? 'woovi', $pixOnlyGateways, true)) {
+            http_response_code(400);
+            echo json_encode(['message' => 'O Modo Turbo está disponível apenas para pagamentos exclusivamente via Pix.']);
+            exit;
+        }
+
         try {
             $db->beginTransaction();
 
@@ -132,6 +140,7 @@ switch ($method) {
                     checkout_style = :checkout_style,
                     product_type = :product_type,
                     compare_at_price = :compare_at_price,
+                    turbo_mode = :turbo_mode,
                     checkout_cta_text = :checkout_cta_text,
                     show_close_button = :show_close_button,
                     payment_gateway = :payment_gateway
@@ -189,6 +198,7 @@ switch ($method) {
                     ':checkout_style' => $data->checkout_style ?? 'default',
                     ':product_type' => $data->product_type ?? 'digital',
                     ':compare_at_price' => (!isset($data->compare_at_price) || $data->compare_at_price === '') ? null : $data->compare_at_price,
+                    ':turbo_mode' => $turboMode ? 1 : 0,
                     ':checkout_cta_text' => $data->checkout_cta_text ?? '',
                     ':show_close_button' => isset($data->show_close_button) ? ($data->show_close_button ? 1 : 0) : 1,
                     ':payment_gateway' => $data->payment_gateway ?? 'woovi',
@@ -212,7 +222,7 @@ switch ($method) {
                     fake_notifications, notification_text, 
                     top_bar_enabled, top_bar_text, top_bar_bg_color, top_bar_text_color, top_bar_timer, 
                     downsell_enabled, downsell_discount_type, downsell_discount_amount,
-                    checkout_style, product_type, compare_at_price, checkout_cta_text, show_close_button, payment_gateway
+                    checkout_style, product_type, compare_at_price, turbo_mode, checkout_cta_text, show_close_button, payment_gateway
                 ) VALUES (
                     :name, :slug, :description, :price, :image_url, :active, :theme, 
                     :request_email, :request_phone, :request_name, 
@@ -228,7 +238,7 @@ switch ($method) {
                     :fake_notifications, :notification_text, 
                     :top_bar_enabled, :top_bar_text, :top_bar_bg_color, :top_bar_text_color, :top_bar_timer, 
                     :downsell_enabled, :downsell_discount_type, :downsell_discount_amount,
-                    :checkout_style, :product_type, :compare_at_price, :checkout_cta_text, :show_close_button, :payment_gateway
+                    :checkout_style, :product_type, :compare_at_price, :turbo_mode, :checkout_cta_text, :show_close_button, :payment_gateway
                 )");
 
                 $stmt->execute([
@@ -283,6 +293,7 @@ switch ($method) {
                     ':checkout_style' => $data->checkout_style ?? 'default',
                     ':product_type' => $data->product_type ?? 'digital',
                     ':compare_at_price' => (!isset($data->compare_at_price) || $data->compare_at_price === '') ? null : $data->compare_at_price,
+                    ':turbo_mode' => $turboMode ? 1 : 0,
                     ':checkout_cta_text' => $data->checkout_cta_text ?? '',
                     ':show_close_button' => isset($data->show_close_button) ? ($data->show_close_button ? 1 : 0) : 1,
                     ':payment_gateway' => $data->payment_gateway ?? 'woovi'
