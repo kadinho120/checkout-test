@@ -8,6 +8,7 @@ $menuItems = [
     ['url' => 'orders.php', 'icon' => 'shopping-cart', 'label' => 'Pedidos'],
     ['url' => 'pix-rotations.php', 'icon' => 'key-round', 'label' => 'Chaves Pix'],
     ['url' => 'meta-events.php', 'icon' => 'activity', 'label' => 'Monitor Meta'],
+    ['url' => 'meta-ads.php', 'icon' => 'megaphone', 'label' => 'Meta Ads'],
     ['url' => 'tracking.php', 'icon' => 'scan-line', 'label' => 'Rastreamento'],
     ['url' => 'webhooks.php', 'icon' => 'webhook', 'label' => 'Webhooks'],
     ['url' => 'capi.php', 'icon' => 'cpu', 'label' => 'Testar CAPI'],
