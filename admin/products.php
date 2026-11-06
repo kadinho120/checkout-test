@@ -122,6 +122,11 @@ require_once 'auth.php';
                                             title="Código do Modal iFrame">
                                             <i data-lucide="code" class="w-4 h-4"></i>
                                         </button>
+                                        <button type="button" @click="duplicateProduct(product.id)" :disabled="duplicatingProduct"
+                                            class="p-2 text-emerald-400 hover:text-emerald-300 bg-slate-800 rounded hover:bg-slate-700 disabled:opacity-50"
+                                            title="Duplicar produto" aria-label="Duplicar produto">
+                                            <i data-lucide="copy" class="w-4 h-4"></i>
+                                        </button>
                                         <button @click="deleteProduct(product.id)"
                                             class="p-2 text-red-400 hover:text-red-300 bg-slate-800 rounded hover:bg-slate-700"
                                             title="Excluir">
@@ -2011,6 +2016,29 @@ require_once 'auth.php';
                             alert('Erro na requisição.');
                             console.error(err);
                         });
+                },
+
+                duplicatingProduct: false,
+
+                async duplicateProduct(id) {
+                    if (this.duplicatingProduct) return;
+                    this.duplicatingProduct = true;
+
+                    try {
+                        const response = await fetch('../api/v1/products.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ duplicate_id: id })
+                        });
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.message);
+                        this.page = 1;
+                        this.fetchProducts();
+                    } catch (error) {
+                        alert(error.message || 'Não foi possível duplicar o produto.');
+                    } finally {
+                        this.duplicatingProduct = false;
+                    }
                 },
 
                 deleteProduct(id) {

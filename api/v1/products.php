@@ -69,6 +69,83 @@ switch ($method) {
         // Create or Update
         $data = json_decode(file_get_contents("php://input"));
 
+        if (isset($data->duplicate_id)) {
+            session_start();
+            $loggedIn = ($_SESSION['logged_in'] ?? false) === true;
+            session_write_close();
+            if (!$loggedIn) {
+                http_response_code(403);
+                echo json_encode(['message' => 'Faça login para duplicar um produto.']);
+                exit;
+            }
+
+            $sourceId = (int) $data->duplicate_id;
+            $transactionStarted = false;
+            try {
+                // Lock writes while selecting a unique slug and copying the settings.
+                $db->exec('BEGIN IMMEDIATE');
+                $transactionStarted = true;
+                $source = $db->prepare('SELECT * FROM products WHERE id = ?');
+                $source->execute([$sourceId]);
+                $product = $source->fetch();
+                if (!$product) {
+                    $db->exec('ROLLBACK');
+                    http_response_code(404);
+                    echo json_encode(['message' => 'Produto não encontrado.']);
+                    exit;
+                }
+
+                $baseSlug = $product['slug'] . '-copia';
+                $slug = $baseSlug;
+                $slugExists = $db->prepare('SELECT 1 FROM products WHERE slug = ?');
+                for ($suffix = 2; ; $suffix++) {
+                    $slugExists->execute([$slug]);
+                    $exists = $slugExists->fetchColumn();
+                    $slugExists->closeCursor();
+                    if (!$exists) {
+                        break;
+                    }
+                    $slug = $baseSlug . '-' . $suffix;
+                }
+
+                // Copy every setting, including columns added by migrations.
+                $insertCopy = static function ($table, $row) use ($db) {
+                    unset($row['id']);
+                    $columns = array_map(static function ($column) {
+                        return '"' . str_replace('"', '""', $column) . '"';
+                    }, array_keys($row));
+                    $placeholders = implode(', ', array_fill(0, count($row), '?'));
+                    $stmt = $db->prepare('INSERT INTO ' . $table . ' (' . implode(', ', $columns) . ') VALUES (' . $placeholders . ')');
+                    $stmt->execute(array_values($row));
+                };
+
+                $product['slug'] = $slug;
+                $insertCopy('products', $product);
+                $newId = (int) $db->lastInsertId();
+
+                foreach (['order_bumps', 'pixels'] as $table) {
+                    $related = $db->prepare('SELECT * FROM ' . $table . ' WHERE product_id = ? ORDER BY id');
+                    $related->execute([$sourceId]);
+                    foreach ($related->fetchAll() as $row) {
+                        $row['product_id'] = $newId;
+                        $insertCopy($table, $row);
+                    }
+                }
+
+                $db->exec('COMMIT');
+                http_response_code(201);
+                echo json_encode(['id' => $newId, 'slug' => $slug]);
+            } catch (PDOException $e) {
+                if ($transactionStarted) {
+                    $db->exec('ROLLBACK');
+                }
+                error_log('Product duplication failed: ' . $e->getMessage());
+                http_response_code(500);
+                echo json_encode(['message' => 'Não foi possível duplicar o produto.']);
+            }
+            exit;
+        }
+
         if (!isset($data->name) || !isset($data->price) || !isset($data->slug)) {
             http_response_code(400);
             echo json_encode(["message" => "Incomplete data."]);
